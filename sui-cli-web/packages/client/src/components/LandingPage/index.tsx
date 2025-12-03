@@ -1,16 +1,44 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CommunityJoin } from '../CommunityJoin';
+import { SetupInstructions } from '../SetupInstructions';
+import { api } from '../../api/client';
 
 export function LandingPage() {
   const navigate = useNavigate();
   const [showCommunityModal, setShowCommunityModal] = useState(false);
+  const [serverConnected, setServerConnected] = useState<boolean | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  const checkServerConnection = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/health', {
+        method: 'GET',
+        signal: AbortSignal.timeout(3000),
+      });
+      setServerConnected(response.ok);
+    } catch (error) {
+      setServerConnected(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    await checkServerConnection();
+    setIsRetrying(false);
+  };
 
   const handleEnter = () => {
-    navigate('/app');
+    if (serverConnected) {
+      navigate('/app');
+    } else {
+      handleRetry();
+    }
   };
 
   useEffect(() => {
+    checkServerConnection();
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
         handleEnter();
@@ -19,7 +47,33 @@ export function LandingPage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [serverConnected]);
+
+  // Show loading state while checking connection
+  if (serverConnected === null) {
+    return (
+      <div className="relative w-full h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-[#4da2ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/60">Checking server connection...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show setup instructions if server is not connected
+  if (!serverConnected) {
+    return (
+      <div className="relative w-full h-screen overflow-y-auto overflow-x-hidden">
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
+        <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-8 sm:py-12">
+          <div className="max-w-3xl w-full bg-background/90 backdrop-blur-sm rounded-xl border border-border shadow-2xl">
+            <SetupInstructions onRetry={handleRetry} isRetrying={isRetrying} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-screen overflow-y-auto overflow-x-hidden">
