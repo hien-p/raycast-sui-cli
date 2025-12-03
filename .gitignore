@@ -15,3 +15,7 @@ yarn-error.log*
 .vscode
 .idea
 *.swp
+
+# Private
+prompts/
+.agent/
