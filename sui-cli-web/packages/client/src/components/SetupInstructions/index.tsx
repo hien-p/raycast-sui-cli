@@ -96,20 +96,6 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
         </div>
       </div>
 
-      {/* Alternative: Clone Repo */}
-      <div>
-        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-secondary text-muted-foreground text-xs">?</span>
-          Alternative: Run from Source
-        </h4>
-        <div className="space-y-3 pl-7">
-          <CodeBlock id="git">{`git clone https://github.com/hien-p/raycast-sui-cli.git
-cd raycast-sui-cli/sui-cli-web
-npm install
-npm run dev:server`}</CodeBlock>
-        </div>
-      </div>
-
       {/* Security & Trust */}
       <div className="bg-black/40 rounded-lg p-4 border border-border space-y-4">
         <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
