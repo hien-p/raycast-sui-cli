@@ -24,6 +24,7 @@ import { PTBBuilder } from "./PTBBuilder";
 import { KeyManager } from "./KeyManager";
 import { CallFunctionWizard } from "./CallFunctionWizard";
 import { WalrusStorage } from "./WalrusStorage";
+import { CommunityView } from "./CommunityView";
 
 export function SuiCommandPalette() {
   const {
@@ -114,6 +115,36 @@ export function SuiCommandPalette() {
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Search Sui commands...">
+      {/* Community Section */}
+      <List.Section title="Community">
+        <List.Item
+          title="My Community Profile"
+          subtitle="View tier, progress & benefits"
+          icon={{ source: Icon.TwoPeople, tintColor: Color.Blue }}
+          keywords={[
+            "community",
+            "tier",
+            "member",
+            "profile",
+            "progress",
+            "badge",
+            "rank",
+            "droplet",
+            "wave",
+            "tsunami",
+            "ocean",
+          ]}
+          actions={
+            <ActionPanel>
+              <Action
+                title="View Community Profile"
+                onAction={() => push(<CommunityView />)}
+              />
+            </ActionPanel>
+          }
+        />
+      </List.Section>
+
       {/* Keys & Security Section */}
       <List.Section title="Keys & Security">
         <List.Item

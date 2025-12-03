@@ -85,12 +85,12 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
         </h4>
         <div className="space-y-3 pl-7">
           <p className="text-sm text-muted-foreground">Install globally (recommended - one time only):</p>
-          <CodeBlock id="install">{`npm install -g sui-cli-web
+          <CodeBlock id="install">{`npm install -g sui-cli-web-server
 sui-cli-web`}</CodeBlock>
           <p className="text-xs text-muted-foreground mt-2">
             Or run directly with npx (may prompt for install each time):
           </p>
-          <CodeBlock id="npx">npx sui-cli-web</CodeBlock>
+          <CodeBlock id="npx">npx sui-cli-web-server</CodeBlock>
           <p className="text-xs text-muted-foreground">
             Server will start on port 3001 and connect this UI to your local Sui CLI.
           </p>
@@ -150,7 +150,7 @@ npm run dev:server`}</CodeBlock>
             </p>
             <ul className="text-xs text-muted-foreground space-y-1 pl-4">
               <li>• <a href="https://github.com/hien-p/raycast-sui-cli" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Review the source code on GitHub</a></li>
-              <li>• <a href="https://www.npmjs.com/package/sui-cli-web" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Check the npm package</a></li>
+              <li>• <a href="https://www.npmjs.com/package/sui-cli-web-server" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Check the npm package</a></li>
               <li>• The server only binds to localhost (127.0.0.1) - no external access</li>
               <li>• All code is open source - audit it yourself!</li>
             </ul>

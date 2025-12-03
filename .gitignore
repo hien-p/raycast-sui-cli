@@ -18,4 +18,13 @@ yarn-error.log*
 
 # Private
 prompts/
+.prompts/
 .agent/
+.claude/
+package_summaries/
+
+# AI Traces
+CLAUDE.md
+PLAN.md
+.mcp.json
+**/.mcp.json
