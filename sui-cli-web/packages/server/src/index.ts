@@ -38,8 +38,11 @@ async function main() {
       'http://127.0.0.1:5175',
       'http://127.0.0.1:3000',
       // Deployed UI domains
+      'https://www.harriweb3.dev',
+      'https://harriweb3.dev',
       /^https:\/\/client.*\.vercel\.app$/,
       /^https:\/\/sui-cli.*\.vercel\.app$/,
+      /^https:\/\/.*\.vercel\.app$/,
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
@@ -133,7 +136,7 @@ async function main() {
 ║   Server running at: http://localhost:${PORT}                  ║
 ║                                                               ║
 ║   Now open the web UI:                                        ║
-║   → https://client-gray-mu.vercel.app                         ║
+║   → https://www.harriweb3.dev/                                ║
 ║   → https://raycast-sui-cli.vercel.app                        ║
 ║                                                               ║
 ║   The UI will connect to this local server automatically.     ║
