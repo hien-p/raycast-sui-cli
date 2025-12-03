@@ -50,7 +50,7 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
         <div>
           <h3 className="font-medium text-warning">Local Server Not Connected</h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            This app requires a local server to interact with your Sui CLI
+            This app requires a local server to interact with your Sui CLI. If you see network errors below, the server may be experiencing connectivity issues.
           </p>
         </div>
       </div>
@@ -104,6 +104,47 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
           <p className="text-xs text-muted-foreground">
             Server will start on port 3001 and connect this UI to your local Sui CLI.
           </p>
+        </div>
+      </div>
+
+      {/* Network Troubleshooting */}
+      <div className="bg-black/40 rounded-lg p-4 border border-border space-y-4">
+        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <svg className="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+          </svg>
+          Network Issues?
+        </h4>
+
+        <div className="text-sm text-muted-foreground space-y-3">
+          <div className="space-y-2">
+            <p className="font-medium text-foreground text-xs">If requests timeout or show "Request timed out":</p>
+            <ul className="text-xs space-y-1 pl-4 text-muted-foreground">
+              <li>• Check if terminal running the server is still open</li>
+              <li>• Verify server is actually running: you should see output like "🚀 Sui CLI Web - Local Server"</li>
+              <li>• Try restarting the server: kill the terminal and run <code className="px-1 py-0.5 bg-black/40 rounded text-xs">npx sui-cli-web-server</code> again</li>
+              <li>• Check if port 3001 is in use: <code className="px-1 py-0.5 bg-black/40 rounded text-xs">lsof -i :3001</code></li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-medium text-foreground text-xs">If "Cannot connect to local server" appears:</p>
+            <ul className="text-xs space-y-1 pl-4 text-muted-foreground">
+              <li>• Ensure the server is actually running (not just installed)</li>
+              <li>• Check if you're using a VPN or proxy that blocks localhost</li>
+              <li>• Try accessing <code className="px-1 py-0.5 bg-black/40 rounded text-xs">http://localhost:3001/api/health</code> directly in a new tab</li>
+              <li>• If nothing works, restart everything: close this tab, close the server terminal, and start fresh</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-medium text-foreground text-xs">If the app loads but shows empty data:</p>
+            <ul className="text-xs space-y-1 pl-4 text-muted-foreground">
+              <li>• Sui CLI may not be initialized. Run: <code className="px-1 py-0.5 bg-black/40 rounded text-xs">sui client envs</code></li>
+              <li>• If no networks appear, run: <code className="px-1 py-0.5 bg-black/40 rounded text-xs">sui client</code> to initialize</li>
+              <li>• Check that at least one address exists: <code className="px-1 py-0.5 bg-black/40 rounded text-xs">sui client addresses</code></li>
+            </ul>
+          </div>
         </div>
       </div>
 
