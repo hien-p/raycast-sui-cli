@@ -1,0 +1,9 @@
+{
+  "network": "",
+  "deployer_address": "",
+  "deployed_at": "",
+  "package_id": "",
+  "registry_id": "",
+  "upgrade_cap_id": "",
+  "notes": "IMPORTANT: Keep upgrade_cap_id safe! You need it to upgrade the contract."
+}

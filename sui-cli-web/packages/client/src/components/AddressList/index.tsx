@@ -95,7 +95,7 @@ export function AddressList() {
               </label>
               <select
                 value={keyScheme}
-                onChange={(e) => setKeyScheme(e.target.value as any)}
+                onChange={(e) => setKeyScheme(e.target.value as 'ed25519' | 'secp256k1' | 'secp256r1')}
                 className="w-full px-3 py-2 bg-background-primary border border-border rounded text-sm text-text-primary focus:outline-none focus:border-accent"
               >
                 <option value="ed25519">Ed25519</option>

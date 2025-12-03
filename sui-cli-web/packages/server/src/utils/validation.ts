@@ -184,3 +184,103 @@ export function validateOptionalGasBudget(budget: unknown): string | undefined {
   }
   return budget;
 }
+
+// Move module name: alphanumeric with underscores, starts with letter or underscore
+const MODULE_NAME_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]{0,127}$/;
+
+// Move function name: same as module name
+const FUNCTION_NAME_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]{0,127}$/;
+
+// Type args: safe characters for generic type parameters (e.g., "0x2::sui::SUI")
+const TYPE_ARG_REGEX = /^[a-zA-Z0-9_:<>,\s]+$/;
+
+// Transaction digest: base58, 44 characters
+const TX_DIGEST_REGEX = /^[1-9A-HJ-NP-Za-km-z]{43,44}$/;
+
+// Shell metacharacters to block in args
+const SHELL_METACHAR_REGEX = /[;&|`$(){}[\]\\'"<>!#~*?]/;
+
+export function isValidModuleName(name: string): boolean {
+  return typeof name === 'string' && MODULE_NAME_REGEX.test(name);
+}
+
+export function isValidFunctionName(name: string): boolean {
+  return typeof name === 'string' && FUNCTION_NAME_REGEX.test(name);
+}
+
+export function isValidTypeArg(arg: string): boolean {
+  return typeof arg === 'string' && TYPE_ARG_REGEX.test(arg) && arg.length <= 256;
+}
+
+export function isValidTxDigest(digest: string): boolean {
+  return typeof digest === 'string' && TX_DIGEST_REGEX.test(digest);
+}
+
+export function isSafeArg(arg: string): boolean {
+  return typeof arg === 'string' && !SHELL_METACHAR_REGEX.test(arg) && arg.length <= 1024;
+}
+
+export function validateModuleName(module: unknown, fieldName = 'module'): string {
+  if (typeof module !== 'string' || !isValidModuleName(module)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid module name (alphanumeric/underscore, starts with letter/underscore, max 128 chars)' },
+    ]);
+  }
+  return module;
+}
+
+export function validateFunctionName(functionName: unknown, fieldName = 'function'): string {
+  if (typeof functionName !== 'string' || !isValidFunctionName(functionName)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid function name (alphanumeric/underscore, starts with letter/underscore, max 128 chars)' },
+    ]);
+  }
+  return functionName;
+}
+
+export function validateTypeArgs(typeArgs: unknown): string[] {
+  if (typeArgs === undefined || typeArgs === null) {
+    return [];
+  }
+  if (!Array.isArray(typeArgs)) {
+    throw new ValidationException([
+      { field: 'typeArgs', message: 'Type arguments must be an array' },
+    ]);
+  }
+  for (let i = 0; i < typeArgs.length; i++) {
+    if (!isValidTypeArg(typeArgs[i])) {
+      throw new ValidationException([
+        { field: `typeArgs[${i}]`, message: 'Invalid type argument format' },
+      ]);
+    }
+  }
+  return typeArgs;
+}
+
+export function validateMoveArgs(args: unknown): string[] {
+  if (args === undefined || args === null) {
+    return [];
+  }
+  if (!Array.isArray(args)) {
+    throw new ValidationException([
+      { field: 'args', message: 'Arguments must be an array' },
+    ]);
+  }
+  for (let i = 0; i < args.length; i++) {
+    if (!isSafeArg(args[i])) {
+      throw new ValidationException([
+        { field: `args[${i}]`, message: 'Invalid argument (contains forbidden characters or too long)' },
+      ]);
+    }
+  }
+  return args;
+}
+
+export function validateTxDigest(digest: unknown, fieldName = 'digest'): string {
+  if (typeof digest !== 'string' || !isValidTxDigest(digest)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid transaction digest format (expected base58, 43-44 chars)' },
+    ]);
+  }
+  return digest;
+}

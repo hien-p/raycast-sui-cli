@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import type { SuiAddress, SuiEnvironment, GasCoin } from '@/types';
 import * as api from '@/api/client';
-import { checkConnection } from '@/api/client';
+import { checkConnection, TierInfo } from '@/api/client';
+import { suiService } from '@/services/SuiService';
 
 export type View =
   | 'commands'
@@ -25,11 +26,16 @@ interface AppState {
   isServerConnected: boolean | null; // null = checking, true = connected, false = disconnected
   isCheckingConnection: boolean;
 
+  // Community state
+  isCommunityMember: boolean;
+  communityStats: { totalMembers: number; isConfigured: boolean };
+  tierInfo: TierInfo | null;
+
   // Data
   addresses: SuiAddress[];
   environments: SuiEnvironment[];
   gasCoins: GasCoin[];
-  objects: any[];
+  objects: Record<string, unknown>[];
   selectedObjectId: string | null;
   suiInstalled: boolean | null;
   suiVersion: string | null;
@@ -69,6 +75,12 @@ interface AppState {
 
   // Connection
   checkServerConnection: () => Promise<boolean>;
+
+  // Community
+  fetchCommunityStatus: () => Promise<void>;
+  joinCommunity: () => Promise<{ success: boolean; txDigest?: string; error?: string }>;
+  fetchTierInfo: (address?: string) => Promise<void>;
+  refreshTierInfo: (address?: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -83,6 +95,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Connection state
   isServerConnected: null,
   isCheckingConnection: false,
+
+  // Community state
+  isCommunityMember: false,
+  communityStats: { totalMembers: 0, isConfigured: false },
+  tierInfo: null,
 
   // Initial Data
   addresses: [],
@@ -159,6 +176,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await api.switchAddress(address);
       await get().fetchAddresses();
+      await get().fetchCommunityStatus();
       set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
@@ -251,6 +269,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await api.requestFaucet(network);
+      // Wait for transaction to finalize on blockchain before refreshing balance
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       await get().fetchAddresses();
       set({ isLoading: false });
     } catch (error) {
@@ -274,6 +294,103 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch {
       set({ isServerConnected: false, isCheckingConnection: false });
       return false;
+    }
+  },
+
+  // Community
+  fetchCommunityStatus: async () => {
+    try {
+      // Try to get active address from store first, then from API if not available
+      let activeAddress = get().addresses.find((a) => a.isActive)?.address;
+
+      // If addresses not loaded yet, try to get from API
+      if (!activeAddress) {
+        try {
+          const addresses = await api.getAddresses();
+          activeAddress = addresses.find((a) => a.isActive)?.address;
+        } catch {
+          // Ignore - might not be connected to server yet
+        }
+      }
+
+      const [statsData, isMember] = await Promise.all([
+        suiService.getCommunityStats().catch(() => ({ totalMembers: 0, isConfigured: false })),
+        activeAddress
+          ? suiService.checkMembership(activeAddress).catch(() => false)
+          : Promise.resolve(false),
+      ]);
+
+      set({
+        communityStats: statsData,
+        isCommunityMember: isMember,
+      });
+    } catch {
+      // Silently fail
+    }
+  },
+
+  joinCommunity: async () => {
+    try {
+      const result = await api.joinCommunity();
+      if (result.alreadyMember || result.txDigest) {
+        set({ isCommunityMember: true });
+        // Refresh stats
+        const stats = await suiService.getCommunityStats().catch(() => get().communityStats);
+        set({ communityStats: stats });
+        return { success: true, txDigest: result.txDigest };
+      }
+      return { success: false, error: 'Join failed' };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return { success: false, error: errorMsg };
+    }
+  },
+
+  fetchTierInfo: async (address?: string) => {
+    try {
+      // Get active address if not provided
+      let targetAddress = address;
+      if (!targetAddress) {
+        targetAddress = get().addresses.find((a) => a.isActive)?.address;
+        if (!targetAddress) {
+          // Try to get from API
+          try {
+            const addresses = await api.getAddresses();
+            targetAddress = addresses.find((a) => a.isActive)?.address;
+          } catch {
+            // Ignore
+          }
+        }
+      }
+
+      if (!targetAddress) {
+        set({ tierInfo: null });
+        return;
+      }
+
+      const tierInfo = await api.getTierInfo(targetAddress);
+      set({ tierInfo });
+    } catch (error) {
+      console.error('Failed to fetch tier info:', error);
+      set({ tierInfo: null });
+    }
+  },
+
+  refreshTierInfo: async (address?: string) => {
+    try {
+      let targetAddress = address;
+      if (!targetAddress) {
+        targetAddress = get().addresses.find((a) => a.isActive)?.address;
+      }
+
+      if (!targetAddress) {
+        return;
+      }
+
+      const tierInfo = await api.refreshTier(targetAddress);
+      set({ tierInfo });
+    } catch (error) {
+      console.error('Failed to refresh tier info:', error);
     }
   },
 }));

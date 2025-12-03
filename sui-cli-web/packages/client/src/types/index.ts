@@ -64,6 +64,7 @@ export const CATEGORIES = {
   GAS: 'Gas',
   FAUCET: 'Faucet',
   KEYS: 'Keys & Security',
+  COMMUNITY: 'Community',
 } as const;
 
 export const DEFAULT_COMMANDS: Command[] = [
@@ -111,5 +112,14 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.FAUCET,
     keywords: ['faucet', 'free', 'token', 'test'],
     action: 'faucet',
+  },
+  {
+    id: 'community',
+    title: 'My Community Profile',
+    subtitle: 'View tier, progress & hints',
+    icon: '👥',
+    category: CATEGORIES.COMMUNITY,
+    keywords: ['community', 'tier', 'member', 'profile', 'progress', 'badge', 'rank'],
+    action: 'community',
   },
 ];

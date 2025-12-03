@@ -1,0 +1,5 @@
+# Build artifacts
+build/
+
+# Dependencies lock file (regenerated on build)
+Move.lock

@@ -173,11 +173,11 @@ export const API_BASE_URL = 'http://localhost:3001/api';
 export const NETWORKS = {
   devnet: {
     rpc: 'https://fullnode.devnet.sui.io:443',
-    faucet: 'https://faucet.devnet.sui.io/gas',
+    faucet: 'https://faucet.devnet.sui.io/v2/gas',
   },
   testnet: {
     rpc: 'https://fullnode.testnet.sui.io:443',
-    faucet: 'https://faucet.testnet.sui.io/gas',
+    faucet: 'https://faucet.testnet.sui.io/v2/gas',
   },
   mainnet: {
     rpc: 'https://fullnode.mainnet.sui.io:443',
@@ -185,6 +185,83 @@ export const NETWORKS = {
   },
   localnet: {
     rpc: 'http://127.0.0.1:9000',
-    faucet: 'http://127.0.0.1:9123/gas',
+    faucet: 'http://127.0.0.1:9123/v2/gas',
   },
 } as const;
+
+// Faucet sources - multiple providers for better availability
+export interface FaucetSource {
+  id: string;
+  name: string;
+  description: string;
+  networks: ('devnet' | 'testnet')[];
+  type: 'api' | 'web' | 'discord';
+  url?: string;  // For web/discord types
+  apiUrl?: string; // For api types
+  apiFormat?: 'sui-official' | 'mysten'; // API request format
+  dailyLimit?: string;
+  perRequestAmount?: string;
+}
+
+export const FAUCET_SOURCES: FaucetSource[] = [
+  {
+    id: 'sui-official',
+    name: 'Sui Official Faucet',
+    description: 'Official Sui Foundation faucet',
+    networks: ['devnet', 'testnet'],
+    type: 'api',
+    apiFormat: 'sui-official',
+    dailyLimit: '10 requests/day',
+    perRequestAmount: '1 SUI',
+  },
+  {
+    id: 'sui-web-faucet',
+    name: 'Sui Web Faucet',
+    description: 'Official web faucet by Mysten Labs',
+    networks: ['devnet', 'testnet'],
+    type: 'web',
+    url: 'https://faucet.sui.io/',
+    dailyLimit: 'Rate limited',
+    perRequestAmount: '1 SUI',
+  },
+  {
+    id: 'blockbolt-faucet',
+    name: 'Blockbolt Faucet',
+    description: 'Community faucet - no captcha',
+    networks: ['devnet', 'testnet'],
+    type: 'web',
+    url: 'https://faucet.blockbolt.io/',
+    dailyLimit: 'Limited',
+    perRequestAmount: '1 SUI',
+  },
+  {
+    id: 'n1stake-faucet',
+    name: 'n1stake Faucet',
+    description: 'Fast faucet - no registration',
+    networks: ['testnet'],
+    type: 'web',
+    url: 'https://faucet.n1stake.com/',
+    dailyLimit: '1 request/day',
+    perRequestAmount: '0.5 SUI',
+  },
+  {
+    id: 'stakely-faucet',
+    name: 'Stakely Faucet',
+    description: 'Requires captcha verification',
+    networks: ['testnet'],
+    type: 'web',
+    url: 'https://stakely.io/faucet/sui-testnet-sui',
+    dailyLimit: '1 request/day',
+    perRequestAmount: '0.5 SUI',
+  },
+  {
+    id: 'sui-discord',
+    name: 'Sui Discord Faucet',
+    description: 'Get tokens via Discord bot #devnet-faucet or #testnet-faucet channel',
+    networks: ['devnet', 'testnet'],
+    type: 'discord',
+    url: 'https://discord.gg/sui',
+    dailyLimit: 'Varies',
+    perRequestAmount: 'Varies',
+  },
+];

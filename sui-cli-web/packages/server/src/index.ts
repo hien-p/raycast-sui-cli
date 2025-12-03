@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { addressRoutes } from './routes/address';
 import { environmentRoutes } from './routes/environment';
 import { faucetRoutes } from './routes/faucet';
+import { communityRoutes } from './routes/community';
 import { SuiCliExecutor } from './cli/SuiCliExecutor';
 import { createRateLimitHook } from './utils/rateLimiter';
 
@@ -26,11 +27,15 @@ async function main() {
   // Register CORS - allow localhost and deployed UI domains only
   await fastify.register(cors, {
     origin: [
-      // Local development
+      // Local development (various ports Vite might use)
       'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
       'http://localhost:3000',
       'http://localhost:3001',
       'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      'http://127.0.0.1:5175',
       'http://127.0.0.1:3000',
       // Deployed UI domains
       /^https:\/\/client.*\.vercel\.app$/,
@@ -98,6 +103,21 @@ async function main() {
     async (instance) => {
       instance.addHook('onRequest', faucetRateLimit);
       await instance.register(faucetRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Community routes - mixed read/write
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(communityRoutes);
     },
     { prefix: '/api' }
   );

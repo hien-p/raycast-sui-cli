@@ -4,20 +4,13 @@ import type { ApiResponse, FaucetResponse } from '@sui-cli-web/shared';
 import {
   validateNetwork,
   validateAddress,
-  ValidationException,
 } from '../utils/validation';
+import { handleRouteError } from '../utils/errorHandler';
 
 const faucetService = new FaucetService();
 
-// Helper to handle validation errors
-function handleError(error: unknown, reply: any) {
-  if (error instanceof ValidationException) {
-    reply.status(400);
-    return { success: false, error: error.message };
-  }
-  reply.status(500);
-  return { success: false, error: String(error) };
-}
+// Alias for cleaner code
+const handleError = handleRouteError;
 
 export async function faucetRoutes(fastify: FastifyInstance) {
   // Request tokens from faucet
@@ -33,9 +26,17 @@ export async function faucetRoutes(fastify: FastifyInstance) {
         address = validateAddress(request.body.address);
       }
       const result = await faucetService.requestTokens(network, address);
+
+      // If faucet service returned an error, propagate it properly
+      if (!result.success) {
+        reply.status(400);
+        return { success: false, error: result.message };
+      }
+
       return { success: true, data: result };
     } catch (error) {
       return handleError(error, reply);
     }
   });
+
 }

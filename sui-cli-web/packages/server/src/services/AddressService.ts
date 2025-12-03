@@ -1,6 +1,14 @@
 import { SuiCliExecutor } from '../cli/SuiCliExecutor';
 import { ConfigParser } from '../cli/ConfigParser';
 import type { SuiAddress, GasCoin } from '@sui-cli-web/shared';
+import {
+  validateModuleName,
+  validateFunctionName,
+  validateTypeArgs,
+  validateMoveArgs,
+  validateObjectId,
+  validateOptionalGasBudget,
+} from '../utils/validation';
 
 // Constants
 const SUI_COIN_TYPE = '0x2::sui::SUI';
@@ -36,62 +44,93 @@ export class AddressService {
     this.configParser = ConfigParser.getInstance();
   }
 
-  public async getAddresses(): Promise<SuiAddress[]> {
+  public async getAddresses(includeBalance: boolean = true): Promise<SuiAddress[]> {
     const activeAddress = await this.getActiveAddress();
+
+    let addresses: SuiAddress[] = [];
 
     try {
       const output = await this.executor.execute(['client', 'addresses'], { json: true });
       const data = JSON.parse(output);
 
       if (data.addresses && Array.isArray(data.addresses)) {
-        return data.addresses.map((addr: any) => {
-          let address: string;
-          let alias: string | undefined;
+        addresses = data.addresses
+          .map((addr: any) => {
+            try {
+              let address: string;
+              let alias: string | undefined;
 
-          if (Array.isArray(addr)) {
-            const p1 = addr[0];
-            const p2 = addr[1];
-            if (p1.startsWith('0x')) {
-              address = p1;
-              alias = p2 || undefined;
-            } else if (p2 && p2.startsWith('0x')) {
-              address = p2;
-              alias = p1 || undefined;
-            } else {
-              address = p1;
+              if (Array.isArray(addr)) {
+                const p1 = addr[0];
+                const p2 = addr[1];
+                if (typeof p1 === 'string' && p1.startsWith('0x')) {
+                  address = p1;
+                  alias = p2 || undefined;
+                } else if (typeof p2 === 'string' && p2.startsWith('0x')) {
+                  address = p2;
+                  alias = p1 || undefined;
+                } else {
+                  address = String(p1);
+                }
+              } else if (typeof addr === 'string') {
+                address = addr;
+              } else {
+                return null;
+              }
+
+              return {
+                address,
+                alias,
+                isActive: address === activeAddress,
+              };
+            } catch {
+              return null;
             }
-          } else {
-            address = addr;
-          }
-
-          return {
-            address,
-            alias,
-            isActive: address === activeAddress,
-          };
-        });
+          })
+          .filter((item: SuiAddress | null): item is SuiAddress => item !== null);
       }
-      return [];
     } catch {
       // Fallback to text parsing
-      const textOutput = await this.executor.execute(['client', 'addresses']);
-      return textOutput
-        .split('\n')
-        .map((line) => {
-          const parts = line.trim().split(/\s+/);
-          const addr = parts.find((p) => p.startsWith('0x'));
-          const alias = parts.find((p) => !p.startsWith('0x') && p !== 'Active' && p !== 'Address');
-          if (addr) {
-            return {
-              address: addr,
-              alias: alias || undefined,
-              isActive: addr === activeAddress,
-            };
-          }
-          return null;
-        })
-        .filter((item): item is SuiAddress => item !== null);
+      try {
+        const textOutput = await this.executor.execute(['client', 'addresses']);
+        const parsed = textOutput
+          .split('\n')
+          .map((line) => {
+            const parts = line.trim().split(/\s+/);
+            const addr = parts.find((p) => p.startsWith('0x'));
+            const alias = parts.find((p) => !p.startsWith('0x') && p !== 'Active' && p !== 'Address');
+            if (addr) {
+              return {
+                address: addr,
+                alias,
+                isActive: addr === activeAddress,
+              } as SuiAddress;
+            }
+            return null;
+          })
+          .filter((item): item is SuiAddress => item !== null);
+        addresses = parsed;
+      } catch {
+        // Return empty array if both methods fail
+        addresses = [];
+      }
     }
+
+    // Fetch balances for all addresses in parallel
+    if (includeBalance && addresses.length > 0) {
+      const balancePromises = addresses.map(async (addr) => {
+        try {
+          const balance = await this.getBalance(addr.address);
+          return { ...addr, balance };
+        } catch {
+          return { ...addr, balance: '0' };
+        }
+      });
+
+      addresses = await Promise.all(balancePromises);
+    }
+
+    return addresses;
   }
 
   public async getActiveAddress(): Promise<string> {
@@ -151,7 +190,10 @@ export class AddressService {
 
     if (!response.ok) throw new Error(response.statusText);
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      error?: { message: string };
+      result?: { totalBalance?: string };
+    };
     if (data.error) throw new Error(data.error.message);
 
     const totalBalance = data.result?.totalBalance;
@@ -272,6 +314,161 @@ export class AddressService {
 
   public async getObject(objectId: string): Promise<any> {
     const output = await this.executor.execute(['client', 'object', objectId], { json: true });
+    return JSON.parse(output);
+  }
+
+  public async getTransactionBlock(digest: string): Promise<any> {
+    const output = await this.executor.execute(['client', 'tx-block', digest], { json: true });
+    return JSON.parse(output);
+  }
+
+  public async getPackageSummary(packageId: string): Promise<any> {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const os = await import('os');
+
+    // Create temp directory for output
+    const tempDir = path.join(os.tmpdir(), `sui-pkg-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    try {
+      // Run sui move summary
+      await this.executor.execute([
+        'move',
+        'summary',
+        '--package-id',
+        packageId,
+        '--bytecode',
+        '--output-directory',
+        tempDir,
+      ]);
+
+      // Read the generated files
+      const result: any = {
+        packageId,
+        modules: [],
+        metadata: null,
+      };
+
+      // Read root package metadata
+      const metadataPath = path.join(tempDir, 'root_package_metadata.json');
+      try {
+        const metadataContent = await fs.readFile(metadataPath, 'utf-8');
+        result.metadata = JSON.parse(metadataContent);
+      } catch {
+        // Metadata might not exist
+      }
+
+      // Read module summaries
+      const packageDir = path.join(tempDir, packageId);
+      try {
+        const files = await fs.readdir(packageDir);
+        for (const file of files) {
+          if (file.endsWith('.json')) {
+            const modulePath = path.join(packageDir, file);
+            const moduleContent = await fs.readFile(modulePath, 'utf-8');
+            const moduleData = JSON.parse(moduleContent);
+            result.modules.push({
+              name: file.replace('.json', ''),
+              ...moduleData,
+            });
+          }
+        }
+      } catch {
+        // Package directory might not exist
+      }
+
+      return result;
+    } finally {
+      // Cleanup temp directory
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+  }
+
+  public async callFunction(
+    packageId: string,
+    module: string,
+    functionName: string,
+    typeArgs: string[] = [],
+    args: string[] = [],
+    gasBudget: string = '10000000'
+  ): Promise<any> {
+    // Validate all inputs to prevent command injection
+    const validPackageId = validateObjectId(packageId, 'packageId');
+    const validModule = validateModuleName(module);
+    const validFunction = validateFunctionName(functionName);
+    const validTypeArgs = validateTypeArgs(typeArgs);
+    const validArgs = validateMoveArgs(args);
+    const validGasBudget = validateOptionalGasBudget(gasBudget) || '10000000';
+
+    const cmdArgs = [
+      'client',
+      'call',
+      '--package',
+      validPackageId,
+      '--module',
+      validModule,
+      '--function',
+      validFunction,
+      '--gas-budget',
+      validGasBudget,
+    ];
+
+    if (validTypeArgs.length > 0) {
+      cmdArgs.push('--type-args', ...validTypeArgs);
+    }
+
+    if (validArgs.length > 0) {
+      cmdArgs.push('--args', ...validArgs);
+    }
+
+    const output = await this.executor.execute(cmdArgs, { json: true });
+    return JSON.parse(output);
+  }
+
+  public async dryRunCall(
+    packageId: string,
+    module: string,
+    functionName: string,
+    typeArgs: string[] = [],
+    args: string[] = [],
+    gasBudget: string = '10000000'
+  ): Promise<any> {
+    // Validate all inputs to prevent command injection
+    const validPackageId = validateObjectId(packageId, 'packageId');
+    const validModule = validateModuleName(module);
+    const validFunction = validateFunctionName(functionName);
+    const validTypeArgs = validateTypeArgs(typeArgs);
+    const validArgs = validateMoveArgs(args);
+    const validGasBudget = validateOptionalGasBudget(gasBudget) || '10000000';
+
+    const cmdArgs = [
+      'client',
+      'call',
+      '--package',
+      validPackageId,
+      '--module',
+      validModule,
+      '--function',
+      validFunction,
+      '--gas-budget',
+      validGasBudget,
+      '--dry-run',
+    ];
+
+    if (validTypeArgs.length > 0) {
+      cmdArgs.push('--type-args', ...validTypeArgs);
+    }
+
+    if (validArgs.length > 0) {
+      cmdArgs.push('--args', ...validArgs);
+    }
+
+    const output = await this.executor.execute(cmdArgs, { json: true });
     return JSON.parse(output);
   }
 }

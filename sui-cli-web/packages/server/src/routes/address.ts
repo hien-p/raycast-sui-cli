@@ -9,40 +9,26 @@ import {
   validateAmounts,
   validateCoinIds,
   validateOptionalGasBudget,
-  ValidationException,
+  validateModuleName,
+  validateFunctionName,
+  validateTypeArgs,
+  validateMoveArgs,
+  validateTxDigest,
 } from '../utils/validation';
+import { handleRouteError } from '../utils/errorHandler';
 
 const addressService = new AddressService();
 
-// Helper to handle validation errors
-function handleError(error: unknown, reply: any) {
-  if (error instanceof ValidationException) {
-    reply.status(400);
-    return { success: false, error: error.message };
-  }
-  reply.status(500);
-  return { success: false, error: String(error) };
-}
+// Alias for cleaner code
+const handleError = handleRouteError;
 
 export async function addressRoutes(fastify: FastifyInstance) {
   // Get all addresses with balances
   fastify.get<{ Reply: ApiResponse<SuiAddress[]> }>('/addresses', async (request, reply) => {
     try {
-      const addresses = await addressService.getAddresses();
-
-      // Fetch balances in parallel
-      const addressesWithBalances = await Promise.all(
-        addresses.map(async (addr) => {
-          try {
-            const balance = await addressService.getBalance(addr.address);
-            return { ...addr, balance };
-          } catch {
-            return { ...addr, balance: '0' };
-          }
-        })
-      );
-
-      return { success: true, data: addressesWithBalances };
+      // getAddresses already includes balance fetching by default
+      const addresses = await addressService.getAddresses(true);
+      return { success: true, data: addresses };
     } catch (error) {
       return handleError(error, reply);
     }
@@ -170,6 +156,108 @@ export async function addressRoutes(fastify: FastifyInstance) {
       const objectId = validateObjectId(request.params.objectId);
       const object = await addressService.getObject(objectId);
       return { success: true, data: object };
+    } catch (error) {
+      return handleError(error, reply);
+    }
+  });
+
+  // Get transaction block by digest
+  fastify.get<{
+    Params: { digest: string };
+    Reply: ApiResponse<any>;
+  }>('/tx/:digest', async (request, reply) => {
+    try {
+      const digest = validateTxDigest(request.params.digest);
+      const txBlock = await addressService.getTransactionBlock(digest);
+      return { success: true, data: txBlock };
+    } catch (error) {
+      return handleError(error, reply);
+    }
+  });
+
+  // Get package summary (modules, functions, structs)
+  fastify.get<{
+    Params: { packageId: string };
+    Reply: ApiResponse<any>;
+  }>('/packages/:packageId/summary', async (request, reply) => {
+    try {
+      const packageId = validateObjectId(request.params.packageId, 'packageId');
+      const summary = await addressService.getPackageSummary(packageId);
+      return { success: true, data: summary };
+    } catch (error) {
+      return handleError(error, reply);
+    }
+  });
+
+  // Call a Move function
+  fastify.post<{
+    Body: {
+      packageId: string;
+      module: string;
+      function: string;
+      typeArgs?: string[];
+      args?: string[];
+      gasBudget?: string;
+    };
+    Reply: ApiResponse<any>;
+  }>('/call', async (request, reply) => {
+    try {
+      const { packageId, module, function: functionName, typeArgs, args, gasBudget } = request.body;
+
+      // Validate all inputs at route level for early rejection
+      const validPackageId = validateObjectId(packageId, 'packageId');
+      const validModule = validateModuleName(module);
+      const validFunction = validateFunctionName(functionName);
+      const validTypeArgs = validateTypeArgs(typeArgs);
+      const validArgs = validateMoveArgs(args);
+      const validGasBudget = validateOptionalGasBudget(gasBudget);
+
+      const result = await addressService.callFunction(
+        validPackageId,
+        validModule,
+        validFunction,
+        validTypeArgs,
+        validArgs,
+        validGasBudget || '10000000'
+      );
+      return { success: true, data: result };
+    } catch (error) {
+      return handleError(error, reply);
+    }
+  });
+
+  // Dry run a Move function call
+  fastify.post<{
+    Body: {
+      packageId: string;
+      module: string;
+      function: string;
+      typeArgs?: string[];
+      args?: string[];
+      gasBudget?: string;
+    };
+    Reply: ApiResponse<any>;
+  }>('/call/dry-run', async (request, reply) => {
+    try {
+      const { packageId, module, function: functionName, typeArgs, args, gasBudget } = request.body;
+
+      // Validate all inputs at route level for early rejection
+      const validPackageId = validateObjectId(packageId, 'packageId');
+      const validModule = validateModuleName(module);
+      const validFunction = validateFunctionName(functionName);
+      const validTypeArgs = validateTypeArgs(typeArgs);
+      const validArgs = validateMoveArgs(args);
+      const validGasBudget = validateOptionalGasBudget(gasBudget);
+
+      const result = await addressService.dryRunCall(
+        validPackageId,
+        validModule,
+        validFunction,
+        validTypeArgs,
+        validArgs,
+        validGasBudget || '10000000'
+      );
+      return { success: true, data: result };
     } catch (error) {
       return handleError(error, reply);
     }

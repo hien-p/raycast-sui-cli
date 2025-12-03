@@ -22,6 +22,9 @@ let currentUrlIndex = 0;
 // Connection state
 let isServerConnected = false;
 
+// Request timeout (30 seconds)
+const REQUEST_TIMEOUT_MS = 30000;
+
 export function getConnectionStatus() {
   return isServerConnected;
 }
@@ -30,15 +33,57 @@ async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
+  // Create AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
       },
       ...options,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
-    const data: ApiResponse<T> = await response.json();
+    // Check if response is ok - for 4xx errors, try to read the error message from body
+    if (!response.ok) {
+      isServerConnected = response.status < 500; // Still connected if it's a 4xx error
+
+      // Try to read error message from response body
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          if (errorData.error) {
+            throw new Error(errorData.error);
+          }
+        }
+      } catch (parseError) {
+        // If parsing fails, fall through to generic error
+        if (parseError instanceof Error && !parseError.message.includes('Server error')) {
+          throw parseError;
+        }
+      }
+
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+    }
+
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      isServerConnected = false;
+      throw new Error('Server returned non-JSON response. Is the server running?');
+    }
+
+    const text = await response.text();
+    if (!text) {
+      isServerConnected = false;
+      throw new Error('Server returned empty response. Is the server running?');
+    }
+
+    const data: ApiResponse<T> = JSON.parse(text);
     isServerConnected = true;
 
     if (!data.success) {
@@ -47,10 +92,22 @@ async function fetchApi<T>(
 
     return data.data as T;
   } catch (error) {
+    clearTimeout(timeoutId);
+
+    // Check for timeout (AbortError)
+    if (error instanceof Error && error.name === 'AbortError') {
+      isServerConnected = false;
+      throw new Error('Request timed out. Please try again.');
+    }
     // Check if it's a network error (server not running)
     if (error instanceof TypeError && error.message.includes('fetch')) {
       isServerConnected = false;
       throw new Error('Cannot connect to local server. Make sure the server is running on port 3001.');
+    }
+    // Check for JSON parse error
+    if (error instanceof SyntaxError && error.message.includes('JSON')) {
+      isServerConnected = false;
+      throw new Error('Invalid server response. Is the server running correctly?');
     }
     throw error;
   }
@@ -124,7 +181,7 @@ export async function getBalance(address: string) {
 }
 
 export async function getObjects(address: string) {
-  return fetchApi<any[]>(`/addresses/${address}/objects`);
+  return fetchApi<Record<string, unknown>[]>(`/addresses/${address}/objects`);
 }
 
 export async function getGasCoins(address: string) {
@@ -195,5 +252,152 @@ export async function requestFaucet(
 
 // Objects
 export async function getObject(objectId: string) {
-  return fetchApi<any>(`/objects/${objectId}`);
+  return fetchApi<Record<string, unknown>>(`/objects/${objectId}`);
+}
+
+// Transaction
+export async function getTransactionBlock(digest: string) {
+  return fetchApi<Record<string, unknown>>(`/tx/${digest}`);
+}
+
+// Package
+export async function getPackageSummary(packageId: string) {
+  return fetchApi<Record<string, unknown>>(`/packages/${packageId}/summary`);
+}
+
+// Move call
+export async function callFunction(
+  packageId: string,
+  module: string,
+  functionName: string,
+  typeArgs: string[] = [],
+  args: string[] = [],
+  gasBudget?: string
+) {
+  return fetchApi<Record<string, unknown>>('/call', {
+    method: 'POST',
+    body: JSON.stringify({
+      packageId,
+      module,
+      function: functionName,
+      typeArgs,
+      args,
+      gasBudget,
+    }),
+  });
+}
+
+export async function dryRunCall(
+  packageId: string,
+  module: string,
+  functionName: string,
+  typeArgs: string[] = [],
+  args: string[] = [],
+  gasBudget?: string
+) {
+  return fetchApi<Record<string, unknown>>('/call/dry-run', {
+    method: 'POST',
+    body: JSON.stringify({
+      packageId,
+      module,
+      function: functionName,
+      typeArgs,
+      args,
+      gasBudget,
+    }),
+  });
+}
+
+// Community
+export async function getCommunityStats() {
+  return fetchApi<{ totalMembers: number; isConfigured: boolean }>('/community/stats');
+}
+
+export async function getCommunityConfig() {
+  return fetchApi<{ packageId: string; registryId: string; isConfigured: boolean }>('/community/config');
+}
+
+export async function checkCommunityMembership() {
+  return fetchApi<{ isMember: boolean }>('/community/membership');
+}
+
+export async function joinCommunity() {
+  return fetchApi<{ txDigest?: string; alreadyMember?: boolean }>('/community/join', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+export interface EligibilityInfo {
+  eligible: boolean;
+  reasons: string[];
+  txCount: number;
+  balance: number;
+  requirements: {
+    minTxCount: number;
+    minBalance: number;
+  };
+}
+
+export async function checkEligibility(address: string) {
+  return fetchApi<EligibilityInfo>(`/community/eligibility/${address}`);
+}
+
+// Tier types
+export interface TierInfo {
+  level: number;
+  name: string;
+  icon: string;
+  color: string;
+  colorGradient: string;
+  description: string;
+  txCount: number;
+  contractCount: number;
+  hasDeployedContract: boolean;
+  progress: {
+    current: number;
+    required: number;
+    percentage: number;
+    nextTier: string | null;
+  };
+}
+
+export interface TierMetadata {
+  name: string;
+  icon: string;
+  color: string;
+  colorGradient: string;
+  description: string;
+}
+
+// Tier API
+export async function getTierInfo(address: string) {
+  return fetchApi<TierInfo>(`/community/tier/${address}`);
+}
+
+export async function getTierMetadata() {
+  return fetchApi<Record<number, TierMetadata>>('/community/tier-metadata');
+}
+
+export async function getTierRequirements() {
+  return fetchApi<{ WAVE_MIN_TX: number; TSUNAMI_MIN_TX: number }>('/community/tier-requirements');
+}
+
+export async function refreshTier(address: string) {
+  return fetchApi<TierInfo>(`/community/tier/refresh/${address}`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+// Deployed packages
+export interface DeployedPackage {
+  id: string;
+  package: string;
+  version: string;
+  digest: string;
+}
+
+export async function getDeployedPackages(address: string) {
+  return fetchApi<DeployedPackage[]>(`/community/packages/${address}`);
 }
