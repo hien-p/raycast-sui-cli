@@ -6,11 +6,35 @@
  */
 
 /**
+ * Get the appropriate Google Analytics ID based on the domain
+ */
+function getGAId(): string {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  // Map domains to their GA IDs
+  const gaIds: Record<string, string> = {
+    'harriweb3.dev': 'G-Z37RHCYYX6',
+    'raycast-sui-cli.vercel.app': 'G-CQXKRXBW5J',
+    'localhost': 'G-Z37RHCYYX6', // Use harriweb3 GA for local development
+  };
+
+  // Find matching GA ID
+  for (const [domain, id] of Object.entries(gaIds)) {
+    if (hostname.includes(domain)) {
+      return id;
+    }
+  }
+
+  // Fallback to harriweb3 GA ID
+  return 'G-Z37RHCYYX6';
+}
+
+/**
  * Initialize Google Analytics
  * Call this once in app initialization
  */
 export function initializeAnalytics() {
-  const GA_ID = 'G-Z37RHCYYX6'; // Google Analytics ID
+  const GA_ID = getGAId();
 
   // Create script element
   const script = document.createElement('script');
