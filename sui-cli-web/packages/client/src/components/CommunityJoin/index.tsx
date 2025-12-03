@@ -67,6 +67,11 @@ export function CommunityJoin({ onClose, compact = false }: CommunityJoinProps) 
         setJoinResult({ success: true, txDigest: result.txDigest });
         if (result.txDigest) {
           toast.success('Welcome to the community!');
+          // Refresh community stats after successful join
+          setTimeout(() => {
+            fetchCommunityStatus();
+            fetchTierInfo();
+          }, 1500);
         } else {
           toast.success('You are already a community member!');
         }
