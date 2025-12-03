@@ -10,7 +10,7 @@
  * Call this once in app initialization
  */
 export function initializeAnalytics() {
-  const GA_ID = 'G-XXXXXXXXXX'; // Replace with your Google Analytics ID
+  const GA_ID = 'G-Z37RHCYYX6'; // Google Analytics ID
 
   // Create script element
   const script = document.createElement('script');
