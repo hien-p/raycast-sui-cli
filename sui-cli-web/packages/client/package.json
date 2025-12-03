@@ -5,17 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sui-cli-web/shared": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.2",
     "@tanstack/react-query": "^5.28.4",
-    "cmdk": "^1.0.0",
     "clsx": "^2.1.0",
     "react-hot-toast": "^2.4.1"
   },

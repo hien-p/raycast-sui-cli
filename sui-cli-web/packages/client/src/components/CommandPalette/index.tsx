@@ -9,7 +9,7 @@ import { EnvironmentList } from '../EnvironmentList';
 import { ObjectList } from '../ObjectList';
 import { GasList } from '../GasList';
 import { FaucetForm } from '../FaucetForm';
-import { DEFAULT_COMMANDS } from '@sui-cli-web/shared';
+import { DEFAULT_COMMANDS, type Command } from '@/types';
 
 export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);

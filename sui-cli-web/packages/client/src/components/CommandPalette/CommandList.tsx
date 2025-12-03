@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { CommandItem } from './CommandItem';
 import { Kbd } from '../shared/Kbd';
 import { useAppStore, type View } from '@/stores/useAppStore';
-import type { Command } from '@sui-cli-web/shared';
-import { DEFAULT_COMMANDS, CATEGORIES } from '@sui-cli-web/shared';
+import type { Command } from '@/types';
+import { DEFAULT_COMMANDS, CATEGORIES } from '@/types';
 
 interface CommandGroup {
   category: string;
@@ -14,7 +14,6 @@ export function CommandList() {
   const {
     searchQuery,
     selectedIndex,
-    setSelectedIndex,
     setView,
     environments,
     addresses,
@@ -85,12 +84,6 @@ export function CommandList() {
 
     return groups;
   }, [filteredCommands]);
-
-  // Flatten for index calculation
-  const flatCommands = useMemo(
-    () => groupedCommands.flatMap((g) => g.commands),
-    [groupedCommands]
-  );
 
   const handleSelect = (action: string) => {
     setView(action as View);

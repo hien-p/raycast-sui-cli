@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SuiAddress, SuiEnvironment, GasCoin } from '@sui-cli-web/shared';
+import type { SuiAddress, SuiEnvironment, GasCoin } from '@/types';
 import * as api from '@/api/client';
 
 export type View =

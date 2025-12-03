@@ -4,7 +4,7 @@ import type {
   SuiEnvironment,
   GasCoin,
   FaucetResponse,
-} from '@sui-cli-web/shared';
+} from '@/types';
 
 // In production (deployed UI), connect to localhost server
 // In development (vite dev), use proxy
