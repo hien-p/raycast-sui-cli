@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { SuiAddress, SuiEnvironment, GasCoin } from '@/types';
 import * as api from '@/api/client';
+import { checkConnection } from '@/api/client';
 
 export type View =
   | 'commands'
@@ -19,6 +20,10 @@ interface AppState {
   selectedIndex: number;
   isLoading: boolean;
   error: string | null;
+
+  // Connection state
+  isServerConnected: boolean | null; // null = checking, true = connected, false = disconnected
+  isCheckingConnection: boolean;
 
   // Data
   addresses: SuiAddress[];
@@ -61,6 +66,9 @@ interface AppState {
 
   // Object detail
   viewObjectDetail: (objectId: string) => void;
+
+  // Connection
+  checkServerConnection: () => Promise<boolean>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -71,6 +79,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedIndex: 0,
   isLoading: false,
   error: null,
+
+  // Connection state
+  isServerConnected: null,
+  isCheckingConnection: false,
 
   // Initial Data
   addresses: [],
@@ -147,6 +159,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await api.switchAddress(address);
       await get().fetchAddresses();
+      set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
     }
@@ -172,6 +185,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       await api.switchEnvironment(alias);
       await get().fetchEnvironments();
       await get().fetchAddresses();
+      set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
     }
@@ -182,6 +196,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await api.addEnvironment(alias, rpc, ws);
       await get().fetchEnvironments();
+      set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
       throw error;
@@ -193,6 +208,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await api.removeEnvironment(alias);
       await get().fetchEnvironments();
+      set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
       throw error;
@@ -208,6 +224,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (activeAddress) {
         await get().fetchGasCoins(activeAddress.address);
       }
+      set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
       throw error;
@@ -222,6 +239,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (activeAddress) {
         await get().fetchGasCoins(activeAddress.address);
       }
+      set({ isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
       throw error;
@@ -244,5 +262,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Object detail
   viewObjectDetail: (objectId: string) => {
     set({ selectedObjectId: objectId, view: 'object-detail' });
+  },
+
+  // Connection
+  checkServerConnection: async () => {
+    set({ isCheckingConnection: true });
+    try {
+      const connected = await checkConnection();
+      set({ isServerConnected: connected, isCheckingConnection: false });
+      return connected;
+    } catch {
+      set({ isServerConnected: false, isCheckingConnection: false });
+      return false;
+    }
   },
 }));

@@ -1,16 +1,19 @@
 {
-  "name": "sui-cli-web-server",
-  "version": "1.0.0",
+  "name": "sui-cli-web",
+  "version": "1.0.1",
   "description": "Local server for Sui CLI Web - connects your browser to local Sui CLI",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
     "sui-cli-web": "./bin/cli.js"
   },
+  "files": [
+    "dist",
+    "bin"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup src/index.ts --format esm --dts && npm run build:shared",
-    "build:shared": "cd ../shared && npm run build",
+    "build": "tsup src/index.ts --format esm --dts",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build"
   },
@@ -19,13 +22,19 @@
     "blockchain",
     "cli",
     "web",
-    "wallet"
+    "wallet",
+    "move",
+    "crypto"
   ],
-  "author": "",
+  "author": "hien-p",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/hien-p/raycast-sui-cli.git"
+  },
+  "homepage": "https://github.com/hien-p/raycast-sui-cli#readme",
+  "bugs": {
+    "url": "https://github.com/hien-p/raycast-sui-cli/issues"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -37,7 +46,6 @@
     "pino-pretty": "^11.0.0"
   },
   "devDependencies": {
-    "@sui-cli-web/shared": "*",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.11.30",
     "tsup": "^8.0.2",

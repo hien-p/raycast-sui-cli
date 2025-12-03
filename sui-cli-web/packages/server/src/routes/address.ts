@@ -1,8 +1,28 @@
 import { FastifyInstance } from 'fastify';
 import { AddressService } from '../services/AddressService';
 import type { ApiResponse, SuiAddress, GasCoin } from '@sui-cli-web/shared';
+import {
+  validateAddress,
+  validateObjectId,
+  validateOptionalAlias,
+  validateKeyScheme,
+  validateAmounts,
+  validateCoinIds,
+  validateOptionalGasBudget,
+  ValidationException,
+} from '../utils/validation';
 
 const addressService = new AddressService();
+
+// Helper to handle validation errors
+function handleError(error: unknown, reply: any) {
+  if (error instanceof ValidationException) {
+    reply.status(400);
+    return { success: false, error: error.message };
+  }
+  reply.status(500);
+  return { success: false, error: String(error) };
+}
 
 export async function addressRoutes(fastify: FastifyInstance) {
   // Get all addresses with balances
@@ -24,8 +44,7 @@ export async function addressRoutes(fastify: FastifyInstance) {
 
       return { success: true, data: addressesWithBalances };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -35,8 +54,7 @@ export async function addressRoutes(fastify: FastifyInstance) {
       const address = await addressService.getActiveAddress();
       return { success: true, data: { address } };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -46,12 +64,11 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<void>;
   }>('/addresses/switch', async (request, reply) => {
     try {
-      const { address } = request.body;
+      const address = validateAddress(request.body?.address);
       await addressService.switchAddress(address);
       return { success: true };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -61,12 +78,12 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<{ address: string; phrase?: string }>;
   }>('/addresses/create', async (request, reply) => {
     try {
-      const { keyScheme, alias } = request.body;
+      const keyScheme = validateKeyScheme(request.body?.keyScheme);
+      const alias = validateOptionalAlias(request.body?.alias);
       const result = await addressService.createAddress(keyScheme, alias);
       return { success: true, data: result };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -76,12 +93,11 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<{ balance: string }>;
   }>('/addresses/:address/balance', async (request, reply) => {
     try {
-      const { address } = request.params;
+      const address = validateAddress(request.params.address);
       const balance = await addressService.getBalance(address);
       return { success: true, data: { balance } };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -91,12 +107,11 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<any[]>;
   }>('/addresses/:address/objects', async (request, reply) => {
     try {
-      const { address } = request.params;
+      const address = validateAddress(request.params.address);
       const objects = await addressService.getObjects(address);
       return { success: true, data: objects };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -106,12 +121,11 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<GasCoin[]>;
   }>('/addresses/:address/gas', async (request, reply) => {
     try {
-      const { address } = request.params;
+      const address = validateAddress(request.params.address);
       const gasCoins = await addressService.getGasCoins(address);
       return { success: true, data: gasCoins };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -121,12 +135,13 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<string>;
   }>('/gas/split', async (request, reply) => {
     try {
-      const { coinId, amounts, gasBudget } = request.body;
+      const coinId = validateObjectId(request.body?.coinId, 'coinId');
+      const amounts = validateAmounts(request.body?.amounts);
+      const gasBudget = validateOptionalGasBudget(request.body?.gasBudget);
       const result = await addressService.splitCoin(coinId, amounts, gasBudget);
       return { success: true, data: result };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -136,12 +151,13 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<string>;
   }>('/gas/merge', async (request, reply) => {
     try {
-      const { primaryCoinId, coinIdsToMerge, gasBudget } = request.body;
+      const primaryCoinId = validateObjectId(request.body?.primaryCoinId, 'primaryCoinId');
+      const coinIdsToMerge = validateCoinIds(request.body?.coinIdsToMerge, 'coinIdsToMerge');
+      const gasBudget = validateOptionalGasBudget(request.body?.gasBudget);
       const result = await addressService.mergeCoins(primaryCoinId, coinIdsToMerge, gasBudget);
       return { success: true, data: result };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -151,12 +167,11 @@ export async function addressRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<any>;
   }>('/objects/:objectId', async (request, reply) => {
     try {
-      const { objectId } = request.params;
+      const objectId = validateObjectId(request.params.objectId);
       const object = await addressService.getObject(objectId);
       return { success: true, data: object };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 }

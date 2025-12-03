@@ -1,8 +1,40 @@
 import { FastifyInstance } from 'fastify';
 import { EnvironmentService } from '../services/EnvironmentService';
 import type { ApiResponse, SuiEnvironment } from '@sui-cli-web/shared';
+import {
+  validateOptionalAlias,
+  validateRpcUrl,
+  ValidationException,
+} from '../utils/validation';
 
 const environmentService = new EnvironmentService();
+
+// Helper to handle validation errors
+function handleError(error: unknown, reply: any) {
+  if (error instanceof ValidationException) {
+    reply.status(400);
+    return { success: false, error: error.message };
+  }
+  reply.status(500);
+  return { success: false, error: String(error) };
+}
+
+// Validate environment alias (required, non-empty)
+function validateRequiredAlias(alias: unknown): string {
+  if (typeof alias !== 'string' || alias.trim().length === 0) {
+    throw new ValidationException([
+      { field: 'alias', message: 'Alias is required and must be non-empty' },
+    ]);
+  }
+  // Use the optional alias validator for format checking
+  const validated = validateOptionalAlias(alias);
+  if (!validated) {
+    throw new ValidationException([
+      { field: 'alias', message: 'Invalid alias format' },
+    ]);
+  }
+  return validated;
+}
 
 export async function environmentRoutes(fastify: FastifyInstance) {
   // Get all environments
@@ -11,8 +43,7 @@ export async function environmentRoutes(fastify: FastifyInstance) {
       const environments = await environmentService.getEnvironments();
       return { success: true, data: environments };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -22,8 +53,7 @@ export async function environmentRoutes(fastify: FastifyInstance) {
       const alias = await environmentService.getActiveEnvironment();
       return { success: true, data: { alias } };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -33,12 +63,11 @@ export async function environmentRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<void>;
   }>('/environments/switch', async (request, reply) => {
     try {
-      const { alias } = request.body;
+      const alias = validateRequiredAlias(request.body?.alias);
       await environmentService.switchEnvironment(alias);
       return { success: true };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -48,12 +77,17 @@ export async function environmentRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<void>;
   }>('/environments', async (request, reply) => {
     try {
-      const { alias, rpc, ws } = request.body;
+      const alias = validateRequiredAlias(request.body?.alias);
+      const rpc = validateRpcUrl(request.body?.rpc, 'rpc');
+      // ws is optional but must be valid URL if provided
+      let ws: string | undefined;
+      if (request.body?.ws) {
+        ws = validateRpcUrl(request.body.ws, 'ws');
+      }
       await environmentService.addEnvironment(alias, rpc, ws);
       return { success: true };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 
@@ -63,12 +97,11 @@ export async function environmentRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<void>;
   }>('/environments/:alias', async (request, reply) => {
     try {
-      const { alias } = request.params;
+      const alias = validateRequiredAlias(request.params.alias);
       await environmentService.removeEnvironment(alias);
       return { success: true };
     } catch (error) {
-      reply.status(500);
-      return { success: false, error: String(error) };
+      return handleError(error, reply);
     }
   });
 }

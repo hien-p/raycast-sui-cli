@@ -9,7 +9,8 @@ import { EnvironmentList } from '../EnvironmentList';
 import { ObjectList } from '../ObjectList';
 import { GasList } from '../GasList';
 import { FaucetForm } from '../FaucetForm';
-import { DEFAULT_COMMANDS, type Command } from '@/types';
+import { SetupInstructions } from '../SetupInstructions';
+import { DEFAULT_COMMANDS } from '@/types';
 
 export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,17 +26,23 @@ export function CommandPalette() {
     setError,
     suiInstalled,
     suiVersion,
+    isServerConnected,
+    isCheckingConnection,
     fetchStatus,
     fetchAddresses,
     fetchEnvironments,
+    checkServerConnection,
   } = useAppStore();
 
-  // Fetch initial data on mount only
+  // Check connection and fetch initial data on mount
   useEffect(() => {
     const init = async () => {
-      await fetchStatus();
-      await fetchAddresses();
-      await fetchEnvironments();
+      const connected = await checkServerConnection();
+      if (connected) {
+        await fetchStatus();
+        await fetchAddresses();
+        await fetchEnvironments();
+      }
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -134,7 +141,38 @@ export function CommandPalette() {
     }
   };
 
+  const handleRetryConnection = async () => {
+    const connected = await checkServerConnection();
+    if (connected) {
+      await fetchStatus();
+      await fetchAddresses();
+      await fetchEnvironments();
+    }
+  };
+
   const renderContent = () => {
+    // Show setup instructions when not connected
+    if (isServerConnected === false) {
+      return (
+        <SetupInstructions
+          onRetry={handleRetryConnection}
+          isRetrying={isCheckingConnection}
+        />
+      );
+    }
+
+    // Show loading state while checking connection
+    if (isServerConnected === null) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="text-sm text-text-secondary mt-3">Connecting to local server...</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (view) {
       case 'addresses':
         return <AddressList />;

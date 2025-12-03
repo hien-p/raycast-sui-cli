@@ -9,7 +9,15 @@ import type {
 // In production (deployed UI), connect to localhost server
 // In development (vite dev), use proxy
 const isDev = import.meta.env.DEV;
-const API_BASE = isDev ? '/api' : 'http://localhost:3001/api';
+
+// Try multiple localhost variants for browser compatibility
+const LOCALHOST_URLS = [
+  'http://localhost:3001/api',
+  'http://127.0.0.1:3001/api',
+];
+
+let API_BASE = isDev ? '/api' : LOCALHOST_URLS[0];
+let currentUrlIndex = 0;
 
 // Connection state
 let isServerConnected = false;
@@ -48,16 +56,36 @@ async function fetchApi<T>(
   }
 }
 
-// Check server connection
+// Check server connection - tries multiple localhost URLs for browser compatibility
 export async function checkConnection(): Promise<boolean> {
-  try {
-    await fetch(`${API_BASE}/health`, { method: 'GET' });
-    isServerConnected = true;
-    return true;
-  } catch {
-    isServerConnected = false;
-    return false;
+  if (isDev) {
+    try {
+      await fetch(`${API_BASE}/health`, { method: 'GET' });
+      isServerConnected = true;
+      return true;
+    } catch {
+      isServerConnected = false;
+      return false;
+    }
   }
+
+  // In production, try multiple localhost URLs (some browsers block certain variants)
+  for (let i = 0; i < LOCALHOST_URLS.length; i++) {
+    const url = LOCALHOST_URLS[(currentUrlIndex + i) % LOCALHOST_URLS.length];
+    try {
+      await fetch(`${url}/health`, { method: 'GET' });
+      // Found working URL, update API_BASE
+      API_BASE = url;
+      currentUrlIndex = (currentUrlIndex + i) % LOCALHOST_URLS.length;
+      isServerConnected = true;
+      return true;
+    } catch {
+      // Try next URL
+    }
+  }
+
+  isServerConnected = false;
+  return false;
 }
 
 // Status

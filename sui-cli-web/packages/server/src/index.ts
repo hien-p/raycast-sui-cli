@@ -4,6 +4,7 @@ import { addressRoutes } from './routes/address';
 import { environmentRoutes } from './routes/environment';
 import { faucetRoutes } from './routes/faucet';
 import { SuiCliExecutor } from './cli/SuiCliExecutor';
+import { createRateLimitHook } from './utils/rateLimiter';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -22,32 +23,35 @@ async function main() {
     },
   });
 
-  // Register CORS - allow the hosted UI domains and localhost
+  // Register CORS - allow localhost and deployed UI domains only
   await fastify.register(cors, {
     origin: [
+      // Local development
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:3001',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:3000',
-      // Deployed UI domains - update with your actual domain
-      /https:\/\/.*\.vercel\.app$/,
-      /https:\/\/.*\.netlify\.app$/,
-      /https:\/\/sui-cli.*\.vercel\.app$/,
-      // Allow all in development
-      true,
+      // Deployed UI domains
+      /^https:\/\/client.*\.vercel\.app$/,
+      /^https:\/\/sui-cli.*\.vercel\.app$/,
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
 
-  // Health check endpoint
+  // Rate limiting hooks
+  const readRateLimit = createRateLimitHook('read');
+  const writeRateLimit = createRateLimitHook('write');
+  const faucetRateLimit = createRateLimitHook('faucet');
+
+  // Health check endpoint (no rate limit)
   fastify.get('/api/health', async () => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   });
 
-  // Sui CLI status endpoint
-  fastify.get('/api/status', async () => {
+  // Sui CLI status endpoint (read rate limit)
+  fastify.get('/api/status', { preHandler: readRateLimit }, async () => {
     const executor = SuiCliExecutor.getInstance();
     const installation = await executor.checkInstallation();
     return {
@@ -57,10 +61,46 @@ async function main() {
     };
   });
 
-  // Register routes
-  await fastify.register(addressRoutes, { prefix: '/api' });
-  await fastify.register(environmentRoutes, { prefix: '/api' });
-  await fastify.register(faucetRoutes, { prefix: '/api' });
+  // Register routes with rate limiting
+  // Address routes - mixed read/write
+  await fastify.register(
+    async (instance) => {
+      // Read endpoints
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(addressRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Environment routes - write operations
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(environmentRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Faucet routes - strict rate limit
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', faucetRateLimit);
+      await instance.register(faucetRoutes);
+    },
+    { prefix: '/api' }
+  );
 
   // Start server
   try {
@@ -70,10 +110,10 @@ async function main() {
 ║                                                               ║
 ║   🚀 Sui CLI Web - Local Server                               ║
 ║                                                               ║
-║   Server: http://localhost:${PORT}                             ║
+║   Server running at: http://localhost:${PORT}                  ║
 ║                                                               ║
 ║   Now open the web UI:                                        ║
-║   → https://sui-cli-web.vercel.app                            ║
+║   → https://client-gray-mu.vercel.app                         ║
 ║                                                               ║
 ║   The UI will connect to this local server automatically.     ║
 ║   Keep this terminal open while using the app.                ║

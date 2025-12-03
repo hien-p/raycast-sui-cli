@@ -2,6 +2,31 @@ import { SuiCliExecutor } from '../cli/SuiCliExecutor';
 import { ConfigParser } from '../cli/ConfigParser';
 import type { SuiAddress, GasCoin } from '@sui-cli-web/shared';
 
+// Constants
+const SUI_COIN_TYPE = '0x2::sui::SUI';
+const MIST_PER_SUI = 1_000_000_000;
+const FETCH_TIMEOUT_MS = 10_000; // 10 seconds
+
+// Helper for fetch with timeout
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number = FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export class AddressService {
   private executor: SuiCliExecutor;
   private configParser: ConfigParser;
@@ -113,14 +138,14 @@ export class AddressService {
   }
 
   private async fetchBalanceViaRpc(address: string, rpcUrl: string): Promise<string> {
-    const response = await fetch(rpcUrl, {
+    const response = await fetchWithTimeout(rpcUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
         method: 'suix_getBalance',
-        params: [address, '0x2::sui::SUI'],
+        params: [address, SUI_COIN_TYPE],
       }),
     });
 
@@ -131,7 +156,7 @@ export class AddressService {
 
     const totalBalance = data.result?.totalBalance;
     if (totalBalance) {
-      return (parseInt(totalBalance) / 1_000_000_000).toFixed(4);
+      return (parseInt(totalBalance) / MIST_PER_SUI).toFixed(4);
     }
     return '0';
   }
@@ -159,20 +184,20 @@ export class AddressService {
             const coins = group[1];
             if (Array.isArray(coins)) {
               for (const coin of coins) {
-                if (coin.coinType === '0x2::sui::SUI') {
+                if (coin.coinType === SUI_COIN_TYPE) {
                   totalSui += parseInt(coin.balance || '0');
                 }
               }
             }
           }
         }
-        return (totalSui / 1_000_000_000).toFixed(4);
+        return (totalSui / MIST_PER_SUI).toFixed(4);
       }
 
       if (Array.isArray(data) && data.length > 0) {
-        const suiBalance = data.find((b: any) => b.coinType === '0x2::sui::SUI');
+        const suiBalance = data.find((b: any) => b.coinType === SUI_COIN_TYPE);
         if (suiBalance?.totalBalance) {
-          return (parseInt(suiBalance.totalBalance) / 1_000_000_000).toFixed(4);
+          return (parseInt(suiBalance.totalBalance) / MIST_PER_SUI).toFixed(4);
         }
       }
 
