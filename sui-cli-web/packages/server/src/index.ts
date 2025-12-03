@@ -134,14 +134,35 @@ async function main() {
 ║                                                               ║
 ║   Now open the web UI:                                        ║
 ║   → https://client-gray-mu.vercel.app                         ║
+║   → https://raycast-sui-cli.vercel.app                        ║
 ║                                                               ║
 ║   The UI will connect to this local server automatically.     ║
 ║   Keep this terminal open while using the app.                ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
     `);
-  } catch (err) {
-    fastify.log.error(err);
+  } catch (err: any) {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   ❌ ERROR: Port ${PORT} is already in use                       ║
+║                                                               ║
+║   Another server is running on this port.                     ║
+║                                                               ║
+║   To fix this, run one of these commands:                     ║
+║                                                               ║
+║   MacOS/Linux:                                                ║
+║   → lsof -ti:${PORT} | xargs kill -9                             ║
+║                                                               ║
+║   Or change the port:                                         ║
+║   → PORT=3002 sui-cli-web                                     ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+      `);
+    } else {
+      fastify.log.error(err);
+    }
     process.exit(1);
   }
 }
