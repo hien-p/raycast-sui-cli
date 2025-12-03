@@ -85,8 +85,7 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
         </h4>
         <div className="space-y-3 pl-7">
           <p className="text-sm text-muted-foreground">Install globally (recommended - one time only):</p>
-          <CodeBlock id="install">{`npm install -g sui-cli-web-server
-sui-cli-web`}</CodeBlock>
+          <CodeBlock id="install">npm install -g sui-cli-web-server</CodeBlock>
           <p className="text-xs text-muted-foreground mt-2">
             Or run directly with npx (may prompt for install each time):
           </p>
