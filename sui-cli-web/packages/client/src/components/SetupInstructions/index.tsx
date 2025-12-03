@@ -75,6 +75,17 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
             <span>Sui CLI installed and configured (<code className="px-1 py-0.5 bg-black/40 rounded text-xs">sui</code> command available)</span>
           </div>
         </div>
+
+        {/* Upgrade Sui CLI */}
+        <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
+          <p className="text-xs font-medium text-foreground">Update Sui CLI (if needed):</p>
+          <p className="text-xs text-muted-foreground">If Sui CLI is already installed but outdated, upgrade to latest version:</p>
+          <CodeBlock id="brew-upgrade">brew upgrade sui</CodeBlock>
+          <p className="text-xs text-muted-foreground">Verify installation and check configured networks:</p>
+          <CodeBlock id="sui-version">sui --version && sui client envs</CodeBlock>
+          <p className="text-xs text-muted-foreground">If no networks appear, initialize Sui:</p>
+          <CodeBlock id="sui-init">sui client</CodeBlock>
+        </div>
       </div>
 
       {/* Install & Run */}
