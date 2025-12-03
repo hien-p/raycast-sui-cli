@@ -1,0 +1,47 @@
+{
+  "name": "sui-cli-web-server",
+  "version": "1.0.0",
+  "description": "Local server for Sui CLI Web - connects your browser to local Sui CLI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "sui-cli-web": "./bin/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts --format esm --dts && npm run build:shared",
+    "build:shared": "cd ../shared && npm run build",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "sui",
+    "blockchain",
+    "cli",
+    "web",
+    "wallet"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "fastify": "^4.26.2",
+    "@fastify/cors": "^9.0.1",
+    "js-yaml": "^4.1.0",
+    "pino-pretty": "^11.0.0"
+  },
+  "devDependencies": {
+    "@sui-cli-web/shared": "*",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.30",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5"
+  }
+}

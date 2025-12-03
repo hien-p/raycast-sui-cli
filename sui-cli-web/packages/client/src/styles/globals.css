@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+      Roboto, sans-serif;
+    overflow: hidden;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #444444;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(0, 122, 255, 0.3);
+    color: #ffffff;
+  }
+}
+
+@layer components {
+  /* Command palette input */
+  .command-input {
+    @apply w-full bg-transparent border-none outline-none text-text-primary text-base;
+    @apply placeholder:text-text-tertiary;
+  }
+
+  /* Command item */
+  .command-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer;
+    @apply transition-colors duration-75;
+  }
+
+  .command-item:hover,
+  .command-item[data-selected='true'] {
+    @apply bg-background-hover;
+  }
+
+  .command-item[data-selected='true'] {
+    @apply bg-accent-muted;
+  }
+
+  /* Keyboard shortcut */
+  .kbd {
+    @apply inline-flex items-center justify-center px-1.5 py-0.5;
+    @apply text-xs font-medium text-text-secondary;
+    @apply bg-background-tertiary border border-border rounded;
+    @apply min-w-[20px];
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-success/20 text-success;
+  }
+
+  .badge-warning {
+    @apply bg-warning/20 text-warning;
+  }
+
+  .badge-error {
+    @apply bg-error/20 text-error;
+  }
+
+  .badge-accent {
+    @apply bg-accent-muted text-accent;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Truncate with ellipsis */
+  .truncate-address {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Glass effect */
+  .glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}

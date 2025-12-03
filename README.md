@@ -1,69 +1,115 @@
 # Raycast Sui CLI
 
-A powerful Raycast extension to streamline your Sui development workflow. Manage addresses, switch networks, request test tokens, and inspect objects—all without leaving your keyboard.
+A powerful Raycast extension that brings the Sui CLI to your fingertips. Manage addresses, switch networks, request test tokens, inspect objects, and build Move packages—all from Raycast's command palette.
 
-![Sui CLI Extension](assets/command-icon.png)
+## Features
 
-## 🚀 Features
+### Address Management
+- View all addresses with real-time SUI balances
+- Switch active address instantly
+- Create new addresses (Ed25519, Secp256k1, Secp256r1)
+- View object counts and detailed coin lists
+- Copy address or alias to clipboard
+- Open address in Sui Explorer
 
-- **Address Management**:
-  - View all addresses with **real-time balances** (SUI and other coins).
-  - Switch active address instantly.
-  - Create new addresses (Ed25519, Secp256k1, Secp256r1).
-  - View detailed insights: object counts and full coin lists.
-  - Copy address/alias to clipboard.
+### Network & Environment
+- Switch between Localnet, Devnet, Testnet, and Mainnet
+- Add custom RPC environments
+- Remove unused environments
+- View active network status at a glance
 
-- **Network & Environment**:
-  - Switch between Localnet, Devnet, Testnet, and Mainnet.
-  - Add new custom RPC environments.
-  - View active network status.
+### Developer Tools
+- **Faucet**: Request SUI tokens for Devnet/Testnet/Localnet with one click
+- **Object Inspector**: Browse and inspect objects owned by any address
+- **Transaction Inspector**: View transaction details by digest
+- **Package Manager**: Build, test, publish, and upgrade Move packages
+- **Gas Management**: View gas objects and manage coin splits
 
-- **Developer Tools**:
-  - **Faucet**: Request SUI tokens for Devnet/Testnet/Localnet.
-  - **Object Inspector**: Browse and inspect objects owned by an address.
-  - **Package Manager**: Build, test, and publish Move packages.
-  - **Templates**: Scaffold new Sui Move projects quickly.
-  - **Gas Management**: View gas objects and split coins.
+### Productivity Features
+- **Command History**: Quick access to recently executed commands
+- **Favorites**: Star frequently used commands for instant access
+- **Templates**: Save and reuse parameterized command snippets
+- **Keyboard-First**: Navigate everything without leaving the keyboard
 
-## 🛠 Prerequisites
+## Architecture
 
-Before using this extension, ensure you have the following installed:
+```
+UI Components (src/ui/)
+    ↓
+React Hooks (src/state/) → Services (src/services/)
+    ↓
+CLI Layer (src/cli/) → Sui CLI Binary
+```
 
-1.  **Raycast**: [Download here](https://www.raycast.com/).
-2.  **Node.js**: Version 18+ recommended.
-3.  **Sui CLI**: The extension wraps the official Sui CLI.
-    - Install via Homebrew: `brew install sui`
-    - Or build from source.
-    - **Important**: Run `sui client active-address` in your terminal once to ensure the CLI is initialized and configured.
+The extension follows a three-layer architecture:
+- **UI Layer**: 12 React components for different views (addresses, environments, faucet, etc.)
+- **State Layer**: React hooks that manage state and wrap services
+- **Service Layer**: Business logic services that interact with the Sui CLI
+- **CLI Layer**: Singleton executors for parsing config and running commands
 
-## 📦 Installation
+## Prerequisites
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/yourusername/raycast-sui-cli.git
-    cd raycast-sui-cli
-    ```
+1. **Raycast**: [Download here](https://www.raycast.com/)
+2. **Node.js**: Version 18+
+3. **Sui CLI**: Install and configure before using
+   ```bash
+   brew install sui
+   sui client active-address  # Initialize CLI config
+   ```
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+## Installation
 
-3.  **Run locally**:
-    ```bash
-    npm run dev
-    ```
-    This will open Raycast and load the extension in development mode.
+### From Source
 
-## 🔧 Configuration
+```bash
+git clone https://github.com/hien-p/raycast-sui-cli.git
+cd raycast-sui-cli
+npm install
+npm run dev
+```
 
-The extension uses your existing local Sui configuration (`~/.sui/sui_config/client.yaml`). No extra configuration is needed inside Raycast!
+### From Raycast Store
 
-If you encounter "No active RPC URL" errors:
-1.  Open your terminal.
-2.  Run `sui client envs` to check your environments.
-3.  Run `sui client switch --env <env>` to set an active environment if none is selected.
+Search for "Sui CLI" in the Raycast Store.
 
-## 📝 License
+## Development
+
+```bash
+npm run dev         # Start development mode (opens Raycast)
+npm run build       # Build for distribution
+npm run lint        # Check code quality
+npm run fix-lint    # Auto-fix linting issues
+npm run publish     # Publish to Raycast store
+```
+
+## Configuration
+
+The extension uses your existing Sui configuration at `~/.sui/sui_config/client.yaml`. No additional setup required inside Raycast.
+
+**Troubleshooting "No active RPC URL" errors:**
+```bash
+sui client envs                    # Check available environments
+sui client switch --env testnet    # Set active environment
+```
+
+## Project Structure
+
+```
+src/
+├── cli/           # CLI execution layer (ConfigParser, SuiCliExecutor)
+├── services/      # Business logic (Address, Environment, Faucet, etc.)
+├── state/         # React hooks for state management
+├── ui/            # React components (12 views)
+└── index.tsx      # Entry point
+```
+
+## Tech Stack
+
+- **Framework**: Raycast API
+- **Language**: TypeScript
+- **Config Parsing**: js-yaml
+- **CLI Integration**: Sui CLI binary wrapper
+
+## License
 
 MIT

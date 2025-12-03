@@ -3,7 +3,7 @@
     "title": "Sui CLI",
     "description": "A unified command palette for executing Sui CLI commands.",
     "icon": "assets/command-icon.png",
-    "author": "Harry Phan",
+    "author": "hien-p",
     "categories": [
         "Other"
     ],
