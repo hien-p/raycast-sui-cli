@@ -28,12 +28,12 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "npm run dev -w @sui-cli-web/server",
+    "dev:server": "npm run dev -w sui-cli-web-server",
     "dev:client": "npm run dev -w @sui-cli-web/client",
-    "build": "npm run build -w @sui-cli-web/shared && npm run build -w @sui-cli-web/server && npm run build -w @sui-cli-web/client",
-    "build:server": "npm run build -w @sui-cli-web/server",
+    "build": "npm run build -w @sui-cli-web/shared && npm run build -w sui-cli-web-server && npm run build -w @sui-cli-web/client",
+    "build:server": "npm run build -w sui-cli-web-server",
     "build:client": "npm run build -w @sui-cli-web/client",
-    "start": "npm run start -w @sui-cli-web/server",
+    "start": "npm run start -w sui-cli-web-server",
     "lint": "npm run lint --workspaces --if-present",
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
   },
