@@ -10,7 +10,7 @@ export class AddressService {
   public async getAddresses(): Promise<
     { address: string; alias: string | null }[]
   > {
-    const output = await this.executor.execute("client addresses", {
+    const output = await this.executor.execute(["client", "addresses"], {
       json: true,
     });
     try {
@@ -31,7 +31,7 @@ export class AddressService {
       }
       return [];
     } catch (e) {
-      const textOutput = await this.executor.execute("client addresses");
+      const textOutput = await this.executor.execute(["client", "addresses"]);
       return textOutput
         .split("\n")
         .map((line) => {
@@ -51,26 +51,26 @@ export class AddressService {
   }
 
   public async getActiveAddress(): Promise<string> {
-    return (await this.executor.execute("client active-address")).trim();
+    return (await this.executor.execute(["client", "active-address"])).trim();
   }
 
   public async switchAddress(address: string): Promise<string> {
-    return this.executor.execute(`client switch --address ${address}`);
+    return this.executor.execute(["client", "switch", "--address", address]);
   }
 
   public async createAddress(
     keyScheme: "ed25519" | "secp256k1" | "secp256r1" = "ed25519",
     alias?: string,
   ): Promise<string> {
-    let cmd = `client new-address ${keyScheme}`;
+    const args = ["client", "new-address", keyScheme];
     if (alias) {
-      cmd += ` --alias ${alias}`;
+      args.push("--alias", alias);
     }
-    return this.executor.execute(cmd);
+    return this.executor.execute(args);
   }
   private async getActiveRpcUrl(): Promise<string | null> {
     try {
-      const envsOutput = await this.executor.execute("client envs", {
+      const envsOutput = await this.executor.execute(["client", "envs"], {
         json: true,
       });
       const envs = JSON.parse(envsOutput);
@@ -82,7 +82,7 @@ export class AddressService {
     } catch (e) {
       // Fallback to text parsing
       try {
-        const text = await this.executor.execute("client envs");
+        const text = await this.executor.execute(["client", "envs"]);
         const lines = text.split("\n");
         for (const line of lines) {
           if (line.includes("*")) {
@@ -146,7 +146,7 @@ export class AddressService {
     try {
       // Try `client balance` (JSON)
       // Note: `client balance` takes address as positional argument, not --address
-      const output = await this.executor.execute(`client balance ${address}`, {
+      const output = await this.executor.execute(["client", "balance", address], {
         json: true,
       });
       const data = JSON.parse(output);
@@ -199,7 +199,7 @@ export class AddressService {
       // Fallback to `client gas` (JSON)
       try {
         // Note: `client gas` takes address as positional argument
-        const output = await this.executor.execute(`client gas ${address}`, {
+        const output = await this.executor.execute(["client", "gas", address], {
           json: true,
         });
         const data = JSON.parse(output);
@@ -233,7 +233,7 @@ export class AddressService {
     address: string,
   ): Promise<{ coinType: string; totalBalance: string; count: number }[]> {
     try {
-      const output = await this.executor.execute(`client balance ${address}`, {
+      const output = await this.executor.execute(["client", "balance", address], {
         json: true,
       });
       const data = JSON.parse(output);
@@ -284,7 +284,7 @@ export class AddressService {
   public async getObjectCount(address: string): Promise<number> {
     try {
       // client objects returns a list of objects
-      const output = await this.executor.execute(`client objects ${address}`, {
+      const output = await this.executor.execute(["client", "objects", address], {
         json: true,
       });
       const data = JSON.parse(output);
@@ -309,11 +309,17 @@ export class AddressService {
     amounts: number[],
     gasBudget: number = 10000000,
   ): Promise<string> {
-    const amountsStr = amounts.join(" ");
-    return this.executor.execute(
-      `client split-coin --coin-id ${coinId} --amounts ${amountsStr} --gas-budget ${gasBudget}`,
-      { json: true },
-    );
+    const args = [
+      "client",
+      "split-coin",
+      "--coin-id",
+      coinId,
+      "--amounts",
+      ...amounts.map(String),
+      "--gas-budget",
+      String(gasBudget),
+    ];
+    return this.executor.execute(args, { json: true });
   }
 
   /**
@@ -324,11 +330,17 @@ export class AddressService {
     coinToMergeIds: string[],
     gasBudget: number = 10000000,
   ): Promise<string> {
-    const coinsToMerge = coinToMergeIds.join(" ");
-    return this.executor.execute(
-      `client merge-coin --primary-coin ${primaryCoinId} --coin-to-merge ${coinsToMerge} --gas-budget ${gasBudget}`,
-      { json: true },
-    );
+    const args = [
+      "client",
+      "merge-coin",
+      "--primary-coin",
+      primaryCoinId,
+      "--coin-to-merge",
+      ...coinToMergeIds,
+      "--gas-budget",
+      String(gasBudget),
+    ];
+    return this.executor.execute(args, { json: true });
   }
 
   /**
@@ -338,7 +350,7 @@ export class AddressService {
     address: string,
   ): Promise<{ coinId: string; balance: number }[]> {
     try {
-      const output = await this.executor.execute(`client gas ${address}`, {
+      const output = await this.executor.execute(["client", "gas", address], {
         json: true,
       });
       const data = JSON.parse(output);
@@ -367,11 +379,17 @@ export class AddressService {
     recipient: string,
     gasBudget: number = 10000000,
   ): Promise<string> {
-    const objects = objectIds.join(" ");
-    return this.executor.execute(
-      `client transfer --to ${recipient} --object-id ${objects} --gas-budget ${gasBudget}`,
-      { json: true },
-    );
+    const args = [
+      "client",
+      "transfer",
+      "--to",
+      recipient,
+      "--object-id",
+      ...objectIds,
+      "--gas-budget",
+      String(gasBudget),
+    ];
+    return this.executor.execute(args, { json: true });
   }
 
   /**
@@ -382,10 +400,19 @@ export class AddressService {
     amount: number,
     gasBudget: number = 10000000,
   ): Promise<string> {
-    return this.executor.execute(
-      `client transfer-sui --to ${recipient} --sui-coin-object-id gas --amount ${amount} --gas-budget ${gasBudget}`,
-      { json: true },
-    );
+    const args = [
+      "client",
+      "transfer-sui",
+      "--to",
+      recipient,
+      "--sui-coin-object-id",
+      "gas",
+      "--amount",
+      String(amount),
+      "--gas-budget",
+      String(gasBudget),
+    ];
+    return this.executor.execute(args, { json: true });
   }
 
   /**
@@ -396,11 +423,16 @@ export class AddressService {
     amounts: number[],
     gasBudget: number = 10000000,
   ): Promise<string> {
-    const recipientsStr = recipients.join(" ");
-    const amountsStr = amounts.join(" ");
-    return this.executor.execute(
-      `client pay-sui --recipients ${recipientsStr} --amounts ${amountsStr} --gas-budget ${gasBudget}`,
-      { json: true },
-    );
+    const args = [
+      "client",
+      "pay-sui",
+      "--recipients",
+      ...recipients,
+      "--amounts",
+      ...amounts.map(String),
+      "--gas-budget",
+      String(gasBudget),
+    ];
+    return this.executor.execute(args, { json: true });
   }
 }

@@ -16,11 +16,15 @@ export class CommandService {
   }
 
   public async executeCommand(command: string): Promise<string> {
-    return this.executor.execute(command);
+    // Split command string into array of arguments
+    const args = command.split(/\s+/);
+    return this.executor.execute(args);
   }
 
   public async executeCommandJson<T>(command: string): Promise<T> {
-    const output = await this.executor.execute(command, { json: true });
+    // Split command string into array of arguments
+    const args = command.split(/\s+/);
+    const output = await this.executor.execute(args, { json: true });
     try {
       return JSON.parse(output);
     } catch (e) {

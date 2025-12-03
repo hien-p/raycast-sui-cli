@@ -21,10 +21,10 @@ export class EnvironmentService {
   }
 
   public async switchEnvironment(env: string): Promise<void> {
-    await this.executor.execute(`client switch --env ${env}`);
+    await this.executor.execute(['client', 'switch', '--env', env]);
   }
   public async addEnvironment(alias: string, rpc: string): Promise<void> {
-    await this.executor.execute(`client new-env --alias ${alias} --rpc ${rpc}`);
+    await this.executor.execute(['client', 'new-env', '--alias', alias, '--rpc', rpc]);
   }
 
   public async removeEnvironment(alias: string): Promise<void> {

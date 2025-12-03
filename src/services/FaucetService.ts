@@ -11,7 +11,7 @@ export class FaucetService {
     network: "testnet" | "devnet" | "localnet",
   ): Promise<string> {
     const activeAddress = (
-      await this.executor.execute("client active-address")
+      await this.executor.execute(["client", "active-address"])
     ).trim();
 
     let faucetUrl = "";
