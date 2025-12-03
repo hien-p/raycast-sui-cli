@@ -1,5 +1,6 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useEffect, useState } from 'react';
 import { LandingPage } from './components/LandingPage';
 import { MainLayout } from './components/layouts/MainLayout';
 import { CommandPalette } from './components/CommandPalette';
@@ -14,6 +15,25 @@ import FaultyTerminal from './components/backgrounds/FaultyTerminal';
 export function App() {
   const location = useLocation();
   const isLanding = location.pathname === '/';
+  const [serverConnected, setServerConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkServerConnection = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/health', {
+          method: 'GET',
+          signal: AbortSignal.timeout(3000),
+        });
+        setServerConnected(response.ok);
+      } catch (error) {
+        setServerConnected(false);
+      }
+    };
+
+    checkServerConnection();
+    const interval = setInterval(checkServerConnection, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -36,7 +56,10 @@ export function App() {
       <div className="relative z-10">
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<MainLayout />}>
+          <Route
+            path="/app"
+            element={serverConnected ? <MainLayout /> : <Navigate to="/" replace />}
+          >
             <Route index element={<CommandPalette />} />
             <Route path="addresses" element={<AddressList />} />
             <Route path="environments" element={<EnvironmentList />} />
