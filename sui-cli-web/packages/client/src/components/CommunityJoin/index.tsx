@@ -5,6 +5,7 @@ import { Spinner } from '../shared/Spinner';
 import { TierBadge, TierProgress } from '../TierBadge';
 import * as api from '@/api/client';
 import toast from 'react-hot-toast';
+import { trackEligibilityCheck } from '@/lib/analytics';
 
 interface CommunityJoinProps {
   onClose?: () => void;
@@ -50,6 +51,8 @@ export function CommunityJoin({ onClose, compact = false }: CommunityJoinProps) 
     try {
       const result = await api.checkEligibility(activeAddress.address);
       setEligibility(result);
+      // Track eligibility check
+      trackEligibilityCheck(result.eligible, result.txCount, result.balance);
     } catch (error) {
       console.error('Failed to check eligibility:', error);
     } finally {

@@ -11,11 +11,20 @@ import { GasList } from './components/GasList';
 import { FaucetForm } from './components/FaucetForm';
 import { CommunityDashboard } from './components/CommunityDashboard';
 import FaultyTerminal from './components/backgrounds/FaultyTerminal';
+import { trackPageView } from './lib/analytics';
 
 export function App() {
   const location = useLocation();
   const isLanding = location.pathname === '/';
   const [serverConnected, setServerConnected] = useState<boolean | null>(null);
+
+  // Track page views on route change
+  useEffect(() => {
+    const pageName = location.pathname === '/' ? 'Landing Page' :
+                     location.pathname === '/app' ? 'Dashboard' :
+                     location.pathname.includes('/app/') ? location.pathname.replace('/app/', '') : 'Unknown';
+    trackPageView(pageName);
+  }, [location.pathname]);
 
   useEffect(() => {
     const checkServerConnection = async () => {
