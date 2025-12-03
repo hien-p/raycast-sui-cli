@@ -1,8 +1,28 @@
 {
   "name": "sui-cli-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Raycast-style web interface for Sui CLI",
+  "description": "Raycast-style web interface for Sui CLI with community tier system",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hien-p/raycast-sui-cli.git",
+    "directory": "sui-cli-web"
+  },
+  "homepage": "https://github.com/hien-p/raycast-sui-cli/tree/master/sui-cli-web#readme",
+  "bugs": {
+    "url": "https://github.com/hien-p/raycast-sui-cli/issues"
+  },
+  "keywords": [
+    "sui",
+    "blockchain",
+    "cli",
+    "web",
+    "raycast",
+    "community",
+    "tier-system"
+  ],
+  "author": "Harry Phan",
+  "license": "MIT",
   "workspaces": [
     "packages/*"
   ],
