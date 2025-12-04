@@ -1,6 +1,6 @@
 {
   "name": "sui-cli-web-server",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Local server for Sui CLI Web - connects your browser to local Sui CLI",
   "type": "module",
   "main": "./dist/index.js",

@@ -23,9 +23,9 @@ try {
   // Deployment file not found or invalid, will use env vars
 }
 
-// Contract addresses - priority: env vars > my_deployments.json
-const PACKAGE_ID = process.env.COMMUNITY_PACKAGE_ID || deploymentConfig.package_id || '';
-const REGISTRY_ID = process.env.COMMUNITY_REGISTRY_ID || deploymentConfig.registry_id || '';
+// Contract addresses - hardcoded for testnet (deployed contract)
+const PACKAGE_ID = process.env.COMMUNITY_PACKAGE_ID || deploymentConfig.package_id || '0xffb8f17c91212d170cb0fee4128b8b44277bfd19af040590cfae08c1abd2bbd2';
+const REGISTRY_ID = process.env.COMMUNITY_REGISTRY_ID || deploymentConfig.registry_id || '0x7bf988f34c98d5b69d60264083c581d90fa97c51e902846bed491c0f6bf9b80b';
 const CLOCK_ID = '0x6'; // Sui system clock
 
 export interface CommunityStats {
