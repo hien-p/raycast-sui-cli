@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { Spinner } from '../shared/Spinner';
 import { TierBadge, TierProgress } from '../TierBadge';
 import * as api from '@/api/client';
-import toast from 'react-hot-toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { trackEligibilityCheck } from '@/lib/analytics';
 
 interface MembershipJoinProps {
@@ -69,14 +69,22 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
       if (result.success) {
         setJoinResult({ success: true, txDigest: result.txDigest });
         if (result.txDigest) {
-          toast.success('Welcome to the community!');
+          showSuccessToast({
+            message: 'Welcome to the community!',
+            details: 'You\'ve received your Droplet 💧 tier badge. Keep building to level up!',
+            icon: '🎉'
+          });
           // Refresh community stats after successful join
           setTimeout(() => {
             fetchCommunityStatus();
             fetchTierInfo();
           }, 1500);
         } else {
-          toast.success('You are already a community member!');
+          showSuccessToast({
+            message: 'You are already a community member!',
+            details: 'Your membership is active and your tier is synced.',
+            icon: '✅'
+          });
         }
       } else {
         throw new Error(result.error);
@@ -90,29 +98,44 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
 
       if (errorMsg.includes('Cannot connect') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('fetch')) {
         friendlyMsg = 'Server not running';
-        actionHint = 'Please start the local server first (npx sui-cli-web).';
+        actionHint = 'Start the local server first: npx sui-cli-web';
       } else if (errorMsg.includes('already a community member') || errorMsg.includes('alreadyMember')) {
         friendlyMsg = 'You are already a member!';
-        actionHint = 'Try switching to a different wallet address.';
+        actionHint = 'Try switching to a different wallet address to join with that one.';
         // Refresh to update UI
         fetchCommunityStatus();
       } else if (errorMsg.includes('Insufficient') || errorMsg.includes('gas') || errorMsg.includes('No SUI tokens')) {
         friendlyMsg = 'Not enough SUI tokens';
-        actionHint = 'Please request tokens from Faucet first.';
+        actionHint = 'Go to Faucet → Request testnet SUI → Try joining again';
+      } else if (errorMsg.includes('Requirements not met') || errorMsg.includes('Need at least')) {
+        friendlyMsg = 'Requirements not met';
+        if (errorMsg.includes('10 SUI')) {
+          actionHint = 'Get testnet SUI from Faucet first, then try again';
+        } else if (errorMsg.includes('transactions')) {
+          actionHint = 'Make some test transactions first (transfer, split/merge coins, etc.)';
+        } else {
+          actionHint = 'Check the requirements above and complete them before joining';
+        }
       } else if (errorMsg.includes('paused')) {
         friendlyMsg = 'Registration paused';
         actionHint = 'Community registration is temporarily unavailable. Please try again later.';
       } else if (errorMsg.includes('Bad Request') || errorMsg.includes('400')) {
         friendlyMsg = 'Request failed';
-        actionHint = 'Make sure you have SUI tokens and try again.';
+        actionHint = 'Make sure you have SUI tokens and meet all requirements';
       } else if (errorMsg.includes('Network') || errorMsg.includes('connection')) {
         friendlyMsg = 'Network error';
-        actionHint = 'Please check your internet connection and try again.';
+        actionHint = 'Check your internet connection and try again';
       }
 
       const fullMessage = actionHint ? `${friendlyMsg}. ${actionHint}` : friendlyMsg;
       setJoinResult({ success: false, error: fullMessage });
-      toast.error(fullMessage);
+
+      // Show beautiful error toast
+      showErrorToast({
+        message: friendlyMsg,
+        hint: actionHint,
+        icon: '❌'
+      });
     } finally {
       setIsJoining(false);
     }
@@ -235,10 +258,20 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
               </button>
             )}
 
-            {/* Error message */}
+            {/* Enhanced Error message */}
             {joinResult && !joinResult.success && (
-              <div className="p-2 bg-red-500/10 border border-red-500/20 rounded text-xs text-red-400">
-                {joinResult.error}
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs animate-slide-up">
+                <div className="flex items-start gap-2">
+                  <span className="text-red-400 text-base flex-shrink-0">❌</span>
+                  <div className="flex-1">
+                    <div className="text-red-400 font-semibold mb-1">
+                      Unable to Join
+                    </div>
+                    <div className="text-red-300/90 leading-relaxed">
+                      {joinResult.error}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </>
@@ -466,28 +499,69 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
         </div>
       )}
 
-      {/* Join result */}
+      {/* Enhanced Join Result with Better Error Display */}
       {joinResult && (
         <div
           className={clsx(
-            'p-3 rounded-lg mb-4',
-            joinResult.success ? 'bg-success/10 border border-success/30' : 'bg-error/10 border border-error/30'
+            'p-4 rounded-lg mb-4 animate-slide-up border',
+            joinResult.success
+              ? 'bg-green-500/10 border-green-500/30'
+              : 'bg-red-500/10 border-red-500/30'
           )}
         >
-          <div className={clsx('text-sm', joinResult.success ? 'text-success' : 'text-error')}>
-            {joinResult.success ? (
-              <>
-                &#10003; Welcome to the community!
+          {joinResult.success ? (
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🎉</span>
+              <div className="flex-1">
+                <div className="text-green-400 font-semibold mb-1">
+                  Welcome to the Community!
+                </div>
+                <div className="text-green-300/80 text-sm mb-2">
+                  You're now a member and have received your Droplet 💧 tier badge!
+                </div>
                 {joinResult.txDigest && (
-                  <div className="text-xs mt-1 font-mono opacity-70">
+                  <div className="text-xs font-mono text-green-400/60 bg-green-500/5 rounded px-2 py-1 inline-block">
                     TX: {joinResult.txDigest.slice(0, 20)}...
                   </div>
                 )}
-              </>
-            ) : (
-              <>&#10007; {joinResult.error}</>
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <span className="text-2xl flex-shrink-0">❌</span>
+              <div className="flex-1">
+                <div className="text-red-400 font-semibold mb-2">
+                  Unable to Join Community
+                </div>
+                <div className="text-red-300/90 text-sm leading-relaxed mb-3">
+                  {joinResult.error}
+                </div>
+
+                {/* Actionable Suggestions based on error */}
+                {(joinResult.error?.includes('10 SUI') || joinResult.error?.includes('Not enough')) && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mt-2">
+                    <div className="text-yellow-400 text-xs font-medium mb-1 flex items-center gap-1">
+                      💡 Quick Fix
+                    </div>
+                    <div className="text-yellow-300/80 text-xs">
+                      Go to <span className="font-semibold">Faucet</span> → Request testnet SUI → Try joining again
+                    </div>
+                  </div>
+                )}
+
+                {(joinResult.error?.includes('10 transactions') || joinResult.error?.includes('0)')) && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mt-2">
+                    <div className="text-blue-400 text-xs font-medium mb-1 flex items-center gap-1">
+                      💡 Quick Fix
+                    </div>
+                    <div className="text-blue-300/80 text-xs">
+                      Make some test transactions first (transfer SUI between addresses, split/merge coins, etc.)
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

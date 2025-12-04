@@ -63,6 +63,7 @@ export const CATEGORIES = {
   OBJECTS: 'Objects & Assets',
   GAS: 'Gas',
   FAUCET: 'Faucet',
+  TRANSFER: 'Transfer',
   KEYS: 'Keys & Security',
   MEMBERSHIP: 'Membership',
 } as const;
@@ -112,6 +113,15 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.FAUCET,
     keywords: ['faucet', 'free', 'token', 'test'],
     action: 'faucet',
+  },
+  {
+    id: 'transfer',
+    title: 'Transfer SUI',
+    subtitle: 'Send SUI tokens to another address',
+    icon: '💸',
+    category: CATEGORIES.TRANSFER,
+    keywords: ['transfer', 'send', 'pay', 'payment', 'sui', 'token'],
+    action: 'transfer',
   },
   {
     id: 'membership',

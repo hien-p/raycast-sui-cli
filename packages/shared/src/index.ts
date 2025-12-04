@@ -104,6 +104,72 @@ export interface MergeCoinRequest {
   gasBudget?: string;
 }
 
+// Transfer types
+export interface TransferSuiRequest {
+  to: string;
+  amount: string;
+  coinId?: string;
+  gasBudget?: string;
+}
+
+export interface TransferObjectRequest {
+  to: string;
+  objectId: string;
+  gasBudget?: string;
+}
+
+export interface TransferResult {
+  digest: string;
+  success: boolean;
+  gasUsed?: string;
+  error?: string;
+}
+
+export interface DryRunResult {
+  success: boolean;
+  estimatedGas: string;
+  effects?: any;
+  error?: string;
+}
+
+export interface TransferableCoin {
+  coinObjectId: string;
+  balance: string;
+  balanceSui: string;
+}
+
+export interface TransferableObject {
+  objectId: string;
+  type: string;
+  owner: string;
+  digest: string;
+}
+
+// Key management types
+export interface ExportKeyRequest {
+  address: string;
+  confirmationCode: string;
+}
+
+export interface ExportKeyResponse {
+  privateKey: string;
+  keyScheme: string;
+  publicKey: string;
+  warning: string;
+}
+
+export interface ImportKeyRequest {
+  type: 'mnemonic' | 'privatekey';
+  input: string;
+  keyScheme: 'ed25519' | 'secp256k1' | 'secp256r1';
+  alias?: string;
+}
+
+export interface ImportKeyResponse {
+  address: string;
+  alias?: string;
+}
+
 // Command types for the palette
 export interface Command {
   id: string;

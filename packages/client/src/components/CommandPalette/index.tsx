@@ -12,6 +12,7 @@ const VIEW_TO_ROUTE: Record<string, string> = {
   gas: '/app/gas',
   faucet: '/app/faucet',
   membership: '/app/membership',
+  transfer: '/app/transfer',
 };
 
 export function CommandPalette() {

@@ -10,6 +10,7 @@ import { ObjectList } from './components/ObjectList';
 import { GasList } from './components/GasList';
 import { FaucetForm } from './components/FaucetForm';
 import { MembershipProfile } from './components/MembershipProfile';
+import { TransferSui } from './components/TransferSui';
 import FaultyTerminal from './components/backgrounds/FaultyTerminal';
 import { trackPageView } from './lib/analytics';
 
@@ -50,7 +51,7 @@ export function App() {
       <div className="fixed inset-0 z-0">
         <FaultyTerminal
           tint="#4da2ff"
-          brightness={isLanding ? 0.15 : 0.08}
+          brightness={isLanding ? 0.5 : 0.08}
           scale={1.2}
           glitchAmount={0.5}
           flickerAmount={0.3}
@@ -77,6 +78,7 @@ export function App() {
             <Route path="gas" element={<GasList />} />
             <Route path="faucet" element={<FaucetForm />} />
             <Route path="membership" element={<MembershipProfile />} />
+            <Route path="transfer" element={<TransferSui />} />
           </Route>
         </Routes>
       </div>

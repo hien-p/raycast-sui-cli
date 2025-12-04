@@ -284,3 +284,58 @@ export function validateTxDigest(digest: unknown, fieldName = 'digest'): string 
   }
   return digest;
 }
+
+// Private key validation (Bech32 format starting with "suiprivkey")
+const PRIVATE_KEY_REGEX = /^suiprivkey[a-zA-Z0-9]+$/;
+
+export function isValidPrivateKey(privateKey: string): boolean {
+  return typeof privateKey === 'string' && PRIVATE_KEY_REGEX.test(privateKey);
+}
+
+// Mnemonic validation (12, 15, 18, 21, or 24 words)
+export function isValidMnemonic(mnemonic: string): boolean {
+  if (typeof mnemonic !== 'string') return false;
+
+  const words = mnemonic.trim().split(/\s+/);
+  const validWordCounts = [12, 15, 18, 21, 24];
+  return validWordCounts.includes(words.length);
+}
+
+// Amount validation for transfers (must be positive decimal)
+export function isValidTransferAmount(amount: string): boolean {
+  if (typeof amount !== 'string') return false;
+
+  // Allow decimal amounts like "0.1", "1", "100.5"
+  const amountRegex = /^(\d+\.?\d*|\d*\.\d+)$/;
+  if (!amountRegex.test(amount)) return false;
+
+  const numValue = parseFloat(amount);
+  return !isNaN(numValue) && numValue > 0;
+}
+
+export function validateTransferAmount(amount: unknown, fieldName = 'amount'): string {
+  if (!isValidTransferAmount(amount as string)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid amount (must be a positive decimal number)' },
+    ]);
+  }
+  return amount as string;
+}
+
+export function validatePrivateKey(privateKey: unknown, fieldName = 'privateKey'): string {
+  if (typeof privateKey !== 'string' || !isValidPrivateKey(privateKey)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid private key format (expected Bech32 starting with "suiprivkey")' },
+    ]);
+  }
+  return privateKey;
+}
+
+export function validateMnemonic(mnemonic: unknown, fieldName = 'mnemonic'): string {
+  if (typeof mnemonic !== 'string' || !isValidMnemonic(mnemonic)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid mnemonic (expected 12, 15, 18, 21, or 24 words)' },
+    ]);
+  }
+  return mnemonic;
+}

@@ -4,6 +4,8 @@ import { addressRoutes } from './routes/address';
 import { environmentRoutes } from './routes/environment';
 import { faucetRoutes } from './routes/faucet';
 import { communityRoutes } from './routes/community';
+import { transferRoutes } from './routes/transfer';
+import { keyManagementRoutes } from './routes/key-management';
 import { SuiCliExecutor } from './cli/SuiCliExecutor';
 import { createRateLimitHook } from './utils/rateLimiter';
 
@@ -121,6 +123,33 @@ async function main() {
         }
       });
       await instance.register(communityRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Transfer routes - write operations (sensitive)
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', writeRateLimit);
+      await instance.register(transferRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Key management routes - highly sensitive operations
+  await fastify.register(
+    async (instance) => {
+      // Use write rate limit for all key operations
+      instance.addHook('onRequest', async (request, reply) => {
+        // More strict rate limiting for export operations
+        if (request.url.includes('/export') && request.method === 'POST') {
+          // Export uses its own rate limiting in the service layer
+          await writeRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(keyManagementRoutes);
     },
     { prefix: '/api' }
   );
