@@ -573,14 +573,14 @@ export function AddressList() {
 
       {/* Create new address button/form */}
       {showCreateForm ? (
-        <div className="mb-4 p-4 bg-background-tertiary/50 border border-border/30 rounded-lg">
-          <div className="text-sm font-medium text-text-primary mb-3 flex items-center gap-2">
+        <div className="mb-4 p-4 bg-card/50 border border-border/30 rounded-lg">
+          <div className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
             <span className="text-lg">✨</span>
             Create New Wallet
           </div>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1.5">
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                 Wallet Name (optional)
               </label>
               <input
@@ -588,17 +588,17 @@ export function AddressList() {
                 value={newAlias}
                 onChange={(e) => setNewAlias(e.target.value)}
                 placeholder="e.g., my-trading-wallet"
-                className="w-full px-3 py-2.5 bg-background-secondary/50 border border-border/50 rounded-lg text-sm text-text-primary placeholder:text-text-tertiary/60 focus:outline-none focus:border-accent/50 focus:bg-background-secondary transition-colors"
+                className="w-full px-3 py-2.5 bg-secondary/50 border border-border/50 rounded-lg text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent/50 focus:bg-secondary transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1.5">
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                 Key Scheme
               </label>
               <select
                 value={keyScheme}
                 onChange={(e) => setKeyScheme(e.target.value as 'ed25519' | 'secp256k1' | 'secp256r1')}
-                className="w-full px-3 py-2.5 bg-background-secondary/50 border border-border/50 rounded-lg text-sm text-text-primary focus:outline-none focus:border-accent/50 focus:bg-background-secondary transition-colors cursor-pointer"
+                className="w-full px-3 py-2.5 bg-secondary/50 border border-border/50 rounded-lg text-sm text-foreground focus:outline-none focus:border-accent/50 focus:bg-secondary transition-colors cursor-pointer"
               >
                 <option value="ed25519">Ed25519 (Recommended)</option>
                 <option value="secp256k1">Secp256k1</option>
@@ -608,13 +608,13 @@ export function AddressList() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleCreate}
-                className="flex-1 px-4 py-2.5 bg-accent/90 hover:bg-accent text-white rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:shadow-accent/20"
+                className="flex-1 px-4 py-2.5 bg-accent/90 hover:bg-accent text-accent-foreground rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:shadow-accent/20"
               >
                 Create Wallet
               </button>
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="px-4 py-2.5 bg-background-secondary/50 hover:bg-background-secondary text-text-secondary rounded-lg text-sm font-medium transition-colors border border-border/30"
+                className="px-4 py-2.5 bg-secondary/50 hover:bg-secondary text-muted-foreground rounded-lg text-sm font-medium transition-colors border border-border/30"
               >
                 Cancel
               </button>
@@ -624,7 +624,7 @@ export function AddressList() {
       ) : (
         <button
           onClick={() => setShowCreateForm(true)}
-          className="w-full mb-3 px-4 py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-accent hover:bg-accent/10 hover:border-accent/30 rounded-lg transition-all border border-border/30 bg-background-tertiary/30"
+          className="w-full mb-3 px-4 py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-accent hover:bg-accent/10 hover:border-accent/30 rounded-lg transition-all border border-border/30 bg-card/30"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
