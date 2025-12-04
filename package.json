@@ -1,50 +1,47 @@
 {
-    "name": "raycast-sui-cli",
-    "title": "Sui CLI",
-    "description": "A unified command palette for executing Sui CLI commands.",
-    "icon": "assets/command-icon.png",
-    "author": "hien-p",
-    "categories": [
-        "Other"
-    ],
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/hien-p/raycast-sui-cli.git"
-    },
-    "commands": [
-        {
-            "name": "index",
-            "title": "Sui Command Palette",
-            "subtitle": "Sui CLI",
-            "description": "Execute Sui CLI commands",
-            "mode": "view"
-        }
-    ],
-    "dependencies": {
-        "@raycast/api": "^1.79.0",
-        "@raycast/utils": "^1.16.3",
-        "js-yaml": "^4.1.0"
-    },
-    "devDependencies": {
-        "@raycast/eslint-config": "^1.0.8",
-        "@types/js-yaml": "^4.0.9",
-        "@types/node": "18.16.0",
-        "@types/react": "18.2.0",
-        "eslint": "^8.57.0",
-        "prettier": "^3.3.3",
-        "shadcn": "^3.5.1",
-        "typescript": "^5.4.5"
-    },
-    "scripts": {
-        "build": "ray build -e dist",
-        "dev": "ray develop",
-        "fix-lint": "ray lint --fix",
-        "lint": "ray lint",
-        "publish": "npx @raycast/api@latest publish"
-    },
-    "overrides": {
-        "@types/react": "18.2.0",
-        "@types/node": "18.16.0"
-    }
+  "name": "sui-cli-web",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Raycast-style web interface for Sui CLI with community tier system",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hien-p/raycast-sui-cli.git",
+    "directory": "sui-cli-web"
+  },
+  "homepage": "https://github.com/hien-p/raycast-sui-cli/tree/master/sui-cli-web#readme",
+  "bugs": {
+    "url": "https://github.com/hien-p/raycast-sui-cli/issues"
+  },
+  "keywords": [
+    "sui",
+    "blockchain",
+    "cli",
+    "web",
+    "raycast",
+    "community",
+    "tier-system"
+  ],
+  "author": "Harry Phan",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev -w sui-cli-web-server",
+    "dev:client": "npm run dev -w @sui-cli-web/client",
+    "build": "npm run build -w @sui-cli-web/shared && npm run build -w sui-cli-web-server && npm run build -w @sui-cli-web/client",
+    "build:server": "npm run build -w sui-cli-web-server",
+    "build:client": "npm run build -w @sui-cli-web/client",
+    "start": "npm run start -w sui-cli-web-server",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
