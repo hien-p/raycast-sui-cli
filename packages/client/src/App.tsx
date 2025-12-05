@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useEffect, lazy, Suspense, useMemo } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { HomePage } from './components/HomePage';
 import { SetupPage } from './components/SetupPage';
 import { AppGuard } from './components/guards/AppGuard';
@@ -29,33 +29,15 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Check if device is mobile or low-power
-const isLowPowerDevice = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  // Check for mobile/tablet
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  // Check for low memory (if available)
-  const lowMemory = (navigator as { deviceMemory?: number }).deviceMemory !== undefined &&
-                    (navigator as { deviceMemory?: number }).deviceMemory! < 4;
-  // Check for reduced motion preference
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return isMobile || lowMemory || prefersReducedMotion;
-};
-
 export function App() {
   const location = useLocation();
-
-  // Check for low power device once
-  const shouldReduceAnimations = useMemo(() => isLowPowerDevice(), []);
 
   // Determine if we're in app routes
   const isAppRoute = location.pathname.startsWith('/app');
   const isMoveDevStudio = location.pathname === '/app/move';
 
-  // Only show background on landing page for performance
-  // On mobile/low-power devices, use simple gradient instead
-  const isLandingPage = location.pathname === '/';
-  const showAnimatedBackground = isLandingPage && !shouldReduceAnimations;
+  // Show animated background on all pages
+  const showAnimatedBackground = true;
 
   // Track page views on route change
   useEffect(() => {
