@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 10%;
+    --background: 0 0% 8%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 14%;
+    --card: 0 0% 18%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 14%;
+    --popover: 0 0% 18%;
     --popover-foreground: 0 0% 100%;
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 17%;
+    --secondary: 0 0% 25%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 0 0% 30%;
+    --muted-foreground: 0 0% 70%;
     --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
+    --border: 0 0% 30%;
+    --input: 0 0% 25%;
     --ring: 211 100% 50%;
     --radius: 0.5rem;
   }
@@ -91,6 +91,13 @@
 
   .command-item[data-selected='true'] {
     @apply bg-accent/20;
+  }
+
+  /* Section headers */
+  .section-header {
+    @apply text-xs font-semibold uppercase tracking-wider px-3 py-2;
+    @apply text-muted-foreground/80;
+    background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.05), transparent);
   }
 
   /* Keyboard shortcut */
@@ -177,5 +184,201 @@
 
   .animate-leave {
     animation: leave 0.2s ease-in forwards;
+  }
+
+  /* Blob animation - floating gradient orbs */
+  @keyframes blob {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(20px, -50px) scale(1.1);
+    }
+    50% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    75% {
+      transform: translate(50px, 50px) scale(1.05);
+    }
+  }
+
+  .animate-blob {
+    animation: blob 20s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  /* Shimmer effect - moving light */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .animate-shimmer {
+    background-size: 200% auto;
+    animation: shimmer 8s linear infinite;
+  }
+
+  /* Scale in animation */
+  @keyframes scale-in {
+    0% {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+
+  /* Pulse glow effect */
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(77, 162, 255, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(77, 162, 255, 0.6), 0 0 60px rgba(14, 165, 233, 0.4);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* Floating particles effect */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.6;
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Gradient rotation */
+  @keyframes gradient-rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-gradient-rotate {
+    animation: gradient-rotate 20s linear infinite;
+  }
+
+  /* 3D Curved/Sphere Effect - Creates depth and curvature on scale */
+  .transform-3d {
+    transform-style: preserve-3d;
+    perspective: 1200px;
+  }
+
+  /* Smooth 3D scale with curved sphere effect */
+  @keyframes scale-3d-curve {
+    0% {
+      transform: scale(0.92) translateZ(-30px) rotateX(-5deg);
+    }
+    50% {
+      transform: scale(1.03) translateZ(15px) rotateX(2deg) rotateY(1deg);
+    }
+    100% {
+      transform: scale(1) translateZ(0px) rotateX(0deg) rotateY(0deg);
+    }
+  }
+
+  .animate-scale-3d {
+    animation: scale-3d-curve 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Curved Monitor Effect - Only for wide layouts */
+  .curved-terminal-wrapper {
+    perspective: 2500px;
+    perspective-origin: 50% 50%;
+  }
+
+  /* Normal panel - no curve effect */
+  .curved-panel {
+    transform-style: preserve-3d;
+    position: relative;
+    border-radius: 1.5rem;
+  }
+
+  /* Wide panel with curved monitor effect */
+  .curved-panel-wide {
+    transform-style: preserve-3d;
+    position: relative;
+    border-radius: 1.5rem;
+    /* Slight forward tilt for center */
+    transform: translateZ(20px);
+  }
+
+  /* Left edge - recedes backward with shadow */
+  .curved-panel-wide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 18%;
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.25) 60%,
+      transparent
+    );
+    transform-origin: right center;
+    transform: rotateY(-12deg) translateZ(-20px);
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 1.5rem 0 0 1.5rem;
+  }
+
+  /* Right edge - recedes backward with shadow */
+  .curved-panel-wide::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 18%;
+    background: linear-gradient(
+      to left,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.25) 60%,
+      transparent
+    );
+    transform-origin: left center;
+    transform: rotateY(12deg) translateZ(-20px);
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 0 1.5rem 1.5rem 0;
+  }
+
+  .curved-panel > *,
+  .curved-panel-wide > * {
+    position: relative;
+    z-index: 10;
   }
 }

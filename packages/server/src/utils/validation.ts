@@ -1,10 +1,10 @@
 // Validation utilities for Sui addresses and object IDs
 
-// Sui address format: 0x followed by 64 hex characters
-const SUI_ADDRESS_REGEX = /^0x[a-fA-F0-9]{64}$/;
+// Sui address format: 0x followed by 1-64 hex characters (will be normalized to 64)
+const SUI_ADDRESS_REGEX = /^0x[a-fA-F0-9]{1,64}$/;
 
 // Object ID has the same format as address
-const OBJECT_ID_REGEX = /^0x[a-fA-F0-9]{64}$/;
+const OBJECT_ID_REGEX = /^0x[a-fA-F0-9]{1,64}$/;
 
 // Valid key schemes
 const VALID_KEY_SCHEMES = ['ed25519', 'secp256k1', 'secp256r1'] as const;
@@ -14,6 +14,16 @@ const ALIAS_REGEX = /^[a-zA-Z0-9_-]{1,50}$/;
 
 // Network types
 const VALID_NETWORKS = ['testnet', 'devnet', 'localnet'] as const;
+
+// Normalize Sui address to full 64 hex chars (pad with zeros)
+export function normalizeSuiAddress(address: string): string {
+  if (!address.startsWith('0x')) {
+    return address;
+  }
+  // Remove 0x prefix, pad to 64 chars, add 0x back
+  const hex = address.slice(2).toLowerCase();
+  return '0x' + hex.padStart(64, '0');
+}
 
 export function isValidSuiAddress(address: string): boolean {
   return typeof address === 'string' && SUI_ADDRESS_REGEX.test(address);
@@ -78,23 +88,23 @@ export class ValidationException extends Error {
   }
 }
 
-// Helper to validate and throw
+// Helper to validate and throw (normalizes address to 64 chars)
 export function validateAddress(address: unknown, fieldName = 'address'): string {
   if (typeof address !== 'string' || !isValidSuiAddress(address)) {
     throw new ValidationException([
-      { field: fieldName, message: 'Invalid Sui address format (expected 0x + 64 hex chars)' },
+      { field: fieldName, message: 'Invalid Sui address format (expected 0x + hex chars)' },
     ]);
   }
-  return address;
+  return normalizeSuiAddress(address);
 }
 
 export function validateObjectId(objectId: unknown, fieldName = 'objectId'): string {
   if (typeof objectId !== 'string' || !isValidObjectId(objectId)) {
     throw new ValidationException([
-      { field: fieldName, message: 'Invalid object ID format (expected 0x + 64 hex chars)' },
+      { field: fieldName, message: 'Invalid object ID format (expected 0x + hex chars)' },
     ]);
   }
-  return objectId;
+  return normalizeSuiAddress(objectId); // Same normalization as address
 }
 
 export function validateOptionalAlias(alias: unknown): string | undefined {
@@ -194,8 +204,9 @@ const FUNCTION_NAME_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]{0,127}$/;
 // Type args: safe characters for generic type parameters (e.g., "0x2::sui::SUI")
 const TYPE_ARG_REGEX = /^[a-zA-Z0-9_:<>,\s]+$/;
 
-// Transaction digest: base58, 44 characters
-const TX_DIGEST_REGEX = /^[1-9A-HJ-NP-Za-km-z]{43,44}$/;
+// Transaction digest: base58 (43-44 chars) OR hex (0x + 64 hex chars)
+const TX_DIGEST_BASE58_REGEX = /^[1-9A-HJ-NP-Za-km-z]{43,44}$/;
+const TX_DIGEST_HEX_REGEX = /^0x[a-fA-F0-9]{64}$/;
 
 // Shell metacharacters to block in args
 const SHELL_METACHAR_REGEX = /[;&|`$(){}[\]\\'"<>!#~*?]/;
@@ -213,7 +224,7 @@ export function isValidTypeArg(arg: string): boolean {
 }
 
 export function isValidTxDigest(digest: string): boolean {
-  return typeof digest === 'string' && TX_DIGEST_REGEX.test(digest);
+  return typeof digest === 'string' && (TX_DIGEST_BASE58_REGEX.test(digest) || TX_DIGEST_HEX_REGEX.test(digest));
 }
 
 export function isSafeArg(arg: string): boolean {
@@ -279,10 +290,49 @@ export function validateMoveArgs(args: unknown): string[] {
 export function validateTxDigest(digest: unknown, fieldName = 'digest'): string {
   if (typeof digest !== 'string' || !isValidTxDigest(digest)) {
     throw new ValidationException([
-      { field: fieldName, message: 'Invalid transaction digest format (expected base58, 43-44 chars)' },
+      { field: fieldName, message: 'Invalid transaction digest format (expected base58 43-44 chars OR hex 0x + 64 chars)' },
     ]);
   }
   return digest;
+}
+
+// Package path validation - prevent path traversal attacks
+const PACKAGE_PATH_REGEX = /^[a-zA-Z0-9\/_-]+$/;
+
+export function validatePackagePath(packagePath: unknown): string {
+  if (typeof packagePath !== 'string' || !packagePath.trim()) {
+    throw new ValidationException([
+      { field: 'packagePath', message: 'Package path is required' },
+    ]);
+  }
+
+  const trimmed = packagePath.trim();
+
+  // Check for path traversal attempts
+  if (trimmed.includes('..')) {
+    throw new ValidationException([
+      { field: 'packagePath', message: 'Package path cannot contain ".."' },
+    ]);
+  }
+
+  // Must be absolute path on Unix/Linux or valid Windows path
+  const isUnixAbsolute = trimmed.startsWith('/');
+  const isWindowsAbsolute = /^[A-Za-z]:[/\\]/.test(trimmed);
+
+  if (!isUnixAbsolute && !isWindowsAbsolute) {
+    throw new ValidationException([
+      { field: 'packagePath', message: 'Package path must be absolute' },
+    ]);
+  }
+
+  // Check length
+  if (trimmed.length > 1024) {
+    throw new ValidationException([
+      { field: 'packagePath', message: 'Package path too long (max 1024 characters)' },
+    ]);
+  }
+
+  return trimmed;
 }
 
 // Private key validation (Bech32 format starting with "suiprivkey")

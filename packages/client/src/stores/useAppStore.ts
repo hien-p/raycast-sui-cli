@@ -13,6 +13,8 @@ export type View =
   | 'faucet'
   | 'object-detail';
 
+export type ThemeMode = 'glass' | 'dark';
+
 interface AppState {
   // UI State
   isOpen: boolean;
@@ -21,6 +23,7 @@ interface AppState {
   selectedIndex: number;
   isLoading: boolean;
   error: string | null;
+  themeMode: ThemeMode;
 
   // Connection state
   isServerConnected: boolean | null; // null = checking, true = connected, false = disconnected
@@ -46,6 +49,7 @@ interface AppState {
   setSearchQuery: (query: string) => void;
   setSelectedIndex: (index: number) => void;
   setError: (error: string | null) => void;
+  setThemeMode: (mode: ThemeMode) => void;
 
   // Data fetching
   fetchStatus: () => Promise<void>;
@@ -92,6 +96,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedIndex: 0,
   isLoading: false,
   error: null,
+  themeMode: (typeof window !== 'undefined' && localStorage.getItem('sui-cli-theme') as ThemeMode) || 'glass',
 
   // Connection state
   isServerConnected: null,
@@ -117,6 +122,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSearchQuery: (query) => set({ searchQuery: query, selectedIndex: 0 }),
   setSelectedIndex: (index) => set({ selectedIndex: index }),
   setError: (error) => set({ error }),
+  setThemeMode: (mode) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sui-cli-theme', mode);
+    }
+    set({ themeMode: mode });
+  },
 
   // Data fetching
   fetchStatus: async () => {

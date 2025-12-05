@@ -1,49 +1,24 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
 
 interface AnimatedListProps {
-  children: ReactNode[];
-  className?: string;
+  children: React.ReactNode;
   delay?: number;
-  staggerDelay?: number;
 }
 
-export function AnimatedList({
-  children,
-  className,
-  delay = 0,
-  staggerDelay = 50
-}: AnimatedListProps) {
-  const [visibleItems, setVisibleItems] = useState<number[]>([]);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      children.forEach((_, index) => {
-        setTimeout(() => {
-          setVisibleItems((prev) => [...prev, index]);
-        }, index * staggerDelay);
-      });
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [children.length, delay, staggerDelay]);
-
+export const AnimatedList = ({ children, delay = 0 }: AnimatedListProps) => {
   return (
-    <div ref={listRef} className={cn('space-y-2', className)}>
-      {children.map((child, index) => (
-        <div
-          key={index}
-          className={cn(
-            'transition-all duration-300 ease-out',
-            visibleItems.includes(index)
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 translate-y-4'
-          )}
+    <div className="space-y-4">
+      {React.Children.map(children, (child, i) => (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: delay + i * 0.1, duration: 0.3 }}
         >
           {child}
-        </div>
+        </motion.div>
       ))}
     </div>
   );
-}
+};
+
+import React from "react";

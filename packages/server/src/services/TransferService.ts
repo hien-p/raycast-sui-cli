@@ -1,5 +1,6 @@
 import { SuiCliExecutor } from '../cli/SuiCliExecutor';
 import { ConfigParser } from '../cli/ConfigParser';
+import { AddressService } from './AddressService';
 import { sanitizeErrorMessage } from '../utils/errorHandler';
 
 const MIST_PER_SUI = 1_000_000_000;
@@ -34,10 +35,12 @@ export interface TransferableObject {
 export class TransferService {
   private executor: SuiCliExecutor;
   private configParser: ConfigParser;
+  private addressService: AddressService;
 
   constructor() {
     this.executor = SuiCliExecutor.getInstance();
     this.configParser = ConfigParser.getInstance();
+    this.addressService = new AddressService();
   }
 
   /**
@@ -111,6 +114,24 @@ export class TransferService {
     try {
       const amountInMist = this.suiToMist(amount);
 
+      // If no coin ID provided, get the active address and select the first available coin
+      let selectedCoinId = coinId;
+      if (!selectedCoinId) {
+        const activeAddress = await this.addressService.getActiveAddress();
+        if (!activeAddress) {
+          throw new Error('No active address found');
+        }
+
+        const coins = await this.getTransferableCoins(activeAddress);
+        if (coins.length === 0) {
+          throw new Error('No available coins found for gas estimation');
+        }
+
+        // Select the coin with sufficient balance
+        const sufficientCoin = coins.find(coin => parseFloat(coin.balance) >= parseFloat(amountInMist));
+        selectedCoinId = sufficientCoin ? sufficientCoin.coinObjectId : coins[0].coinObjectId;
+      }
+
       const args = [
         'client',
         'transfer-sui',
@@ -120,12 +141,10 @@ export class TransferService {
         amountInMist,
         '--gas-budget',
         gasBudget,
+        '--sui-coin-object-id',
+        selectedCoinId,
         '--dry-run',
       ];
-
-      if (coinId) {
-        args.push('--sui-coin-object-id', coinId);
-      }
 
       const output = await this.executor.execute(args, { json: true });
       const data = JSON.parse(output);

@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/useAppStore';
 import { DEFAULT_COMMANDS } from '@/types';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -13,6 +14,8 @@ const VIEW_TO_ROUTE: Record<string, string> = {
   faucet: '/app/faucet',
   membership: '/app/membership',
   transfer: '/app/transfer',
+  move: '/app/move',
+  inspector: '/app/inspector',
 };
 
 export function CommandPalette() {
@@ -135,7 +138,8 @@ export function CommandPalette() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const handleCommandClick = (action: string) => {
+  const handleCommandClick = (action: string, index: number) => {
+    setSelectedIndex(index);
     if (VIEW_TO_ROUTE[action]) {
       navigate(VIEW_TO_ROUTE[action]);
     }
@@ -156,11 +160,17 @@ export function CommandPalette() {
               Membership
             </div>
           </div>
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className={`flex items-center gap-3 px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors ${
               selectedIndex === 0 ? 'bg-[#4da2ff]/20' : 'hover:bg-muted/50'
             }`}
-            onClick={handleJoinCommunity}
+            onClick={() => {
+              setSelectedIndex(0);
+              handleJoinCommunity();
+            }}
           >
             <div className="w-8 h-8 rounded-lg bg-[#4da2ff]/20 flex items-center justify-center">
               <span className="text-lg">🎖️</span>
@@ -176,7 +186,7 @@ export function CommandPalette() {
             <div className="px-2 py-0.5 bg-[#4da2ff] text-white text-xs rounded-md">
               Join
             </div>
-          </div>
+          </motion.div>
         </>
       )}
 
@@ -188,11 +198,17 @@ export function CommandPalette() {
       </div>
 
       {/* Active Environment */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.05 }}
         className={`flex items-center gap-3 px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors ${
           selectedIndex === envIndex ? 'bg-primary/20' : 'hover:bg-muted/50'
         }`}
-        onClick={() => navigate('/app/environments')}
+        onClick={() => {
+          setSelectedIndex(envIndex);
+          navigate('/app/environments');
+        }}
       >
         <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
           <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,14 +226,20 @@ export function CommandPalette() {
         <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
         </svg>
-      </div>
+      </motion.div>
 
       {/* Active Address */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
         className={`flex items-center gap-3 px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors ${
           selectedIndex === addrIndex ? 'bg-primary/20' : 'hover:bg-muted/50'
         }`}
-        onClick={() => navigate('/app/addresses')}
+        onClick={() => {
+          setSelectedIndex(addrIndex);
+          navigate('/app/addresses');
+        }}
       >
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,10 +254,10 @@ export function CommandPalette() {
             {activeAddress?.balance || '0'} SUI
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Commands by Category */}
-      {['Membership', 'Addresses', 'Environment', 'Objects & Assets', 'Gas', 'Faucet', 'Keys & Security'].map((category) => {
+      {['Membership', 'Addresses', 'Environment', 'Objects & Assets', 'Gas', 'Faucet', 'Transfer', 'Development', 'Keys & Security'].map((category) => {
         const categoryCommands = filteredCommands.filter((cmd) => cmd.category === category);
         if (categoryCommands.length === 0) return null;
 
@@ -246,7 +268,7 @@ export function CommandPalette() {
                 {category}
               </div>
             </div>
-            <AnimatedList staggerDelay={30} delay={0}>
+            <AnimatedList delay={0}>
               {categoryCommands.map((cmd) => {
                 const cmdIndex = filteredCommands.indexOf(cmd) + cmdOffset;
                 return (
@@ -255,7 +277,7 @@ export function CommandPalette() {
                     className={`flex items-center gap-3 px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors ${
                       selectedIndex === cmdIndex ? 'bg-primary/20' : 'hover:bg-muted/50'
                     }`}
-                    onClick={() => handleCommandClick(cmd.action)}
+                    onClick={() => handleCommandClick(cmd.action, cmdIndex)}
                   >
                     <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-lg">
                       {cmd.icon}

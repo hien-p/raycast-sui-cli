@@ -408,3 +408,191 @@ export interface DeployedPackage {
 export async function getDeployedPackages(address: string) {
   return fetchApi<DeployedPackage[]>(`/community/packages/${address}`);
 }
+
+// Filesystem API
+export interface DirectoryEntry {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  isPackage?: boolean;
+}
+
+export interface BrowseResponse {
+  currentPath: string;
+  parentPath: string | null;
+  entries: DirectoryEntry[];
+}
+
+export interface SuggestedDirectory {
+  name: string;
+  path: string;
+}
+
+export async function browseDirectory(path?: string) {
+  const endpoint = path
+    ? `/filesystem/browse?path=${encodeURIComponent(path)}`
+    : '/filesystem/browse';
+  return fetchApi<BrowseResponse>(endpoint);
+}
+
+export async function getSuggestedDirectories() {
+  return fetchApi<{ directories: SuggestedDirectory[] }>('/filesystem/suggested');
+}
+
+// Move Package Development APIs
+export async function buildMovePackage(packagePath: string) {
+  return fetchApi<{ output: string }>('/move/build', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath }),
+  });
+}
+
+export async function testMovePackage(packagePath: string, filter?: string) {
+  return fetchApi<{ output: string; passed: number; failed: number }>('/move/test', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, filter }),
+  });
+}
+
+export async function publishPackage(
+  packagePath: string,
+  gasBudget: string,
+  skipDependencyVerification: boolean
+) {
+  return fetchApi<{
+    packageId?: string;
+    digest?: string;
+    createdObjects?: any[];
+  }>('/packages/publish', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, gasBudget, skipDependencyVerification }),
+  });
+}
+
+export async function upgradePackage(
+  packagePath: string,
+  upgradeCapId: string,
+  gasBudget: string
+) {
+  return fetchApi<{
+    packageId?: string;
+    digest?: string;
+  }>('/packages/upgrade', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, upgradeCapId, gasBudget }),
+  });
+}
+
+export async function inspectPackage(packageId: string) {
+  return fetchApi<{
+    packageId: string;
+    modules: any[];
+  }>(`/inspector/package/${packageId}`);
+}
+
+export async function callPackageFunction(
+  packageId: string,
+  module: string,
+  functionName: string,
+  args: string[],
+  typeArgs: string[],
+  gasBudget: string
+) {
+  return fetchApi<{
+    digest?: string;
+    effects?: any;
+    events?: any[];
+    gasUsed?: string;
+  }>(`/packages/${packageId}/call`, {
+    method: 'POST',
+    body: JSON.stringify({
+      module,
+      function: functionName,
+      args,
+      typeArgs,
+      gasBudget,
+    }),
+  });
+}
+
+// Parameter Helper APIs
+export interface ParsedType {
+  category: string;
+  rawType: string;
+  baseType: string;
+  genericParams: string[];
+  isMutable: boolean;
+  isReference: boolean;
+  isVector: boolean;
+  isOption: boolean;
+}
+
+export interface ParameterSuggestion {
+  type: 'object' | 'value' | 'address' | 'coin';
+  label: string;
+  value: string;
+  metadata?: {
+    objectId?: string;
+    type?: string;
+    version?: string;
+    digest?: string;
+    balance?: string;
+    fields?: Record<string, unknown>;
+  };
+}
+
+export interface AnalyzedParameter {
+  name: string;
+  type: string;
+  parsedType: ParsedType;
+  suggestions: ParameterSuggestion[];
+  autoFilled?: {
+    value: string;
+    reason: 'only_one_option' | 'default_value' | 'user_preference';
+  };
+  examples: string[];
+  validation?: {
+    pattern?: string;
+    min?: string;
+    max?: string;
+    message?: string;
+  };
+  helpText?: string;
+}
+
+export async function analyzeParameters(
+  packageId: string,
+  module: string,
+  functionName: string,
+  userAddress: string
+) {
+  return fetchApi<{
+    parameters: AnalyzedParameter[];
+    function: { name: string; visibility: string };
+  }>('/inspector/analyze-parameters', {
+    method: 'POST',
+    body: JSON.stringify({
+      packageId,
+      module,
+      functionName,
+      userAddress,
+    }),
+  });
+}
+
+export async function getObjectsByType(address: string, typePattern: string) {
+  return fetchApi<Record<string, unknown>[]>(
+    `/addresses/${address}/objects/by-type?type=${encodeURIComponent(typePattern)}`
+  );
+}
+
+export async function getObjectMetadata(objectId: string) {
+  return fetchApi<Record<string, unknown>>(`/inspector/object/${objectId}/metadata`);
+}
+
+export async function convertToVectorU8(value: string, format: 'string' | 'hex') {
+  return fetchApi<{ result: string }>('/inspector/convert-to-vector-u8', {
+    method: 'POST',
+    body: JSON.stringify({ value, format }),
+  });
+}

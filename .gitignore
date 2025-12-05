@@ -28,3 +28,17 @@ CLAUDE.md
 PLAN.md
 .mcp.json
 **/.mcp.json
+*CHECKLIST*.md
+*VERIFICATION*.md
+*ANALYSIS*.md
+*SUMMARY*.md
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Replay directories
+**/.replay/

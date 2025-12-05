@@ -59,6 +59,16 @@ const FAUCET_SOURCES: FaucetSource[] = [
     perRequestAmount: '0.5 SUI',
   },
   {
+    id: 'suilearn-faucet',
+    name: 'SuiLearn Faucet',
+    description: 'Community faucet from India - simple & fast',
+    networks: ['testnet'],
+    type: 'web',
+    url: 'https://faucet.suilearn.io/',
+    dailyLimit: 'Limited',
+    perRequestAmount: '1 SUI',
+  },
+  {
     id: 'stakely-faucet',
     name: 'Stakely Faucet',
     description: 'Requires captcha verification',

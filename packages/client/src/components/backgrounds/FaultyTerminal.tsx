@@ -422,7 +422,11 @@ export default function FaultyTerminal({
     <div
       ref={containerRef}
       className={`w-full h-full relative overflow-hidden ${className || ''}`}
-      style={style}
+      style={{
+        ...style,
+        transformStyle: style?.transformStyle || 'flat',
+        perspective: style?.perspective || 'none',
+      }}
       {...rest}
     />
   );

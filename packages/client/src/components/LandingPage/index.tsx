@@ -20,10 +20,12 @@ import {
   ChevronRight,
   Apple,
   Box,
-  MonitorSmartphone
+  MonitorSmartphone,
+  ArrowRight
 } from 'lucide-react';
 
 export function LandingPage() {
+  // Force HMR update
   const navigate = useNavigate();
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [serverConnected, setServerConnected] = useState<boolean | null>(null);
@@ -87,7 +89,7 @@ export function LandingPage() {
       <div className="relative w-full h-screen overflow-y-auto overflow-x-hidden">
         <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
         <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-8 sm:py-12">
-          <div className="max-w-3xl w-full bg-background/90 backdrop-blur-sm rounded-xl border border-border shadow-2xl">
+          <div className="w-full flex justify-center">
             <SetupInstructions onRetry={handleRetry} isRetrying={isRetrying} />
           </div>
         </div>
@@ -233,20 +235,18 @@ export function LandingPage() {
                         <Terminal className="w-5 h-5 text-[#4da2ff]" />
                         <span className="text-white/60 text-sm">sui</span>
                         <span className="text-white/40">›</span>
-                        <span className="text-white text-sm">client addresses</span>
+                        <span className="text-white text-sm">client transfer --to 0x123... --amount 10</span>
                       </div>
                       <div className="space-y-2 pl-8">
                         <div className="flex items-center gap-3 text-sm">
                           <div className="w-2 h-2 bg-green-400 rounded-full" />
-                          <span className="text-white/80 font-mono">0x915c...88ddb</span>
-                          <span className="text-[#4da2ff]">elegant-epidote</span>
-                          <span className="ml-auto text-white/60">38.54 SUI</span>
+                          <span className="text-white/80 font-mono">Transfer Successful</span>
+                          <span className="text-[#4da2ff] ml-auto">Digest: 5A2...9xP</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm">
                           <div className="w-2 h-2 bg-white/20 rounded-full" />
-                          <span className="text-white/80 font-mono">0x9b35...759ac</span>
-                          <span className="text-white/60">modest-corundum</span>
-                          <span className="ml-auto text-white/60">1.87 SUI</span>
+                          <span className="text-white/60">Gas Used:</span>
+                          <span className="text-white/80">0.002 SUI</span>
                         </div>
                       </div>
                     </div>
@@ -305,11 +305,10 @@ export function LandingPage() {
                 gradient="purple"
               />
               <FeatureBentoCard
-                icon={<Code2 className="w-8 h-8" />}
-                title="Smart Contract Tools"
-                description="Deploy Move contracts, call functions, and interact with on-chain packages effortlessly."
+                icon={<ArrowRight className="w-8 h-8" />}
+                title="Secure Transfers"
+                description="Send SUI and tokens with confidence. Built-in gas estimation and address validation."
                 gradient="green"
-                badge="Coming Soon"
               />
               <FeatureBentoCard
                 icon={<Sparkles className="w-8 h-8" />}
@@ -770,7 +769,7 @@ export function LandingPage() {
                 <h3 className="font-semibold text-white mb-3 text-sm">Resources</h3>
                 <ul className="space-y-2 text-sm text-white/60">
                   <li><a href="https://github.com/hien-p/raycast-sui-cli" target="_blank" rel="noopener noreferrer" className="hover:text-[#4da2ff] transition-colors">GitHub</a></li>
-                  <li><a href="https://www.npmjs.com/package/sui-cli-web" target="_blank" rel="noopener noreferrer" className="hover:text-[#4da2ff] transition-colors">NPM Package</a></li>
+                  <li><a href="https://www.npmjs.com/package/sui-cli-web-server" target="_blank" rel="noopener noreferrer" className="hover:text-[#4da2ff] transition-colors">NPM Package</a></li>
                   <li><a href="https://sui.io" target="_blank" rel="noopener noreferrer" className="hover:text-[#4da2ff] transition-colors">Sui Network</a></li>
                 </ul>
               </div>
@@ -789,7 +788,7 @@ export function LandingPage() {
                     <Github className="w-5 h-5 text-white/80" />
                   </a>
                   <a
-                    href="https://www.npmjs.com/package/sui-cli-web"
+                    href="https://www.npmjs.com/package/sui-cli-web-server"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg transition-colors"

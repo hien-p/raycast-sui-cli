@@ -66,6 +66,7 @@ export const CATEGORIES = {
   TRANSFER: 'Transfer',
   KEYS: 'Keys & Security',
   MEMBERSHIP: 'Membership',
+  DEVELOPMENT: 'Development',
 } as const;
 
 export const DEFAULT_COMMANDS: Command[] = [
@@ -131,5 +132,23 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.MEMBERSHIP,
     keywords: ['membership', 'tier', 'member', 'profile', 'progress', 'badge', 'rank', 'achievement'],
     action: 'membership',
+  },
+  {
+    id: 'move',
+    title: 'Move Development',
+    subtitle: 'Build, test, publish & upgrade Move packages',
+    icon: '📦',
+    category: CATEGORIES.DEVELOPMENT,
+    keywords: ['move', 'smart contract', 'build', 'test', 'publish', 'upgrade', 'package', 'deploy', 'development'],
+    action: 'move',
+  },
+  {
+    id: 'inspector',
+    title: 'Transaction Inspector',
+    subtitle: 'Inspect & replay transactions for debugging',
+    icon: '🔍',
+    category: CATEGORIES.DEVELOPMENT,
+    keywords: ['transaction', 'inspect', 'replay', 'debug', 'debugger', 'bytecode', 'tx'],
+    action: 'inspector',
   },
 ];

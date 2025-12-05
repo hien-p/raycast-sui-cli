@@ -19,6 +19,7 @@
   },
   "iconLibrary": "lucide",
   "registries": {
+    "@shadcn": "https://ui.shadcn.com",
     "@react-bits": "https://reactbits.dev/r/{name}.json"
   }
 }

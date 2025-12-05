@@ -98,7 +98,7 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
 
       if (errorMsg.includes('Cannot connect') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('fetch')) {
         friendlyMsg = 'Server not running';
-        actionHint = 'Start the local server first: npx sui-cli-web';
+        actionHint = 'Start the local server first: npx sui-cli-web-server';
       } else if (errorMsg.includes('already a community member') || errorMsg.includes('alreadyMember')) {
         friendlyMsg = 'You are already a member!';
         actionHint = 'Try switching to a different wallet address to join with that one.';

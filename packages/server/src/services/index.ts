@@ -1,3 +1,11 @@
 export { AddressService } from './AddressService';
 export { EnvironmentService } from './EnvironmentService';
 export { FaucetService } from './FaucetService';
+export { KeyManagementService } from './KeyManagementService';
+export { TierService } from './TierService';
+export { TransferService } from './TransferService';
+export { CommunityService } from './CommunityService';
+export { MoveService } from './dev/MoveService';
+export { PackageService } from './dev/PackageService';
+export { InspectorService } from './dev/InspectorService';
+export { ParameterHelperService } from './ParameterHelperService';

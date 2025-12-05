@@ -1,7 +1,7 @@
 {
   "name": "sui-cli-web-server",
-  "version": "1.1.2",
-  "description": "Local server for Sui CLI Web - connects your browser to local Sui CLI",
+  "version": "1.1.6",
+  "description": "Local server that bridges your browser to Sui CLI. Manage addresses, transfer SUI, deploy Move contracts - all from a beautiful web UI. Private keys never leave your machine.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -9,7 +9,8 @@
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "README.md"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -19,12 +20,19 @@
   },
   "keywords": [
     "sui",
+    "sui-blockchain",
+    "sui-cli",
+    "sui-wallet",
     "blockchain",
-    "cli",
-    "web",
-    "wallet",
+    "web3",
     "move",
-    "crypto"
+    "move-lang",
+    "crypto",
+    "defi",
+    "nft",
+    "smart-contracts",
+    "cli-tool",
+    "developer-tools"
   ],
   "author": "hien-p",
   "license": "MIT",
@@ -32,7 +40,7 @@
     "type": "git",
     "url": "https://github.com/hien-p/raycast-sui-cli.git"
   },
-  "homepage": "https://github.com/hien-p/raycast-sui-cli#readme",
+  "homepage": "https://www.harriweb3.dev",
   "bugs": {
     "url": "https://github.com/hien-p/raycast-sui-cli/issues"
   },

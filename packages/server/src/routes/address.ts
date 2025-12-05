@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { AddressService } from '../services/AddressService';
+import { ParameterHelperService } from '../services/ParameterHelperService';
 import type { ApiResponse, SuiAddress, GasCoin } from '@sui-cli-web/shared';
 import {
   validateAddress,
@@ -18,6 +19,7 @@ import {
 import { handleRouteError } from '../utils/errorHandler';
 
 const addressService = new AddressService();
+const parameterHelperService = new ParameterHelperService();
 
 // Alias for cleaner code
 const handleError = handleRouteError;
@@ -109,6 +111,28 @@ export async function addressRoutes(fastify: FastifyInstance) {
     try {
       const address = validateAddress(request.params.address);
       const objects = await addressService.getObjects(address);
+      return { success: true, data: objects };
+    } catch (error) {
+      return handleError(error, reply);
+    }
+  });
+
+  // Get objects for an address filtered by type
+  fastify.get<{
+    Params: { address: string };
+    Querystring: { type: string };
+    Reply: ApiResponse<any[]>;
+  }>('/addresses/:address/objects/by-type', async (request, reply) => {
+    try {
+      const address = validateAddress(request.params.address);
+      const typePattern = request.query.type;
+
+      if (!typePattern) {
+        reply.status(400);
+        return { success: false, error: 'type query parameter is required' };
+      }
+
+      const objects = await parameterHelperService.getObjectsByType(address, typePattern);
       return { success: true, data: objects };
     } catch (error) {
       return handleError(error, reply);

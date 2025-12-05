@@ -1,0 +1,208 @@
+import { FastifyInstance } from 'fastify';
+import { PackageService } from '../services/dev/PackageService';
+import type { ApiResponse } from '@sui-cli-web/shared';
+import {
+  validateObjectId,
+  validateOptionalGasBudget,
+  validateModuleName,
+  validateFunctionName,
+  validateMoveArgs,
+  validateTypeArgs,
+} from '../utils/validation';
+import { handleRouteError } from '../utils/errorHandler';
+
+const packageService = new PackageService();
+
+export async function packageRoutes(fastify: FastifyInstance) {
+  // Publish a Move package
+  fastify.post<{
+    Body: {
+      packagePath: string;
+      gasBudget?: string;
+      skipDependencyVerification?: boolean;
+    };
+    Reply: ApiResponse<{
+      packageId: string;
+      digest: string;
+      createdObjects: any[];
+    }>;
+  }>('/packages/publish', async (request, reply) => {
+    try {
+      const { packagePath, gasBudget, skipDependencyVerification } = request.body;
+
+      if (!packagePath) {
+        reply.status(400);
+        return { success: false, error: 'packagePath is required' };
+      }
+
+      const validatedGasBudget = validateOptionalGasBudget(gasBudget);
+
+      const result = await packageService.publishPackage(
+        packagePath,
+        validatedGasBudget,
+        skipDependencyVerification
+      );
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'Publish failed' };
+      }
+
+      return {
+        success: true,
+        data: {
+          packageId: result.packageId!,
+          digest: result.digest!,
+          createdObjects: result.createdObjects!,
+        },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Upgrade a Move package
+  fastify.post<{
+    Body: {
+      packagePath: string;
+      upgradeCapId: string;
+      gasBudget?: string;
+    };
+    Reply: ApiResponse<{
+      packageId: string;
+      digest: string;
+    }>;
+  }>('/packages/upgrade', async (request, reply) => {
+    try {
+      const { packagePath, upgradeCapId, gasBudget } = request.body;
+
+      if (!packagePath) {
+        reply.status(400);
+        return { success: false, error: 'packagePath is required' };
+      }
+
+      if (!upgradeCapId) {
+        reply.status(400);
+        return { success: false, error: 'upgradeCapId is required' };
+      }
+
+      const validatedUpgradeCapId = validateObjectId(upgradeCapId, 'upgradeCapId');
+      const validatedGasBudget = validateOptionalGasBudget(gasBudget);
+
+      const result = await packageService.upgradePackage(
+        packagePath,
+        validatedUpgradeCapId,
+        validatedGasBudget
+      );
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'Upgrade failed' };
+      }
+
+      return {
+        success: true,
+        data: {
+          packageId: result.packageId!,
+          digest: result.digest!,
+        },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Get package info
+  fastify.get<{
+    Params: { id: string };
+    Reply: ApiResponse<{
+      data: any;
+      objectId: string;
+      type: string;
+      owner: string;
+    }>;
+  }>('/packages/:id', async (request, reply) => {
+    try {
+      const packageId = validateObjectId(request.params.id, 'packageId');
+
+      const result = await packageService.getPackageInfo(packageId);
+
+      if (!result.success) {
+        reply.status(404);
+        return { success: false, error: result.error || 'Package not found' };
+      }
+
+      return {
+        success: true,
+        data: {
+          data: result.data!,
+          objectId: result.objectId!,
+          type: result.type!,
+          owner: result.owner!,
+        },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Call package function
+  fastify.post<{
+    Params: { id: string };
+    Body: {
+      module: string;
+      function: string;
+      args?: string[];
+      typeArgs?: string[];
+      gasBudget?: string;
+    };
+    Reply: ApiResponse<{
+      digest: string;
+      effects: any;
+      events: any[];
+      gasUsed?: string;
+    }>;
+  }>('/packages/:id/call', async (request, reply) => {
+    try {
+      const packageId = validateObjectId(request.params.id, 'packageId');
+      const { module, function: functionName, args, typeArgs, gasBudget } = request.body;
+
+      if (!module || !functionName) {
+        reply.status(400);
+        return { success: false, error: 'module and function are required' };
+      }
+
+      const validatedModule = validateModuleName(module);
+      const validatedFunction = validateFunctionName(functionName);
+      const validatedArgs = validateMoveArgs(args);
+      const validatedTypeArgs = validateTypeArgs(typeArgs);
+      const validatedGasBudget = validateOptionalGasBudget(gasBudget);
+
+      const result = await packageService.callPackageFunction(
+        packageId,
+        validatedModule,
+        validatedFunction,
+        validatedArgs,
+        validatedTypeArgs,
+        validatedGasBudget
+      );
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'Function call failed' };
+      }
+
+      return {
+        success: true,
+        data: {
+          digest: result.digest!,
+          effects: result.effects!,
+          events: result.events!,
+          gasUsed: result.gasUsed,
+        },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+}

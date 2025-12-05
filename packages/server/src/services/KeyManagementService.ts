@@ -248,7 +248,9 @@ export class KeyManagementService {
         return false;
       }
 
-      return config.keystore.some((key: any) => key.suiAddress === address);
+      // Keystore is an array of key objects
+      const keystore = config.keystore as unknown as any[];
+      return Array.isArray(keystore) && keystore.some((key: any) => key.suiAddress === address);
     } catch (error) {
       console.error('[KeyManagementService] Check duplicate address failed:', error);
       return false;
