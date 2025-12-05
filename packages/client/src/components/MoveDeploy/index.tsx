@@ -528,27 +528,21 @@ export function MoveDeploy() {
   return (
     <>
       {/* Content */}
-      <div className="relative z-10 p-4 sm:p-6">
-        <div className="relative max-w-[1600px] mx-auto space-y-6">
-          {/* Header */}
+      <div className="relative z-10 p-3 sm:p-4">
+        <div className="relative max-w-[1600px] mx-auto space-y-3">
+          {/* Compact Header */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="relative z-10 space-y-2"
+            className="relative z-10 flex items-center justify-between"
           >
-            <h1 className="text-3xl font-bold text-green-400 flex items-center gap-3 font-mono">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
-              >
-                <Package className="w-8 h-8 text-green-400" style={{ filter: 'drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))' }} />
-              </motion.div>
-              Move Development Studio
-            </h1>
-            <p className="text-green-300/80 font-mono text-sm">
-              &gt; Complete workflow for building, testing, and deploying Move smart contracts
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-green-400" style={{ filter: 'drop-shadow(0 0 4px rgba(34, 197, 94, 0.5))' }} />
+              <h1 className="text-lg font-bold text-green-400 font-mono">Move Development Studio</h1>
+            </div>
+            <p className="text-green-500/60 font-mono text-xs hidden sm:block">
+              Build • Test • Deploy
             </p>
           </motion.div>
 
@@ -581,53 +575,47 @@ export function MoveDeploy() {
             </motion.div>
           )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Package Selection */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          {/* Left Column: Package Selection - Compact */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.2 }}
-            className="lg:col-span-1 space-y-4"
+            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
+            className="lg:col-span-1 space-y-2"
           >
-            {/* Recent Projects */}
-            <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-green-400 font-mono">
-                  <Clock className="w-4 h-4 text-green-500" />
-                  Recent Projects
+            {/* Recent Projects - Compact */}
+            <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-green-500" />
+                  Recent
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="px-3 pb-2 space-y-1">
                 {recentProjects.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FolderOpen className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
-                    <p className="text-xs text-green-500/50 font-mono">
-                      No recent projects yet
-                    </p>
+                  <div className="text-center py-4">
+                    <FolderOpen className="w-5 h-5 text-green-500/40 mx-auto mb-1" />
+                    <p className="text-[10px] text-green-500/50 font-mono">No recent projects</p>
                   </div>
                 ) : (
                   recentProjects.map((project) => (
                     <motion.div
                       key={project.path}
                       onClick={() => useRecentProject(project)}
-                      whileHover={{ scale: 1.02, x: 4 }}
+                      whileHover={{ x: 2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex items-center gap-2 p-3 rounded-lg bg-black/40 hover:bg-green-500/10 border border-green-500/20 hover:border-green-500/40 cursor-pointer group transition-all"
+                      className="flex items-center gap-2 p-2 rounded bg-black/40 hover:bg-green-500/10 border border-green-500/20 hover:border-green-500/40 cursor-pointer group transition-all"
                     >
-                      <FolderOpen className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <FolderOpen className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-green-400 truncate font-mono">
-                          {project.name}
-                        </div>
-                        <div className="text-xs text-green-500/60 truncate font-mono">
-                          {new Date(project.lastUsed).toLocaleDateString()}
-                        </div>
+                        <div className="text-xs font-medium text-green-400 truncate font-mono">{project.name}</div>
+                        <div className="text-[10px] text-green-500/50 font-mono">{new Date(project.lastUsed).toLocaleDateString()}</div>
                       </div>
                       <button
                         onClick={(e) => removeFromRecent(project.path, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 rounded transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
                       >
-                        <Trash2 className="w-3 h-3 text-red-400" />
+                        <Trash2 className="w-2.5 h-2.5 text-red-400" />
                       </button>
                     </motion.div>
                   ))
@@ -635,26 +623,18 @@ export function MoveDeploy() {
               </CardContent>
             </Card>
 
-            {/* Project Templates */}
-            <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-green-400 font-mono">
-                  <Sparkles className="w-4 h-4 text-green-500" />
-                  Starter Templates
+            {/* Templates - Very Compact */}
+            <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                  <Sparkles className="w-3.5 h-3.5 text-green-500" />
+                  Templates
                 </CardTitle>
-                <CardDescription className="text-xs text-green-500/60 font-mono">
-                  Quick start with common patterns
-                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Sparkles className="w-8 h-8 text-green-500/50 mx-auto mb-3" />
-                  <p className="text-sm text-green-500/70 font-mono">
-                    Stay tuned!
-                  </p>
-                  <p className="text-xs text-green-500/50 mt-1 font-mono">
-                    Templates coming soon
-                  </p>
+              <CardContent className="px-3 pb-2">
+                <div className="text-center py-3">
+                  <Sparkles className="w-5 h-5 text-green-500/40 mx-auto mb-1" />
+                  <p className="text-[10px] text-green-500/50 font-mono">Coming soon</p>
                 </div>
               </CardContent>
             </Card>
@@ -662,446 +642,338 @@ export function MoveDeploy() {
 
           {/* Right Column: Main Content */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.3 }}
-            className="lg:col-span-2 space-y-4"
+            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.15 }}
+            className="lg:col-span-2 space-y-2"
           >
-            {/* Package Configuration */}
-            <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10 relative overflow-hidden">
-              {/* Accent bar */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-green-500/50" />
-
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                  <FileCode className="w-5 h-5 text-green-500" />
+            {/* Package Configuration - Compact */}
+            <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-green-500/50" />
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                  <FileCode className="w-3.5 h-3.5 text-green-500" />
                   Package Configuration
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Package Path */}
-                <div className="space-y-2">
-                  <Label htmlFor="package-path" className="text-sm font-medium flex items-center gap-2 text-green-400 font-mono">
+              <CardContent className="px-3 pb-3 space-y-2">
+                {/* Package Path - Compact */}
+                <div className="space-y-1">
+                  <Label htmlFor="package-path" className="text-xs font-medium flex items-center gap-1 text-green-400 font-mono">
                     Package Path <span className="text-red-400">*</span>
                   </Label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <input
                       id="package-path"
                       type="text"
                       value={packagePath}
                       onChange={(e) => setPackagePath(e.target.value)}
                       placeholder="/path/to/your/move/package"
-                      className="flex-1 px-4 py-3 bg-black/50 border border-green-500/30 rounded-lg text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-sm font-mono"
+                      className="flex-1 px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500 transition-all text-xs font-mono"
                       disabled={isAnyLoading}
                     />
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={() => setShowBrowser(true)}
                       disabled={isAnyLoading}
-                      className="px-4 py-3 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/20"
-                      title="Browse for Move package"
+                      className="px-2.5 py-1.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 transition-colors disabled:opacity-50"
+                      title="Browse"
                     >
-                      <FolderOpen className="w-4 h-4" />
-                    </motion.button>
+                      <FolderOpen className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <p className="text-xs text-green-500/50 flex items-center gap-1.5 font-mono">
-                    <AlertCircle className="w-3 h-3" />
+                  <p className="text-[10px] text-green-500/50 flex items-center gap-1 font-mono">
+                    <AlertCircle className="w-2.5 h-2.5" />
                     Absolute path to your Move package directory (containing Move.toml)
                   </p>
                 </div>
 
-                <Separator className="bg-green-500/20" />
+                <Separator className="bg-green-500/20 my-1" />
 
-                {/* Gas Budget */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="gas-budget" className="text-sm font-medium text-green-400 font-mono">
-                      Gas Budget
-                    </Label>
+                {/* Gas & Options - Inline Compact */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="gas-budget" className="text-xs font-medium text-green-400 font-mono">Gas Budget</Label>
                     <input
                       id="gas-budget"
                       type="text"
                       value={gasBudget}
                       onChange={(e) => setGasBudget(e.target.value)}
                       placeholder="100000000"
-                      className="w-full px-4 py-3 bg-black/50 border border-green-500/30 rounded-lg text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-sm font-mono"
+                      className="w-full px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 text-xs font-mono"
                       disabled={isAnyLoading}
                     />
-                    <p className="text-xs text-green-500/50 font-mono">
-                      In MIST (0.1 SUI = 100000000 MIST)
-                    </p>
+                    <p className="text-[10px] text-green-500/40 font-mono">In MIST (0.1 SUI = 100000000 MIST)</p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-green-400 font-mono">Options</Label>
-                    <div className="space-y-3 pt-1">
-                      <div className="flex items-center gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-green-400 font-mono">Options</Label>
+                    <div className="space-y-1.5">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
                           type="checkbox"
-                          id="save-upgrade-cap"
                           checked={saveUpgradeCap}
                           onChange={(e) => setSaveUpgradeCap(e.target.checked)}
                           disabled={isAnyLoading}
-                          className="w-4 h-4 text-green-500 bg-black/50 border-green-500/50 rounded focus:ring-2 focus:ring-green-500/50 cursor-pointer"
+                          className="w-3 h-3 text-green-500 bg-black/50 border-green-500/50 rounded focus:ring-1 focus:ring-green-500/50"
                         />
-                        <label htmlFor="save-upgrade-cap" className="text-sm text-green-400 cursor-pointer select-none font-mono">
-                          Auto-save UpgradeCap
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-green-400 font-mono">Auto-save UpgradeCap</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
                           type="checkbox"
-                          id="skipDeps"
                           checked={skipDeps}
                           onChange={(e) => setSkipDeps(e.target.checked)}
                           disabled={isAnyLoading}
-                          className="w-4 h-4 text-green-500 bg-black/50 border-green-500/50 rounded focus:ring-2 focus:ring-green-500/50 cursor-pointer"
+                          className="w-3 h-3 text-green-500 bg-black/50 border-green-500/50 rounded focus:ring-1 focus:ring-green-500/50"
                         />
-                        <label htmlFor="skipDeps" className="text-sm text-green-400 cursor-pointer select-none font-mono">
-                          Skip dependency verification
-                        </label>
-                      </div>
+                        <span className="text-[11px] text-green-400 font-mono">Skip dependency verification</span>
+                      </label>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* One-Click Workflow */}
-            <Card className="bg-black/40 backdrop-blur-md border-green-500/50 hover:border-green-500 transition-colors shadow-lg shadow-green-500/20 relative overflow-hidden">
-              <CardHeader className="relative z-10">
-                <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                  <PlayCircle className="w-5 h-5 text-green-500" />
+            {/* One-Click Workflow - Compact */}
+            <Card className="bg-black/40 backdrop-blur-md border-green-500/50 hover:border-green-500 transition-colors shadow-md relative overflow-hidden">
+              <CardHeader className="py-2 px-3 relative z-10">
+                <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                  <PlayCircle className="w-3.5 h-3.5 text-green-500" />
                   One-Click Workflow
+                  <span className="text-[10px] text-green-500/50 ml-auto font-normal">Automatically build, test, and publish</span>
                 </CardTitle>
-                <CardDescription className="text-green-500/60 font-mono text-sm">
-                  Automatically build, test, and publish your package
-                </CardDescription>
               </CardHeader>
-              <CardContent className="relative z-10">
-                <motion.button
+              <CardContent className="px-3 pb-3 relative z-10">
+                <button
                   onClick={handleOneClickWorkflow}
                   disabled={!isValidPath || isAnyLoading}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="relative group w-full px-6 py-4 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 font-medium shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 overflow-hidden font-mono"
+                  className="w-full px-4 py-2.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm font-mono"
                 >
-                  <span className="relative flex items-center gap-3">
-                    {isOneClickRunning ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Running Complete Workflow...
-                      </>
-                    ) : (
-                      <>
-                        <Rocket className="w-5 h-5" />
-                        Build → Test → Publish
-                        <ChevronRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-                <p className="text-xs text-green-500/60 text-center mt-3 flex items-center justify-center gap-1.5 font-mono">
-                  <Zap className="w-3 h-3 text-green-500" />
+                  {isOneClickRunning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Running...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-4 h-4" />
+                      Build → Test → Publish
+                      <ChevronRight className="w-3 h-3" />
+                    </>
+                  )}
+                </button>
+                <p className="text-[10px] text-green-500/50 text-center mt-1.5 flex items-center justify-center gap-1 font-mono">
+                  <Zap className="w-2.5 h-2.5 text-green-500" />
                   Recommended for production deployment
                 </p>
               </CardContent>
             </Card>
 
-            {/* Main Workflow Tabs */}
+            {/* Main Workflow Tabs - Compact */}
             <Tabs defaultValue="develop" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-black/30 border border-green-500/30">
-                <TabsTrigger value="develop" className="flex items-center gap-2 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono data-[state=active]:border-b-2 data-[state=active]:border-green-500">
-                  <Code className="w-4 h-4" />
+              <TabsList className="grid w-full grid-cols-4 bg-black/30 border border-green-500/30 h-8">
+                <TabsTrigger value="develop" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
+                  <Code className="w-3 h-3" />
                   <span className="hidden sm:inline">Develop</span>
                 </TabsTrigger>
-                <TabsTrigger value="deploy" className="flex items-center gap-2 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono data-[state=active]:border-b-2 data-[state=active]:border-green-500">
-                  <Rocket className="w-4 h-4" />
+                <TabsTrigger value="deploy" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
+                  <Rocket className="w-3 h-3" />
                   <span className="hidden sm:inline">Deploy</span>
                 </TabsTrigger>
-                <TabsTrigger value="upgrade" className="flex items-center gap-2 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono data-[state=active]:border-b-2 data-[state=active]:border-green-500">
-                  <RefreshCw className="w-4 h-4" />
+                <TabsTrigger value="upgrade" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
+                  <RefreshCw className="w-3 h-3" />
                   <span className="hidden sm:inline">Upgrade</span>
                 </TabsTrigger>
-                <TabsTrigger value="interact" className="flex items-center gap-2 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono data-[state=active]:border-b-2 data-[state=active]:border-green-500">
-                  <Zap className="w-4 h-4" />
+                <TabsTrigger value="interact" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
+                  <Zap className="w-3 h-3" />
                   <span className="hidden sm:inline">Interact</span>
                 </TabsTrigger>
               </TabsList>
 
-              {/* Develop Tab */}
-              <TabsContent value="develop" className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Build Card */}
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                  >
-                    <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors h-full relative overflow-hidden shadow-lg shadow-green-500/10">
-                      {/* Status indicator bar */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 transition-all ${
-                        building ? 'bg-green-500 animate-pulse' :
-                        buildOutput && !buildOutput.includes('error') ? 'bg-green-500' :
-                        buildOutput && buildOutput.includes('error') ? 'bg-red-500' :
-                        'bg-green-500/20'
-                      }`} />
-
-                      <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2 text-green-400 font-mono">
-                          <Building2 className="w-5 h-5 text-green-500" />
-                          Build Package
-                          {buildOutput && !building && (
-                            <Badge className={buildOutput.includes('error') ?
-                              'bg-red-500/20 text-red-400 border-red-500/30 font-mono' :
-                              'bg-green-500/20 text-green-400 border-green-500/30 font-mono'
-                            }>
-                              {buildOutput.includes('error') ? (
-                                <><XCircle className="w-3 h-3 mr-1" />Failed</>
-                              ) : (
-                                <><CheckCircle2 className="w-3 h-3 mr-1" />Success</>
-                              )}
-                            </Badge>
-                          )}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <motion.button
-                          onClick={handleBuild}
-                          disabled={!isValidPath || building || isAnyLoading}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative group w-full px-4 py-3 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium text-sm shadow-lg shadow-green-500/20 hover:shadow-xl hover:shadow-green-500/30 overflow-hidden font-mono"
-                        >
-                          <span className="relative flex items-center gap-2">
-                            {building ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Building...
-                              </>
-                            ) : (
-                              <>
-                                <Building2 className="w-4 h-4" />
-                                Build Package
-                              </>
-                            )}
-                          </span>
-                        </motion.button>
-
-                        {/* Loading skeleton */}
-                        <AnimatePresence mode="wait">
-                          {building && !buildOutput && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className="space-y-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 text-green-400 animate-spin" />
-                                <span className="text-sm text-green-400 font-mono">Compiling Move code...</span>
-                              </div>
-                              <Skeleton className="h-3 w-full bg-green-500/20" />
-                              <Skeleton className="h-3 w-3/4 bg-green-500/10" />
-                              <Skeleton className="h-3 w-1/2 bg-green-500/5" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Terminal output */}
-                        <AnimatePresence mode="wait">
-                          {buildOutput && (
-                            <TerminalBuildOutput
-                              output={buildOutput}
-                              isError={buildOutput.includes('error') || buildOutput.includes('Error')}
-                            />
-                          )}
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-
-                  {/* Test Card */}
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                  >
-                    <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors h-full relative overflow-hidden shadow-lg shadow-green-500/10">
-                      {/* Status indicator bar */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 transition-all ${
-                        testing ? 'bg-green-500 animate-pulse' :
-                        testOutput && testOutput.includes('Failed: 0') ? 'bg-green-500' :
-                        testOutput && testOutput.includes('Failed') ? 'bg-red-500' :
-                        'bg-green-500/20'
-                      }`} />
-
-                      <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2 text-green-400 font-mono">
-                          <TestTube2 className="w-5 h-5 text-green-500" />
-                          Run Tests
-                          {testOutput && !testing && (
-                            <Badge className={testOutput.includes('Failed: 0') ?
-                              'bg-green-500/20 text-green-400 border-green-500/30 font-mono' :
-                              'bg-red-500/20 text-red-400 border-red-500/30 font-mono'
-                            }>
-                              {testOutput.includes('Failed: 0') ? (
-                                <><CheckCircle2 className="w-3 h-3 mr-1" />Passed</>
-                              ) : (
-                                <><XCircle className="w-3 h-3 mr-1" />Failed</>
-                              )}
-                            </Badge>
-                          )}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            value={testFilter}
-                            onChange={(e) => setTestFilter(e.target.value)}
-                            placeholder="Filter tests by name..."
-                            disabled={isAnyLoading}
-                            className="w-full px-3 py-2 bg-black/50 border border-green-500/30 rounded-lg text-sm text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-mono"
+              {/* Develop Tab - Compact */}
+              <TabsContent value="develop" className="space-y-2 mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {/* Build Card - Compact */}
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors h-full relative overflow-hidden shadow-md">
+                    <div className={`absolute top-0 left-0 right-0 h-0.5 transition-all ${
+                      building ? 'bg-green-500 animate-pulse' :
+                      buildOutput && !buildOutput.includes('error') ? 'bg-green-500' :
+                      buildOutput && buildOutput.includes('error') ? 'bg-red-500' :
+                      'bg-green-500/20'
+                    }`} />
+                    <CardHeader className="py-2 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                        <Building2 className="w-3.5 h-3.5 text-green-500" />
+                        Build Package
+                        {buildOutput && !building && (
+                          <Badge className={`text-[10px] ml-auto ${buildOutput.includes('error') ?
+                            'bg-red-500/20 text-red-400 border-red-500/30' :
+                            'bg-green-500/20 text-green-400 border-green-500/30'
+                          } font-mono`}>
+                            {buildOutput.includes('error') ? 'Failed' : 'Success'}
+                          </Badge>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3 space-y-2">
+                      <button
+                        onClick={handleBuild}
+                        disabled={!isValidPath || building || isAnyLoading}
+                        className="w-full px-3 py-2 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-xs font-mono"
+                      >
+                        {building ? (
+                          <><Loader2 className="w-3 h-3 animate-spin" />Building...</>
+                        ) : (
+                          <><Building2 className="w-3 h-3" />Build Package</>
+                        )}
+                      </button>
+                      <AnimatePresence mode="wait">
+                        {building && !buildOutput && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="space-y-1.5 p-2 bg-green-500/10 border border-green-500/30 rounded"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
+                              <span className="text-[10px] text-green-400 font-mono">Compiling...</span>
+                            </div>
+                            <Skeleton className="h-2 w-full bg-green-500/20" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <AnimatePresence mode="wait">
+                        {buildOutput && (
+                          <TerminalBuildOutput
+                            output={buildOutput}
+                            isError={buildOutput.includes('error') || buildOutput.includes('Error')}
                           />
-                        </div>
+                        )}
+                      </AnimatePresence>
+                    </CardContent>
+                  </Card>
 
-                        <motion.button
-                          onClick={handleTest}
-                          disabled={!isValidPath || testing || isAnyLoading}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative group w-full px-4 py-3 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium text-sm shadow-lg shadow-green-500/20 hover:shadow-xl hover:shadow-green-500/30 overflow-hidden font-mono"
-                        >
-                          <span className="relative flex items-center gap-2">
-                            {testing ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Testing...
-                              </>
-                            ) : (
-                              <>
-                                <TestTube2 className="w-4 h-4" />
-                                Run Tests
-                              </>
-                            )}
-                          </span>
-                        </motion.button>
-
-                        {/* Loading skeleton */}
-                        <AnimatePresence mode="wait">
-                          {testing && !testOutput && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className="space-y-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 text-green-400 animate-spin" />
-                                <span className="text-sm text-green-400 font-mono">Running test suite...</span>
-                              </div>
-                              <Skeleton className="h-3 w-full bg-green-500/20" />
-                              <Skeleton className="h-3 w-3/4 bg-green-500/10" />
-                              <Skeleton className="h-3 w-1/2 bg-green-500/5" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Terminal output */}
-                        <AnimatePresence mode="wait">
-                          {testOutput && (
-                            <TerminalTestOutput
-                              output={testOutput}
-                              passed={testPassed}
-                              failed={testFailed}
-                            />
-                          )}
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                  {/* Test Card - Compact */}
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors h-full relative overflow-hidden shadow-md">
+                    <div className={`absolute top-0 left-0 right-0 h-0.5 transition-all ${
+                      testing ? 'bg-green-500 animate-pulse' :
+                      testOutput && testOutput.includes('Failed: 0') ? 'bg-green-500' :
+                      testOutput && testOutput.includes('Failed') ? 'bg-red-500' :
+                      'bg-green-500/20'
+                    }`} />
+                    <CardHeader className="py-2 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                        <TestTube2 className="w-3.5 h-3.5 text-green-500" />
+                        Run Tests
+                        {testOutput && !testing && (
+                          <Badge className={`text-[10px] ml-auto ${testOutput.includes('Failed: 0') ?
+                            'bg-green-500/20 text-green-400 border-green-500/30' :
+                            'bg-red-500/20 text-red-400 border-red-500/30'
+                          } font-mono`}>
+                            {testOutput.includes('Failed: 0') ? 'Passed' : 'Failed'}
+                          </Badge>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3 space-y-2">
+                      <input
+                        type="text"
+                        value={testFilter}
+                        onChange={(e) => setTestFilter(e.target.value)}
+                        placeholder="Filter tests by name..."
+                        disabled={isAnyLoading}
+                        className="w-full px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-xs text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 font-mono"
+                      />
+                      <button
+                        onClick={handleTest}
+                        disabled={!isValidPath || testing || isAnyLoading}
+                        className="w-full px-3 py-2 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-xs font-mono"
+                      >
+                        {testing ? (
+                          <><Loader2 className="w-3 h-3 animate-spin" />Testing...</>
+                        ) : (
+                          <><TestTube2 className="w-3 h-3" />Run Tests</>
+                        )}
+                      </button>
+                      <AnimatePresence mode="wait">
+                        {testing && !testOutput && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="space-y-1.5 p-2 bg-green-500/10 border border-green-500/30 rounded"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
+                              <span className="text-[10px] text-green-400 font-mono">Running tests...</span>
+                            </div>
+                            <Skeleton className="h-2 w-full bg-green-500/20" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <AnimatePresence mode="wait">
+                        {testOutput && (
+                          <TerminalTestOutput output={testOutput} passed={testPassed} failed={testFailed} />
+                        )}
+                      </AnimatePresence>
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Development Tips */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md">
-                    <Lightbulb className="h-4 w-4 text-green-400" />
-                    <AlertDescription className="text-xs text-green-300/80 font-mono">
-                      <strong className="text-green-400">Pro Tip:</strong> Always build before testing. Use the One-Click Workflow for the complete process.
-                    </AlertDescription>
-                  </Alert>
-                </motion.div>
+                {/* Pro Tip - Very Compact */}
+                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
+                  <Lightbulb className="h-3 w-3 text-green-400" />
+                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                    <strong className="text-green-400">Pro Tip:</strong> Always build before testing. Use the One-Click Workflow for the complete process.
+                  </AlertDescription>
+                </Alert>
               </TabsContent>
 
-              {/* Deploy Tab */}
-              <TabsContent value="deploy" className="space-y-4 mt-4">
-                <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                      <Upload className="w-5 h-5 text-green-500" />
+              {/* Deploy Tab - Compact */}
+              <TabsContent value="deploy" className="space-y-2 mt-2">
+                <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
+                  <CardHeader className="py-2 px-3">
+                    <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                      <Upload className="w-3.5 h-3.5 text-green-500" />
                       Publish Package
+                      <span className="text-[10px] text-green-500/50 ml-auto font-normal">Deploy to blockchain</span>
                     </CardTitle>
-                    <CardDescription className="text-green-500/60 font-mono text-sm">Deploy your Move package to the blockchain</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <motion.button
+                  <CardContent className="px-3 pb-3 space-y-2">
+                    <button
                       onClick={handlePublish}
                       disabled={!isValidPath || publishing || isAnyLoading}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full px-6 py-4 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 font-mono"
+                      className="w-full px-4 py-2.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm font-mono"
                     >
                       {publishing ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Publishing to Blockchain...
-                        </>
+                        <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</>
                       ) : (
-                        <>
-                          <Upload className="w-5 h-5" />
-                          Publish Package
-                        </>
+                        <><Upload className="w-4 h-4" />Publish Package</>
                       )}
-                    </motion.button>
-
-                    {/* Loading state */}
+                    </button>
                     <AnimatePresence mode="wait">
                       {publishing && !publishResult && (
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg space-y-3"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="p-2 bg-green-500/10 border border-green-500/30 rounded space-y-1"
                         >
-                          <div className="flex items-center gap-3">
-                            <Loader2 className="w-5 h-5 text-green-400 animate-spin flex-shrink-0" />
-                            <span className="text-sm text-green-400 font-mono">Publishing to blockchain...</span>
+                          <div className="flex items-center gap-1.5">
+                            <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
+                            <span className="text-[10px] text-green-400 font-mono">Publishing...</span>
                           </div>
-                          <div className="space-y-2 pl-8">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-400" />
-                              <span className="text-xs text-green-300/80 font-mono">Compiling Move code...</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="w-4 h-4 text-green-400 animate-spin" />
-                              <span className="text-xs text-green-400 font-mono">Generating transaction...</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Circle className="w-4 h-4 text-green-500/30" />
-                              <span className="text-xs text-green-500/50 font-mono">Waiting for confirmation...</span>
-                            </div>
+                          <div className="space-y-1 pl-4">
+                            <div className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5 text-green-400" /><span className="text-[10px] text-green-300/80 font-mono">Compiling...</span></div>
+                            <div className="flex items-center gap-1"><Loader2 className="w-2.5 h-2.5 text-green-400 animate-spin" /><span className="text-[10px] text-green-400 font-mono">Generating tx...</span></div>
+                            <div className="flex items-center gap-1"><Circle className="w-2.5 h-2.5 text-green-500/30" /><span className="text-[10px] text-green-500/50 font-mono">Confirming...</span></div>
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </CardContent>
                 </Card>
-
-                {/* Publish Result */}
                 <AnimatePresence mode="wait">
                   {publishResult && (
                     <>
@@ -1111,71 +983,42 @@ export function MoveDeploy() {
                           command="sui client publish --gas-budget 100000000"
                           rawOutput={(publishResult as any).output}
                           fields={[
-                            ...(publishResult.packageId ? [{
-                              label: 'PACKAGE_ID',
-                              value: publishResult.packageId,
-                              copyable: true
-                            }] : []),
-                            ...(publishResult.digest ? [{
-                              label: 'TX_DIGEST',
-                              value: publishResult.digest,
-                              copyable: true
-                            }] : []),
+                            ...(publishResult.packageId ? [{ label: 'PACKAGE_ID', value: publishResult.packageId, copyable: true }] : []),
+                            ...(publishResult.digest ? [{ label: 'TX_DIGEST', value: publishResult.digest, copyable: true }] : []),
                             ...(publishResult.createdObjects || []).map((obj: any) => ({
-                              label: obj.type?.includes('UpgradeCap') ? 'UPGRADE_CAP' :
-                                     obj.type?.includes('Package') ? 'PACKAGE_OBJECT' : 'CREATED_OBJECT',
-                              value: obj.objectId || 'N/A',
-                              copyable: true
+                              label: obj.type?.includes('UpgradeCap') ? 'UPGRADE_CAP' : obj.type?.includes('Package') ? 'PACKAGE_OBJECT' : 'CREATED_OBJECT',
+                              value: obj.objectId || 'N/A', copyable: true
                             }))
                           ]}
                         />
                       ) : (
-                        <TerminalErrorDisplay
-                          title="PUBLISH FAILED"
-                          error={publishResult.error || 'Unknown error occurred'}
-                          onRetry={handlePublish}
-                          suggestions={[
-                            'Check your gas budget is sufficient',
-                            'Verify wallet has enough SUI balance',
-                            'Ensure package builds successfully first',
-                            'Check network connection to blockchain'
-                          ]}
-                        />
+                        <TerminalErrorDisplay title="PUBLISH FAILED" error={publishResult.error || 'Unknown error'} onRetry={handlePublish}
+                          suggestions={['Check gas budget', 'Verify SUI balance', 'Ensure package builds first', 'Check network connection']} />
                       )}
                     </>
                   )}
                 </AnimatePresence>
-
-                {/* Deploy Tips */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md">
-                    <AlertCircle className="h-4 w-4 text-green-400" />
-                    <AlertDescription className="text-xs text-green-300/80 font-mono">
-                      <strong className="text-green-400">Before Publishing:</strong> Ensure your package builds and all tests pass. UpgradeCap will be auto-saved if enabled.
-                    </AlertDescription>
-                  </Alert>
-                </motion.div>
+                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
+                  <AlertCircle className="h-3 w-3 text-green-400" />
+                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                    <strong className="text-green-400">Before Publishing:</strong> Ensure your package builds and all tests pass.
+                  </AlertDescription>
+                </Alert>
               </TabsContent>
 
-              {/* Upgrade Tab */}
-              <TabsContent value="upgrade" className="space-y-4 mt-4">
-                <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                      <RefreshCw className="w-5 h-5 text-green-500" />
+              {/* Upgrade Tab - Compact */}
+              <TabsContent value="upgrade" className="space-y-2 mt-2">
+                <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
+                  <CardHeader className="py-2 px-3">
+                    <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                      <RefreshCw className="w-3.5 h-3.5 text-green-500" />
                       Upgrade Package
+                      <span className="text-[10px] text-green-500/50 ml-auto font-normal">Using UpgradeCap</span>
                     </CardTitle>
-                    <CardDescription className="text-green-500/60 font-mono text-sm">
-                      Upgrade an existing on-chain package using UpgradeCap
-                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="upgrade-cap" className="text-sm font-medium flex items-center gap-2 text-green-400 font-mono">
+                  <CardContent className="px-3 pb-3 space-y-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="upgrade-cap" className="text-xs font-medium flex items-center gap-1 text-green-400 font-mono">
                         UpgradeCap Object ID <span className="text-red-400">*</span>
                       </Label>
                       <input
@@ -1183,389 +1026,228 @@ export function MoveDeploy() {
                         type="text"
                         value={upgradeCapId}
                         onChange={(e) => setUpgradeCapId(e.target.value)}
-                        placeholder="0x... (auto-filled from recent projects)"
+                        placeholder="0x... (auto-filled from recent)"
                         disabled={isAnyLoading}
-                        className="w-full px-4 py-3 bg-black/50 border border-green-500/30 rounded-lg text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-mono text-sm"
+                        className="w-full px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 font-mono text-xs"
                       />
-                      <p className="text-xs text-green-500/50 flex items-center gap-1.5 font-mono">
-                        <AlertCircle className="w-3 h-3" />
-                        The UpgradeCap object ID from your initial package publish
+                      <p className="text-[10px] text-green-500/50 flex items-center gap-1 font-mono">
+                        <AlertCircle className="w-2.5 h-2.5" />
+                        UpgradeCap from initial publish
                       </p>
                     </div>
-
-                    <motion.button
+                    <button
                       onClick={handleUpgrade}
                       disabled={!isValidPath || !upgradeCapId.trim() || upgrading || isAnyLoading}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full px-6 py-4 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 font-mono"
+                      className="w-full px-4 py-2.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm font-mono"
                     >
                       {upgrading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Upgrading Package...
-                        </>
+                        <><Loader2 className="w-4 h-4 animate-spin" />Upgrading...</>
                       ) : (
-                        <>
-                          <RefreshCw className="w-5 h-5" />
-                          Upgrade Package
-                        </>
+                        <><RefreshCw className="w-4 h-4" />Upgrade Package</>
                       )}
-                    </motion.button>
-
-                    {/* Loading state */}
+                    </button>
                     <AnimatePresence mode="wait">
                       {upgrading && !publishResult && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg space-y-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Loader2 className="w-5 h-5 text-green-400 animate-spin flex-shrink-0" />
-                            <span className="text-sm text-green-400 font-mono">Upgrading package...</span>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          className="p-2 bg-green-500/10 border border-green-500/30 rounded space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
+                            <span className="text-[10px] text-green-400 font-mono">Upgrading...</span>
                           </div>
-                          <Skeleton className="h-3 w-full bg-green-500/20" />
-                          <Skeleton className="h-3 w-3/4 bg-green-500/10" />
+                          <Skeleton className="h-2 w-full bg-green-500/20" />
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </CardContent>
                 </Card>
-
-                {/* Upgrade Tips */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md">
-                    <AlertCircle className="h-4 w-4 text-green-400" />
-                    <AlertDescription className="text-xs text-green-300/80 font-mono">
-                      <strong className="text-green-400">Upgrade Requirements:</strong> You must own the UpgradeCap, build your updated package first, and ensure compatibility with existing on-chain state.
-                    </AlertDescription>
-                  </Alert>
-                </motion.div>
+                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
+                  <AlertCircle className="h-3 w-3 text-green-400" />
+                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                    <strong className="text-green-400">Requirements:</strong> Own the UpgradeCap, build updated package first.
+                  </AlertDescription>
+                </Alert>
               </TabsContent>
 
-              {/* Interact Tab */}
-              <TabsContent value="interact" className="space-y-4 mt-4">
-                {/* Package Loader */}
-                <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                      <Package className="w-5 h-5 text-green-500" />
+              {/* Interact Tab - Compact */}
+              <TabsContent value="interact" className="space-y-2 mt-2">
+                {/* Package Loader - Compact */}
+                <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
+                  <CardHeader className="py-2 px-3">
+                    <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                      <Package className="w-3.5 h-3.5 text-green-500" />
                       Load Package
+                      <span className="text-[10px] text-green-500/50 ml-auto font-normal">Enter package ID to inspect</span>
                     </CardTitle>
-                    <CardDescription className="text-green-500/60 font-mono text-sm">
-                      Enter a deployed package ID to inspect and call its functions
-                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex gap-2">
+                  <CardContent className="px-3 pb-3 space-y-2">
+                    <div className="flex gap-1.5">
                       <input
                         type="text"
                         value={targetPackageId}
                         onChange={(e) => setTargetPackageId(e.target.value)}
-                        placeholder="0x... (auto-filled from publish or last used)"
-                        className="flex-1 px-4 py-3 bg-black/50 border border-green-500/30 rounded-lg text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-mono text-sm"
+                        placeholder="0x... (auto-filled from publish)"
+                        className="flex-1 px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 font-mono text-xs"
                         disabled={loadingFunctions}
                       />
-                      <motion.button
+                      <button
                         onClick={handleLoadPackage}
                         disabled={!targetPackageId.trim() || loadingFunctions}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-4 py-3 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium text-sm whitespace-nowrap shadow-lg shadow-green-500/20 font-mono"
+                        className="px-3 py-1.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-xs whitespace-nowrap font-mono"
                       >
                         {loadingFunctions ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Loading...
-                          </>
+                          <><Loader2 className="w-3 h-3 animate-spin" />Loading...</>
                         ) : (
-                          <>
-                            <Package className="w-4 h-4" />
-                            Load Package
-                          </>
+                          <><Package className="w-3 h-3" />Load</>
                         )}
-                      </motion.button>
+                      </button>
                     </div>
-
                     <AnimatePresence mode="wait">
                       {loadingFunctions && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="space-y-2"
-                        >
-                          <Skeleton className="h-4 w-full bg-green-500/20" />
-                          <Skeleton className="h-4 w-3/4 bg-green-500/10" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-1">
+                          <Skeleton className="h-2 w-full bg-green-500/20" />
+                          <Skeleton className="h-2 w-3/4 bg-green-500/10" />
                         </motion.div>
                       )}
                     </AnimatePresence>
-
                     {packageModules.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                      >
-                        <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md">
-                          <CheckCircle2 className="h-4 w-4 text-green-400" />
-                          <AlertDescription className="text-xs text-green-300/80 font-mono">
-                            <strong className="text-green-400">Package loaded!</strong> Found {packageModules.length} module(s). Select a function below to call it.
-                          </AlertDescription>
-                        </Alert>
-                      </motion.div>
+                      <div className="flex items-center gap-1.5 p-1.5 bg-green-500/10 border border-green-500/30 rounded">
+                        <CheckCircle2 className="h-3 w-3 text-green-400" />
+                        <span className="text-[10px] text-green-300/80 font-mono">
+                          <strong className="text-green-400">Loaded!</strong> {packageModules.length} module(s)
+                        </span>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Function List */}
+                {/* Function List - Compact */}
                 {packageModules.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-lg shadow-green-500/10">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                          <FileCode className="w-5 h-5 text-green-500" />
-                          Available Functions
-                        </CardTitle>
-                        <CardDescription className="text-green-500/60 font-mono text-sm">
-                          Click a function to select it and fill in parameters
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-                        {packageModules.map((module) => (
-                          <div key={module.name} className="border border-green-500/30 rounded-lg overflow-hidden">
-                            {/* Module Header */}
-                            <motion.button
-                              onClick={() => toggleModule(module.name)}
-                              whileHover={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
-                              className="w-full px-4 py-3 bg-black/30 hover:bg-green-500/10 transition-colors flex items-center justify-between text-sm font-medium"
-                            >
-                              <span className="flex items-center gap-2">
-                                <Code className="w-4 h-4 text-green-400" />
-                                <span className="text-green-400 font-mono">{module.name}</span>
-                                <Badge className="bg-green-500/20 text-green-400 text-xs border-green-500/30 font-mono">
-                                  {module.functions.length}
-                                </Badge>
-                              </span>
-                              <motion.div
-                                animate={{ rotate: expandedModules.has(module.name) ? 180 : 0 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <ChevronDown className="w-4 h-4 text-green-400" />
-                              </motion.div>
-                            </motion.button>
-
-                            {/* Functions */}
-                            <AnimatePresence>
-                              {expandedModules.has(module.name) && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  className="divide-y divide-green-500/20 overflow-hidden"
-                                >
-                                  {module.functions.map((func) => {
-                                    const isEntry = func.visibility === 'public' || func.visibility === 'entry';
-                                    const isSelected =
-                                      selectedFunction?.name === func.name &&
-                                      selectedModuleName === module.name;
-
-                                    return (
-                                      <motion.button
-                                        key={func.name}
-                                        onClick={() => handleSelectFunction(func, module.name)}
-                                        whileHover={{ x: 4 }}
-                                        className={`w-full px-4 py-3 text-left hover:bg-green-500/10 transition-all ${
-                                          isSelected ? 'bg-green-500/10 border-l-2 border-green-500' : ''
-                                        }`}
-                                      >
-                                        <div className="flex items-start gap-2">
-                                          <Zap
-                                            className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                                              isEntry ? 'text-green-400' : 'text-green-500/50'
-                                            }`}
-                                          />
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <span className="font-medium text-sm text-green-400 font-mono">{func.name}</span>
-                                              <Badge
-                                                className={`text-xs font-mono ${
-                                                  isEntry
-                                                    ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                                                    : 'bg-green-500/10 text-green-500/60 border-green-500/20'
-                                                }`}
-                                              >
-                                                {func.visibility}
-                                              </Badge>
-                                            </div>
-                                            <code className="text-xs text-green-500/70 break-all font-mono">
-                                              {func.signature}
-                                            </code>
-                                          </div>
-                                        </div>
-                                      </motion.button>
-                                    );
-                                  })}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-
-                {/* Function Call Form */}
-                {selectedFunction && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                  >
-                    <Card className="bg-black/40 backdrop-blur-md border-green-500/50 shadow-lg shadow-green-500/20 relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-green-500/50" />
-
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-green-400 font-mono">
-                          <PlayCircle className="w-5 h-5 text-green-500" />
-                          Call Function: {selectedFunction.name}
-                        </CardTitle>
-                        <CardDescription className="font-mono text-xs text-green-500/60">
-                          {selectedModuleName}::{selectedFunction.name}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Type Arguments */}
-                        {selectedFunction.typeParameters.length > 0 && (
-                          <div className="space-y-2">
-                            <Label className="text-sm font-medium text-green-400 font-mono">
-                              Type Arguments ({selectedFunction.typeParameters.length})
-                            </Label>
-                            <div className="space-y-2">
-                              {selectedFunction.typeParameters.map((typeParam, idx) => (
-                                <input
-                                  key={idx}
-                                  type="text"
-                                  value={functionTypeArgs[idx] || ''}
-                                  onChange={(e) => {
-                                    const newTypeArgs = [...functionTypeArgs];
-                                    newTypeArgs[idx] = e.target.value;
-                                    setFunctionTypeArgs(newTypeArgs);
-                                  }}
-                                  placeholder={`Type for ${typeParam} (e.g., 0x2::sui::SUI)`}
-                                  className="w-full px-4 py-3 bg-black/50 border border-green-500/30 rounded-lg text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-mono text-sm"
-                                />
-                              ))}
-                            </div>
-                            <p className="text-xs text-green-500/50 font-mono">
-                              Provide full type paths for generic parameters
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Function Parameters - Enhanced with ParameterInputField */}
-                        {selectedFunction.parameters.filter((p) => p.name !== 'ctx' && p.name !== '_ctx')
-                          .length > 0 && (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-green-400 font-mono">Parameters</Label>
-                              {analyzingParams && (
-                                <span className="flex items-center gap-1.5 text-xs text-green-500/60">
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                  Analyzing...
-                                </span>
-                              )}
-                            </div>
-                            <div className="space-y-4">
-                              {selectedFunction.parameters
-                                .filter((p) => p.name !== 'ctx' && p.name !== '_ctx')
-                                .map((param, idx) => {
-                                  // Check if we have analyzed data for this parameter
-                                  const analyzedParam = analyzedParams[idx];
-
-                                  if (analyzedParam) {
-                                    // Use enhanced ParameterInputField
-                                    return (
-                                      <div key={idx} className="p-3 bg-black/30 border border-green-500/20 rounded-lg">
-                                        <ParameterInputField
-                                          parameter={analyzedParam}
-                                          value={functionArgs[idx] || ''}
-                                          onChange={(value) => {
-                                            const newArgs = [...functionArgs];
-                                            newArgs[idx] = value;
-                                            setFunctionArgs(newArgs);
-                                          }}
-                                          onRefreshSuggestions={handleRefreshSuggestions}
-                                          isLoading={analyzingParams}
-                                          disabled={calling}
-                                        />
-                                      </div>
-                                    );
-                                  }
-
-                                  // Fallback to simple input if no analysis available
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
+                    <CardHeader className="py-2 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                        <FileCode className="w-3.5 h-3.5 text-green-500" />
+                        Functions
+                        <span className="text-[10px] text-green-500/50 ml-auto font-normal">Click to select</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-2 space-y-1 max-h-48 overflow-y-auto">
+                      {packageModules.map((module) => (
+                        <div key={module.name} className="border border-green-500/30 rounded overflow-hidden">
+                          <button
+                            onClick={() => toggleModule(module.name)}
+                            className="w-full px-2 py-1.5 bg-black/30 hover:bg-green-500/10 transition-colors flex items-center justify-between text-xs"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Code className="w-3 h-3 text-green-400" />
+                              <span className="text-green-400 font-mono">{module.name}</span>
+                              <Badge className="bg-green-500/20 text-green-400 text-[10px] border-green-500/30 font-mono px-1">
+                                {module.functions.length}
+                              </Badge>
+                            </span>
+                            <ChevronDown className={`w-3 h-3 text-green-400 transition-transform ${expandedModules.has(module.name) ? 'rotate-180' : ''}`} />
+                          </button>
+                          <AnimatePresence>
+                            {expandedModules.has(module.name) && (
+                              <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+                                className="divide-y divide-green-500/20 overflow-hidden">
+                                {module.functions.map((func) => {
+                                  const isEntry = func.visibility === 'public' || func.visibility === 'entry';
+                                  const isSelected = selectedFunction?.name === func.name && selectedModuleName === module.name;
                                   return (
-                                    <div key={idx} className="space-y-1">
-                                      <Label className="text-xs text-green-500/70 font-mono">
-                                        {param.name}: {param.type}
-                                      </Label>
-                                      <input
-                                        type="text"
-                                        value={functionArgs[idx] || ''}
-                                        onChange={(e) => {
-                                          const newArgs = [...functionArgs];
-                                          newArgs[idx] = e.target.value;
-                                          setFunctionArgs(newArgs);
-                                        }}
-                                        placeholder={`Enter ${param.type} value`}
-                                        disabled={calling}
-                                        className="w-full px-4 py-3 bg-black/50 border border-green-500/30 rounded-lg text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all text-sm font-mono disabled:opacity-50"
-                                      />
-                                    </div>
+                                    <button
+                                      key={func.name}
+                                      onClick={() => handleSelectFunction(func, module.name)}
+                                      className={`w-full px-2 py-1.5 text-left hover:bg-green-500/10 transition-all ${isSelected ? 'bg-green-500/10 border-l-2 border-green-500' : ''}`}
+                                    >
+                                      <div className="flex items-center gap-1.5">
+                                        <Zap className={`w-2.5 h-2.5 flex-shrink-0 ${isEntry ? 'text-green-400' : 'text-green-500/50'}`} />
+                                        <span className="text-xs text-green-400 font-mono truncate">{func.name}</span>
+                                        <Badge className={`text-[9px] px-1 font-mono ${isEntry ? 'bg-green-500/20 text-green-400' : 'bg-green-500/10 text-green-500/60'}`}>
+                                          {func.visibility}
+                                        </Badge>
+                                      </div>
+                                      <code className="text-[10px] text-green-500/50 truncate block mt-0.5 font-mono">{func.signature}</code>
+                                    </button>
                                   );
                                 })}
-                            </div>
-                            {!activeAddress && (
-                              <p className="text-xs text-yellow-500/70 font-mono">
-                                Connect wallet to get parameter suggestions
-                              </p>
+                              </motion.div>
                             )}
-                          </div>
-                        )}
+                          </AnimatePresence>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
 
-                        {/* Call Button */}
-                        <motion.button
-                          onClick={handleCallFunction}
-                          disabled={calling}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative group w-full px-6 py-4 bg-green-500/20 border-2 border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 overflow-hidden font-mono"
-                        >
-                          <span className="relative flex items-center gap-2">
-                            {calling ? (
-                              <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Calling Function...
-                              </>
-                            ) : (
-                              <>
-                                <Zap className="w-5 h-5" />
-                                Call Function
-                              </>
-                            )}
-                          </span>
-                        </motion.button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                {/* Function Call Form - Compact */}
+                {selectedFunction && (
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/50 shadow-md relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-green-500/50" />
+                    <CardHeader className="py-2 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                        <PlayCircle className="w-3.5 h-3.5 text-green-500" />
+                        {selectedFunction.name}
+                        <span className="text-[10px] text-green-500/50 ml-auto font-normal">{selectedModuleName}::{selectedFunction.name}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3 space-y-2">
+                      {/* Type Arguments - Compact */}
+                      {selectedFunction.typeParameters.length > 0 && (
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium text-green-400 font-mono">Type Args ({selectedFunction.typeParameters.length})</Label>
+                          <div className="space-y-1">
+                            {selectedFunction.typeParameters.map((typeParam, idx) => (
+                              <input key={idx} type="text" value={functionTypeArgs[idx] || ''}
+                                onChange={(e) => { const n = [...functionTypeArgs]; n[idx] = e.target.value; setFunctionTypeArgs(n); }}
+                                placeholder={`${typeParam} (e.g., 0x2::sui::SUI)`}
+                                className="w-full px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 font-mono text-xs"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* Parameters - Compact */}
+                      {selectedFunction.parameters.filter((p) => p.name !== 'ctx' && p.name !== '_ctx').length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-medium text-green-400 font-mono">Parameters</Label>
+                            {analyzingParams && <span className="flex items-center gap-1 text-[10px] text-green-500/60"><Loader2 className="w-2.5 h-2.5 animate-spin" />Analyzing...</span>}
+                          </div>
+                          <div className="space-y-2">
+                            {selectedFunction.parameters.filter((p) => p.name !== 'ctx' && p.name !== '_ctx').map((param, idx) => {
+                              const analyzedParam = analyzedParams[idx];
+                              if (analyzedParam) {
+                                return (
+                                  <div key={idx} className="p-2 bg-black/30 border border-green-500/20 rounded">
+                                    <ParameterInputField parameter={analyzedParam} value={functionArgs[idx] || ''}
+                                      onChange={(v) => { const n = [...functionArgs]; n[idx] = v; setFunctionArgs(n); }}
+                                      onRefreshSuggestions={handleRefreshSuggestions} isLoading={analyzingParams} disabled={calling} />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div key={idx} className="space-y-0.5">
+                                  <Label className="text-[10px] text-green-500/70 font-mono">{param.name}: {param.type}</Label>
+                                  <input type="text" value={functionArgs[idx] || ''}
+                                    onChange={(e) => { const n = [...functionArgs]; n[idx] = e.target.value; setFunctionArgs(n); }}
+                                    placeholder={`Enter ${param.type}`} disabled={calling}
+                                    className="w-full px-2.5 py-1.5 bg-black/50 border border-green-500/30 rounded text-green-400 placeholder:text-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/50 text-xs font-mono disabled:opacity-50"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {!activeAddress && <p className="text-[10px] text-yellow-500/70 font-mono">Connect wallet for suggestions</p>}
+                        </div>
+                      )}
+                      {/* Call Button - Compact */}
+                      <button onClick={handleCallFunction} disabled={calling}
+                        className="w-full px-4 py-2.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm font-mono"
+                      >
+                        {calling ? <><Loader2 className="w-4 h-4 animate-spin" />Calling...</> : <><Zap className="w-4 h-4" />Call Function</>}
+                      </button>
+                    </CardContent>
+                  </Card>
                 )}
 
                 {/* Transaction Result */}
@@ -1573,32 +1255,14 @@ export function MoveDeploy() {
                   {callResult && (
                     <>
                       {callResult.error ? (
-                        <TerminalErrorDisplay
-                          title="FUNCTION CALL FAILED"
-                          error={callResult.error}
-                          onRetry={handleCallFunction}
-                          suggestions={[
-                            'Check function parameters are correct',
-                            'Verify type arguments match the function signature',
-                            'Ensure you have sufficient gas',
-                            'Confirm the function is callable (entry/public)'
-                          ]}
-                        />
+                        <TerminalErrorDisplay title="CALL FAILED" error={callResult.error} onRetry={handleCallFunction}
+                          suggestions={['Check parameters', 'Verify type args', 'Check gas', 'Ensure entry/public']} />
                       ) : (
-                        <TerminalSuccessDisplay
-                          title="FUNCTION EXECUTED"
+                        <TerminalSuccessDisplay title="EXECUTED"
                           command={`sui client call --package ${targetPackageId} --module ${selectedModuleName} --function ${selectedFunction?.name}`}
                           fields={[
-                            ...(callResult.digest ? [{
-                              label: 'TX_DIGEST',
-                              value: callResult.digest,
-                              copyable: true
-                            }] : []),
-                            ...(callResult.gasUsed ? [{
-                              label: 'GAS_USED',
-                              value: `${callResult.gasUsed} MIST`,
-                              copyable: false
-                            }] : [])
+                            ...(callResult.digest ? [{ label: 'TX_DIGEST', value: callResult.digest, copyable: true }] : []),
+                            ...(callResult.gasUsed ? [{ label: 'GAS_USED', value: `${callResult.gasUsed} MIST`, copyable: false }] : [])
                           ]}
                           message="Function executed successfully"
                         />
@@ -1606,20 +1270,13 @@ export function MoveDeploy() {
                     </>
                   )}
                 </AnimatePresence>
-
-                {/* Interaction Tips */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md">
-                    <Lightbulb className="h-4 w-4 text-green-400" />
-                    <AlertDescription className="text-xs text-green-300/80 font-mono">
-                      <strong className="text-green-400">Tips:</strong> Package ID is auto-filled from your publish results. Only entry/public functions can be called directly. Type arguments use full paths like <code className="bg-black/50 px-1 py-0.5 rounded text-green-400">0x2::sui::SUI</code>.
-                    </AlertDescription>
-                  </Alert>
-                </motion.div>
+                {/* Tips - Compact */}
+                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
+                  <Lightbulb className="h-3 w-3 text-green-400" />
+                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                    <strong className="text-green-400">Tips:</strong> Package ID auto-filled from publish. Type args use full paths: <code className="bg-black/50 px-0.5 rounded text-green-400">0x2::sui::SUI</code>
+                  </AlertDescription>
+                </Alert>
               </TabsContent>
             </Tabs>
           </motion.div>

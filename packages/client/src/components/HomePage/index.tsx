@@ -1,785 +1,600 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MembershipJoin } from '../MembershipJoin';
-import { AnimatedGradient } from '@/components/ui/animated-gradient';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TierBadge, TIER_DROPLET, TIER_WAVE, TIER_TSUNAMI, TIER_OCEAN, TIER_METADATA } from '../TierBadge';
-import { useAppStore } from '@/stores/useAppStore';
+import { useScrollReveal, useActiveSection, scrollToSection } from '@/hooks/useScrollReveal';
+import { useScrollProgress, useReducedMotion } from '@/hooks/useScrollProgress';
+import { TypingText } from '@/components/ui/typing-text';
+import { GlitchText } from '@/components/ui/glitch-text';
+import { ScrollDownIndicator } from '@/components/ui/scroll-down-indicator';
+import { SectionDots } from '@/components/ui/section-dots';
+import { suiService } from '@/services/SuiService';
 import {
   Terminal,
   Wallet,
   Network,
   Zap,
   Shield,
-  Code2,
-  Sparkles,
   Github,
-  Download,
   Users,
-  TrendingUp,
   ChevronRight,
-  Apple,
-  Box,
-  MonitorSmartphone,
-  ArrowRight
+  Package,
+  Eye,
+  Droplets,
+  Send,
+  ExternalLink,
+  Copy,
+  CheckCircle2,
+  Database,
+  ChevronDown,
 } from 'lucide-react';
+
+// Contract addresses for verification
+const CONTRACT_INFO = {
+  packageId: '0xffb8f17c91212d170cb0fee4128b8b44277bfd19af040590cfae08c1abd2bbd2',
+  registryId: '0x7bf988f34c98d5b69d60264083c581d90fa97c51e902846bed491c0f6bf9b80b',
+  network: 'testnet',
+  explorerBase: 'https://suiscan.xyz/testnet',
+};
+
+// Beta features list with status
+const BETA_FEATURES = [
+  { id: 'address', icon: <Wallet className="w-5 h-5" />, title: 'Address Management', status: 'stable' as const },
+  { id: 'transfer', icon: <Send className="w-5 h-5" />, title: 'Transfer System', status: 'stable' as const },
+  { id: 'gas', icon: <Zap className="w-5 h-5" />, title: 'Gas Management', status: 'stable' as const },
+  { id: 'network', icon: <Network className="w-5 h-5" />, title: 'Network Switch', status: 'stable' as const },
+  { id: 'faucet', icon: <Droplets className="w-5 h-5" />, title: 'Faucet Integration', status: 'stable' as const },
+  { id: 'community', icon: <Users className="w-5 h-5" />, title: 'Community & Tiers', status: 'stable' as const },
+  { id: 'move', icon: <Package className="w-5 h-5" />, title: 'Move Development', status: 'beta' as const },
+  { id: 'inspector', icon: <Eye className="w-5 h-5" />, title: 'Transaction Inspector', status: 'beta' as const },
+];
+
+// Section IDs for navigation
+const SECTIONS = [
+  { id: 'hero', label: 'Home' },
+  { id: 'features', label: 'Features' },
+  { id: 'contract', label: 'Contract' },
+  { id: 'community', label: 'Community' },
+  { id: 'cta', label: 'Get Started' },
+];
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [showMembershipModal, setShowMembershipModal] = useState(false);
-  const { communityStats } = useAppStore();
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [heroTypingComplete, setHeroTypingComplete] = useState(false);
+  const [memberCount, setMemberCount] = useState<number>(0);
+  const scrollProgress = useScrollProgress();
+  const activeSection = useActiveSection(SECTIONS.map(s => s.id));
+  const prefersReducedMotion = useReducedMotion();
+
+  // Fetch community stats directly from blockchain on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await suiService.getCommunityStats();
+        setMemberCount(stats.totalMembers);
+      } catch (error) {
+        console.error('Failed to fetch community stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Copy address to clipboard
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAddress(id);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleScrollToFeatures = useCallback(() => {
+    scrollToSection('features');
+  }, []);
 
   return (
-    <div className="relative w-full min-h-screen overflow-y-auto overflow-x-hidden">
-      {/* Lighter overlay gradient for brighter appearance */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+    <div className="relative w-full min-h-screen overflow-y-auto overflow-x-hidden font-mono">
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 z-50 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 origin-left"
+        style={{ scaleX: scrollProgress / 100 }}
+        initial={{ scaleX: 0 }}
+      />
+
+      {/* Section Navigation Dots - Hidden on mobile */}
+      <div className="hidden md:block">
+        <SectionDots
+          sections={SECTIONS}
+          activeIndex={activeSection}
+          onDotClick={scrollToSection}
+        />
+      </div>
+
+      {/* Darker overlay for hacker aesthetic */}
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/40 via-black/20 to-black/60 pointer-events-none" />
+
+      {/* Scanline effect */}
+      <div className="fixed inset-0 z-[2] pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,0,0.1) 2px, rgba(255,0,0,0.1) 4px)',
+        }}
+      />
 
       {/* Content */}
       <div className="relative z-10">
-        {/* Hero Section */}
-        <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-20">
-          <div className="max-w-6xl w-full text-center space-y-8">
-            {/* Logo with pulse animation */}
-            <div className="inline-flex items-center justify-center gap-3 mb-6 animate-slide-up">
-              <div className="relative">
-                <div className="absolute inset-0 bg-rose-500 blur-xl opacity-50 animate-pulse" />
-                <svg
-                  className="relative w-16 h-16 text-rose-500"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-            </div>
+        {/* ============ HERO SECTION ============ */}
+        <section id="hero" className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 relative">
+          <div className="max-w-4xl w-full text-center space-y-8">
+            {/* Terminal-style header */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-rose-500/30 rounded-lg text-rose-400 text-sm"
+            >
+              <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+              <span className="font-mono">v1.2.0</span>
+              <span className="text-white/30">|</span>
+              <span className="text-white/50">sui-cli-web</span>
+            </motion.div>
 
-            {/* Main Headline */}
-            <div className="space-y-4 animate-fade-in">
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-tight">
-                Your <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-clip-text text-transparent animate-gradient-x" style={{ backgroundSize: '200% auto' }}>Local Sui CLI</span>
-                <br />
-                <span className="text-white/90">Supercharged</span>
+            {/* Main Headline with Typing Effect */}
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-tight">
+                {prefersReducedMotion ? (
+                  <>
+                    <span className="text-rose-500">$</span> sui-cli
+                    <br />
+                    <GlitchText className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+                      supercharged
+                    </GlitchText>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-rose-500">$</span>{' '}
+                    <TypingText
+                      text="sui-cli"
+                      speed={80}
+                      delay={500}
+                      onComplete={() => setHeroTypingComplete(true)}
+                    />
+                    <br />
+                    <AnimatePresence>
+                      {heroTypingComplete && (
+                        <motion.span
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-clip-text text-transparent"
+                        >
+                          <GlitchText>supercharged</GlitchText>
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-white/70 max-w-3xl mx-auto leading-relaxed">
-                A beautiful, Raycast-inspired web interface for the Sui blockchain CLI.
-                <br />
-                <span className="text-white/60 text-base sm:text-lg">Fast, secure, and works entirely on your machine.</span>
-              </p>
-            </div>
 
-            {/* Cross-Platform Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 animate-slide-up" style={{ animationDelay: '0.1s', opacity: 0, animationFillMode: 'forwards' }}>
-              <PlatformBadge icon={<Apple className="w-4 h-4" />} name="macOS" />
-              <PlatformBadge icon={<Box className="w-4 h-4" />} name="Linux" />
-              <PlatformBadge icon={<MonitorSmartphone className="w-4 h-4" />} name="Windows" />
+              <motion.p
+                className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: heroTypingComplete || prefersReducedMotion ? 1 : 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                Raycast-style interface for Sui blockchain.
+                <br />
+                <span className="text-rose-400/80">100% local. 100% secure.</span>
+              </motion.p>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-scale-in" style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards' }}>
+            <motion.div
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: heroTypingComplete || prefersReducedMotion ? 1 : 0, y: heroTypingComplete || prefersReducedMotion ? 0 : 20 }}
+              transition={{ delay: 0.5 }}
+            >
               <button
                 onClick={() => navigate('/setup')}
-                className="group relative px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 hover:scale-105 overflow-hidden min-w-[200px]"
+                className="group relative px-8 py-4 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 hover:border-rose-500 text-rose-400 font-bold rounded-lg transition-all duration-200 min-w-[200px] overflow-hidden"
               >
-                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                <span className="relative flex items-center justify-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Get Started
+                <span className="relative flex items-center justify-center gap-2 font-mono">
+                  <Terminal className="w-5 h-5" />
+                  ./install.sh
                   <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </span>
               </button>
 
               <button
                 onClick={() => navigate('/app')}
-                className="group px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-xl transition-all duration-200 border border-white/10 hover:border-rose-500/30 min-w-[200px] flex items-center justify-center gap-2"
+                className="group px-8 py-4 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white font-bold rounded-lg transition-all duration-200 border border-white/10 hover:border-white/20 min-w-[200px] font-mono"
               >
-                <Terminal className="w-5 h-5" />
-                Launch CLI
-                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                <span className="flex items-center justify-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  launch --now
+                </span>
               </button>
 
               <a
                 href="https://github.com/hien-p/raycast-sui-cli"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-xl transition-all duration-200 border border-white/10 hover:border-rose-500/30 min-w-[200px] flex items-center justify-center gap-2"
+                className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-mono rounded-lg transition-all border border-white/10 hover:border-white/20"
               >
-                <Github className="w-5 h-5" />
-                View on GitHub
+                <span className="flex items-center gap-2">
+                  <Github className="w-5 h-5" />
+                  src
+                </span>
               </a>
-            </div>
+            </motion.div>
 
-            {/* Keyboard shortcut hint */}
-            <p className="text-sm text-white/40 animate-fade-in" style={{ animationDelay: '0.3s', opacity: 0, animationFillMode: 'forwards' }}>
-              Press <kbd className="px-2 py-1 bg-white/10 rounded text-white/60 font-mono text-xs mx-1">⌘K</kbd> in the app to launch command palette
-            </p>
-          </div>
-        </section>
-
-        {/* Enhanced Stats Section with Animation */}
-        <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.03] to-transparent">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-              <StatCard
-                icon={<Users className="w-6 h-6" />}
-                value={communityStats.totalMembers.toLocaleString()}
-                label="Community Members"
-                color="rose"
-              />
-              <StatCard
-                icon={<TrendingUp className="w-6 h-6" />}
-                value="135+"
-                label="Components"
-                color="pink"
-              />
-              <StatCard
-                icon={<Github className="w-6 h-6" />}
-                value="Open Source"
-                label="MIT License"
-                color="purple"
-              />
-              <StatCard
-                icon={<Shield className="w-6 h-6" />}
-                value="100%"
-                label="Local & Secure"
-                color="green"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Demo Showcase Section */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-full text-sm text-rose-400 font-medium mb-6">
-                <Sparkles className="w-4 h-4" />
-                See It In Action
+            {/* Quick Stats */}
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-6 text-sm font-mono"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: heroTypingComplete || prefersReducedMotion ? 1 : 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <div className="flex items-center gap-2 text-white/50">
+                <Users className="w-4 h-4 text-rose-400" />
+                <span>{memberCount.toLocaleString()} members</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-                Powerful Yet Simple
+              <div className="flex items-center gap-2 text-white/50">
+                <Shield className="w-4 h-4 text-green-400" />
+                <span>open source</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/50">
+                <Package className="w-4 h-4 text-purple-400" />
+                <span>8 modules</span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Scroll Down Indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+            <ScrollDownIndicator onClick={handleScrollToFeatures} />
+          </div>
+        </section>
+
+        {/* ============ FEATURES SECTION ============ */}
+        <AnimatedSectionWrapper id="features" className="py-24 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-16">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-rose-500/30 rounded-lg text-sm mb-6"
+              >
+                <span className="text-rose-400 font-mono">cat</span>
+                <span className="text-white/50">features.md</span>
+              </motion.div>
+
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 font-mono">
+                <span className="text-rose-500">#</span> What's{' '}
+                <GlitchText className="text-rose-400">included</GlitchText>
               </h2>
-              <p className="text-lg text-white/60 max-w-2xl mx-auto">
-                A command palette interface that makes complex blockchain operations feel effortless
-              </p>
             </div>
 
-            {/* Screenshot/Demo Placeholder with Glow Effect */}
-            <div className="relative max-w-5xl mx-auto">
-              <div className="absolute -inset-4 bg-gradient-to-r from-rose-500/20 via-pink-500/20 to-rose-500/20 rounded-3xl blur-3xl" />
-              <div className="relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                {/* Mock Screenshot/Terminal */}
-                <div className="aspect-video bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] p-8 flex flex-col justify-center items-center">
-                  <div className="w-full max-w-2xl space-y-4">
-                    {/* Mock Command Palette */}
-                    <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Terminal className="w-5 h-5 text-rose-500" />
-                        <span className="text-white/60 text-sm">sui</span>
-                        <span className="text-white/40">›</span>
-                        <span className="text-white text-sm">client transfer --to 0x123... --amount 10</span>
-                      </div>
-                      <div className="space-y-2 pl-8">
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-green-400 rounded-full" />
-                          <span className="text-white/80 font-mono">Transfer Successful</span>
-                          <span className="text-rose-400 ml-auto">Digest: 5A2...9xP</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-white/20 rounded-full" />
-                          <span className="text-white/60">Gas Used:</span>
-                          <span className="text-white/80">0.002 SUI</span>
-                        </div>
-                      </div>
-                    </div>
+            {/* Features Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              {BETA_FEATURES.map((feature, index) => (
+                <FeatureCard key={feature.id} feature={feature} index={index} />
+              ))}
+            </div>
 
-                    {/* Feature Highlights */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-white/[0.03] backdrop-blur border border-white/5 rounded-lg p-4 text-center">
-                        <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                        <p className="text-xs text-white/60">Instant Switching</p>
-                      </div>
-                      <div className="bg-white/[0.03] backdrop-blur border border-white/5 rounded-lg p-4 text-center">
-                        <Shield className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                        <p className="text-xs text-white/60">100% Secure</p>
-                      </div>
-                      <div className="bg-white/[0.03] backdrop-blur border border-white/5 rounded-lg p-4 text-center">
-                        <Sparkles className="w-6 h-6 text-rose-500 mx-auto mb-2" />
-                        <p className="text-xs text-white/60">Beautiful UI</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* Status Summary */}
+            <motion.div
+              className="mt-8 text-center"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="inline-flex items-center gap-4 px-6 py-3 bg-black/40 border border-white/10 rounded-lg font-mono text-sm">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-400 rounded-full" />
+                  <span className="text-green-400">6 stable</span>
+                </span>
+                <span className="text-white/20">|</span>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-pulse" />
+                  <span className="text-rose-400">2 beta</span>
+                </span>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </AnimatedSectionWrapper>
 
-        {/* Features Bento Grid */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-                Everything You Need
-              </h2>
-              <p className="text-lg text-white/60 max-w-2xl mx-auto">
-                Professional-grade tools for managing your Sui blockchain operations
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              <FeatureBentoCard
-                icon={<Wallet className="w-8 h-8" />}
-                title="Multi-Address Management"
-                description="Create, switch, and manage unlimited Sui addresses with ease. Import existing wallets or generate new ones."
-                gradient="rose"
-              />
-              <FeatureBentoCard
-                icon={<Network className="w-8 h-8" />}
-                title="Network Switching"
-                description="Seamlessly switch between Mainnet, Testnet, and Devnet. Custom RPC endpoints supported."
-                gradient="pink"
-              />
-              <FeatureBentoCard
-                icon={<Zap className="w-8 h-8" />}
-                title="Gas Optimization"
-                description="Split and merge gas coins intelligently. Visualize gas usage and optimize transaction costs."
-                gradient="purple"
-              />
-              <FeatureBentoCard
-                icon={<ArrowRight className="w-8 h-8" />}
-                title="Secure Transfers"
-                description="Send SUI and tokens with confidence. Built-in gas estimation and address validation."
-                gradient="green"
-              />
-              <FeatureBentoCard
-                icon={<Sparkles className="w-8 h-8" />}
-                title="Community & Tiers"
-                description="Join the community, earn tier badges, and showcase your on-chain activity with NFT cards."
-                gradient="ocean"
-              />
-              <FeatureBentoCard
-                icon={<Shield className="w-8 h-8" />}
-                title="Privacy First"
-                description="Your private keys never leave your machine. All operations run locally via your Sui CLI."
-                gradient="rose"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Technology Stack */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.02] to-transparent">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full text-sm text-purple-400 font-medium mb-6">
-                <Code2 className="w-4 h-4" />
-                Built With Modern Stack
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-                Powered by Best-in-Class Tools
-              </h2>
-              <p className="text-lg text-white/60 max-w-2xl mx-auto">
-                Enterprise-grade technologies ensuring performance, security, and developer experience
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <TechStackCard name="React 18" icon="⚛️" color="cyan" />
-              <TechStackCard name="TypeScript" icon="💙" color="blue" />
-              <TechStackCard name="Fastify" icon="⚡" color="yellow" />
-              <TechStackCard name="Sui Move" icon="🌊" color="teal" />
-              <TechStackCard name="TailwindCSS" icon="🎨" color="sky" />
-              <TechStackCard name="Vite" icon="⚡" color="purple" />
-            </div>
-
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white/[0.02] backdrop-blur border border-white/5 rounded-xl p-6 text-center">
-                <div className="text-3xl font-bold text-white mb-2">3-Tier</div>
-                <div className="text-sm text-white/60">Browser → Server → CLI Architecture</div>
-              </div>
-              <div className="bg-white/[0.02] backdrop-blur border border-white/5 rounded-xl p-6 text-center">
-                <div className="text-3xl font-bold text-white mb-2">&lt;100ms</div>
-                <div className="text-sm text-white/60">Average API Response Time</div>
-              </div>
-              <div className="bg-white/[0.02] backdrop-blur border border-white/5 rounded-xl p-6 text-center">
-                <div className="text-3xl font-bold text-white mb-2">100%</div>
-                <div className="text-sm text-white/60">TypeScript Type Coverage</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Community Onboarding Section */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.03] to-transparent">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-500/10 to-pink-500/10 border border-rose-500/20 rounded-full text-sm text-rose-400 font-medium mb-6 animate-pulse">
-                <Users className="w-4 h-4" />
-                Join {communityStats.totalMembers.toLocaleString()}+ Members
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-                Become Part of the Community
-              </h2>
-              <p className="text-lg text-white/60 max-w-2xl mx-auto">
-                Get your tier badge, unlock exclusive perks, and showcase your blockchain journey
-              </p>
-            </div>
-
-            {/* What is Member? Section */}
-            <div className="max-w-5xl mx-auto mb-16">
-              <div className="relative group">
-                {/* Glowing background effect */}
-                <div className="absolute -inset-6 bg-gradient-to-r from-rose-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-3xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />
-
-                <div className="relative bg-gradient-to-br from-white/[0.12] to-white/[0.04] backdrop-blur-xl border border-white/30 rounded-2xl p-8 sm:p-12 shadow-2xl">
-                  {/* Header */}
-                  <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-rose-500 to-purple-500 rounded-2xl mb-4 shadow-lg shadow-rose-500/30 group-hover:scale-110 transition-transform">
-                      <Shield className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                      What is Member?
-                    </h3>
-                    <p className="text-lg text-white/70 max-w-2xl mx-auto">
-                      A gamified on-chain identity system that rewards your Sui blockchain activity
-                    </p>
-                  </div>
-
-                  {/* Main explanation */}
-                  <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    {/* Left column - Purpose */}
-                    <div className="space-y-6">
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-rose-500/20">
-                            <span className="text-xl">🎯</span>
-                          </div>
-                          <h4 className="text-xl font-semibold text-white">The Purpose</h4>
-                        </div>
-                        <p className="text-white/80 leading-relaxed pl-13">
-                          Track and showcase your journey on Sui blockchain. Your membership NFT evolves as you build,
-                          creating a living record of your contributions to the ecosystem.
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
-                            <span className="text-xl">💎</span>
-                          </div>
-                          <h4 className="text-xl font-semibold text-white">How It Works</h4>
-                        </div>
-                        <p className="text-white/80 leading-relaxed pl-13">
-                          Join once, get your Droplet tier. As you make transactions and deploy contracts,
-                          you automatically level up: Wave → Tsunami → Ocean. No manual claims needed!
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Right column - Benefits */}
-                    <div className="space-y-6">
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
-                            <span className="text-xl">🎁</span>
-                          </div>
-                          <h4 className="text-xl font-semibold text-white">What You Get</h4>
-                        </div>
-                        <ul className="space-y-2 text-white/80 pl-13">
-                          <li className="flex items-start gap-2">
-                            <span className="text-green-400 mt-1">✓</span>
-                            <span>Evolving NFT tier badge (Droplet → Ocean)</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-green-400 mt-1">✓</span>
-                            <span>On-chain reputation & activity tracking</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-green-400 mt-1">✓</span>
-                            <span>Priority features as you level up</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-green-400 mt-1">✓</span>
-                            <span>Governance voting (Tsunami+ tier)</span>
-                          </li>
-                        </ul>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-yellow-500/20">
-                            <span className="text-xl">🔐</span>
-                          </div>
-                          <h4 className="text-xl font-semibold text-white">Privacy First</h4>
-                        </div>
-                        <p className="text-white/80 leading-relaxed pl-13">
-                          We only record your public address and join timestamp. All activity metrics are
-                          pulled from public blockchain data. Zero tracking, fully transparent.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Key Benefits Highlight Banner */}
-                  <div className="relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 via-purple-500/10 to-pink-500/10 rounded-xl" />
-                    <div className="relative border border-rose-500/30 rounded-xl p-6 backdrop-blur-sm">
-                      <div className="text-center mb-4">
-                        <h4 className="text-xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-                          <Sparkles className="w-5 h-5 text-yellow-400" />
-                          Why Join Today?
-                        </h4>
-                      </div>
-                      <div className="grid sm:grid-cols-3 gap-4 text-center">
-                        <div className="group">
-                          <div className="text-3xl font-bold bg-gradient-to-r from-rose-500 to-pink-400 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">
-                            Free
-                          </div>
-                          <div className="text-sm text-white/70">
-                            Only ~0.01 SUI gas fee
-                          </div>
-                        </div>
-                        <div className="group">
-                          <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">
-                            Instant
-                          </div>
-                          <div className="text-sm text-white/70">
-                            Badge in seconds
-                          </div>
-                        </div>
-                        <div className="group">
-                          <div className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">
-                            Permanent
-                          </div>
-                          <div className="text-sm text-white/70">
-                            Stored on-chain forever
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tier Progression - What You Can Earn */}
-            <div className="mb-12">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-                  Tier Progression System
-                </h3>
-                <p className="text-white/60">Level up by being active on Sui blockchain</p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-rose-500/20 via-pink-500/20 to-purple-500/20 -translate-y-1/2 hidden lg:block" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 relative">
-                  <TierShowcaseCard
-                    tier={TIER_DROPLET}
-                    requirement="✅ Just Join!"
-                    description="Everyone starts here"
-                    benefits={["Full CLI access", "Track stats", "Community member"]}
-                  />
-                  <TierShowcaseCard
-                    tier={TIER_WAVE}
-                    requirement="25+ Transactions"
-                    description="Active user"
-                    benefits={["Animated badge", "Priority support", "NFT card"]}
-                  />
-                  <TierShowcaseCard
-                    tier={TIER_TSUNAMI}
-                    requirement="100+ Transactions"
-                    description="Power user"
-                    benefits={["Custom themes", "Voting rights", "Featured"]}
-                  />
-                  <TierShowcaseCard
-                    tier={TIER_OCEAN}
-                    requirement="500+ Transactions"
-                    description="Elite builder"
-                    benefits={["All features", "Ambassador", "Revenue share"]}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Benefits Highlight */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center group hover:bg-white/[0.05] hover:border-rose-500/30 transition-all hover:scale-105">
-                <Shield className="w-10 h-10 text-green-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                <h4 className="text-lg font-semibold text-white mb-2">100% On-Chain</h4>
-                <p className="text-sm text-white/60">
-                  Your membership is stored on Sui blockchain. Fully transparent and verifiable.
-                </p>
-              </div>
-              <div className="bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center group hover:bg-white/[0.05] hover:border-rose-500/30 transition-all hover:scale-105">
-                <Sparkles className="w-10 h-10 text-rose-500 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                <h4 className="text-lg font-semibold text-white mb-2">Earn Perks</h4>
-                <p className="text-sm text-white/60">
-                  Unlock features, badges, and benefits as you level up through tiers.
-                </p>
-              </div>
-              <div className="bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center group hover:bg-white/[0.05] hover:border-rose-500/30 transition-all hover:scale-105">
-                <Users className="w-10 h-10 text-purple-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                <h4 className="text-lg font-semibold text-white mb-2">Growing Community</h4>
-                <p className="text-sm text-white/60">
-                  Join {communityStats.totalMembers.toLocaleString()}+ builders and grow together in the Sui ecosystem.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Roadmap/Coming Soon */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
+        {/* ============ CONTRACT SECTION ============ */}
+        <AnimatedSectionWrapper id="contract" className="py-24 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.02] to-transparent">
+          <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-                What's Next
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-green-500/30 rounded-lg text-sm mb-6"
+              >
+                <Shield className="w-4 h-4 text-green-400" />
+                <span className="text-green-400 font-mono">verified</span>
+              </motion.div>
+
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 font-mono">
+                <span className="text-rose-500">#</span> Smart Contract
               </h2>
-              <p className="text-lg text-white/60">
-                We're just getting started. More features coming soon.
+              <p className="text-white/50 font-mono text-sm">
+                Sui {CONTRACT_INFO.network} • verify yourself
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <RoadmapCard title="Transaction Builder" status="In Progress" />
-              <RoadmapCard title="Move Deploy UI" status="Planned" />
-              <RoadmapCard title="NFT Gallery" status="Planned" />
-              <RoadmapCard title="DeFi Integration" status="Research" />
-            </div>
+            {/* Contract Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-4"
+            >
+              {/* Package ID */}
+              <div className="space-y-2">
+                <div className="text-xs text-white/40 font-mono uppercase tracking-wider">Package ID</div>
+                <div className="flex items-center gap-2 p-3 bg-black/40 rounded-lg border border-white/5">
+                  <code className="flex-1 text-rose-300 text-xs sm:text-sm font-mono truncate">
+                    {CONTRACT_INFO.packageId}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(CONTRACT_INFO.packageId, 'package')}
+                    className="p-2 hover:bg-white/10 rounded transition-colors"
+                  >
+                    {copiedAddress === 'package' ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-white/40 hover:text-white/60" />
+                    )}
+                  </button>
+                  <a
+                    href={`${CONTRACT_INFO.explorerBase}/object/${CONTRACT_INFO.packageId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4 text-white/40 hover:text-rose-400" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Registry ID */}
+              <div className="space-y-2">
+                <div className="text-xs text-white/40 font-mono uppercase tracking-wider">Registry ID</div>
+                <div className="flex items-center gap-2 p-3 bg-black/40 rounded-lg border border-white/5">
+                  <code className="flex-1 text-rose-300 text-xs sm:text-sm font-mono truncate">
+                    {CONTRACT_INFO.registryId}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(CONTRACT_INFO.registryId, 'registry')}
+                    className="p-2 hover:bg-white/10 rounded transition-colors"
+                  >
+                    {copiedAddress === 'registry' ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-white/40 hover:text-white/60" />
+                    )}
+                  </button>
+                  <a
+                    href={`${CONTRACT_INFO.explorerBase}/object/${CONTRACT_INFO.registryId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4 text-white/40 hover:text-rose-400" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Functions */}
+              <div className="pt-4 border-t border-white/5">
+                <div className="text-xs text-white/40 font-mono uppercase tracking-wider mb-3">Functions</div>
+                <div className="flex flex-wrap gap-2">
+                  {['join_community()', 'is_member()', 'get_total_members()'].map((fn) => (
+                    <span key={fn} className="px-3 py-1.5 bg-rose-500/10 text-rose-300 text-xs rounded border border-rose-500/20 font-mono">
+                      {fn}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </section>
+        </AnimatedSectionWrapper>
 
-        {/* Footer */}
-        <footer className="py-12 px-4 sm:px-6 border-t border-white/10">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-              {/* Brand */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <svg className="w-8 h-8 text-rose-500" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
-                  <span className="font-bold text-white">Sui CLI Web</span>
-                </div>
-                <p className="text-sm text-white/50">
-                  Beautiful web interface for Sui blockchain CLI
-                </p>
-              </div>
-
-              {/* Product */}
-              <div>
-                <h3 className="font-semibold text-white mb-3 text-sm">Product</h3>
-                <ul className="space-y-2 text-sm text-white/60">
-                  <li><a href="https://www.harriweb3.dev" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">Live Demo</a></li>
-                  <li><a href="https://github.com/hien-p/raycast-sui-cli" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">Documentation</a></li>
-                  <li><button onClick={() => setShowMembershipModal(true)} className="hover:text-rose-400 transition-colors">Community</button></li>
-                </ul>
-              </div>
-
-              {/* Resources */}
-              <div>
-                <h3 className="font-semibold text-white mb-3 text-sm">Resources</h3>
-                <ul className="space-y-2 text-sm text-white/60">
-                  <li><a href="https://github.com/hien-p/raycast-sui-cli" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">GitHub</a></li>
-                  <li><a href="https://www.npmjs.com/package/sui-cli-web-server" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">NPM Package</a></li>
-                  <li><a href="https://sui.io" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">Sui Network</a></li>
-                </ul>
-              </div>
-
-              {/* Connect */}
-              <div>
-                <h3 className="font-semibold text-white mb-3 text-sm">Connect</h3>
-                <div className="flex items-center gap-3">
-                  <a
-                    href="https://github.com/hien-p/raycast-sui-cli"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                    aria-label="GitHub"
-                  >
-                    <Github className="w-5 h-5 text-white/80" />
-                  </a>
-                  <a
-                    href="https://www.npmjs.com/package/sui-cli-web-server"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                    aria-label="NPM"
-                  >
-                    <Download className="w-5 h-5 text-white/80" />
-                  </a>
-                </div>
-              </div>
+        {/* ============ COMMUNITY SECTION ============ */}
+        <AnimatedSectionWrapper id="community" className="py-24 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-mono">
+                <span className="text-rose-500">#</span> Tier System
+              </h2>
+              <p className="text-white/50 font-mono text-sm">
+                level up by being active on Sui
+              </p>
             </div>
 
-            {/* Bottom bar */}
-            <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/40">
-              <div>
-                <span className="text-rose-400">v1.1.0</span> · Built for the Sui ecosystem
+            {/* Tier Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <TierCard tier={TIER_DROPLET} requirement="Join" />
+              <TierCard tier={TIER_WAVE} requirement="25+ tx" />
+              <TierCard tier={TIER_TSUNAMI} requirement="100+ tx" />
+              <TierCard tier={TIER_OCEAN} requirement="500+ tx" />
+            </div>
+
+            {/* Join Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-12 text-center"
+            >
+              <div className="inline-flex items-center gap-4 px-6 py-4 bg-black/40 border border-rose-500/20 rounded-xl">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-rose-400 font-mono">{memberCount.toLocaleString()}</div>
+                  <div className="text-xs text-white/40 font-mono">members</div>
+                </div>
+                <div className="w-px h-10 bg-white/10" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-400 font-mono">FREE</div>
+                  <div className="text-xs text-white/40 font-mono">~0.01 SUI gas</div>
+                </div>
+                <div className="w-px h-10 bg-white/10" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-400 font-mono">NFT</div>
+                  <div className="text-xs text-white/40 font-mono">on-chain</div>
+                </div>
               </div>
-              <div>
-                Open source under MIT License
+            </motion.div>
+          </div>
+        </AnimatedSectionWrapper>
+
+        {/* ============ CTA SECTION ============ */}
+        <AnimatedSectionWrapper id="cta" className="py-24 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.03] to-transparent">
+          <div className="max-w-2xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="space-y-8"
+            >
+              <h2 className="text-4xl sm:text-5xl font-bold text-white font-mono">
+                <span className="text-rose-500">$</span> ready?
+              </h2>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button
+                  onClick={() => navigate('/setup')}
+                  className="group px-10 py-5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-all text-lg font-mono"
+                >
+                  <span className="flex items-center gap-3">
+                    <Terminal className="w-6 h-6" />
+                    npm i sui-cli-web-server
+                    <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+
+              <p className="text-white/40 font-mono text-sm">
+                works on macOS, Linux, Windows
+              </p>
+            </motion.div>
+          </div>
+        </AnimatedSectionWrapper>
+
+        {/* ============ FOOTER ============ */}
+        <footer className="py-12 px-4 sm:px-6 border-t border-white/5">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/40 font-mono">
+              <div className="flex items-center gap-2">
+                <span className="text-rose-400">v1.2.0</span>
+                <span>•</span>
+                <span>MIT License</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <a href="https://github.com/hien-p/raycast-sui-cli" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">
+                  GitHub
+                </a>
+                <a href="https://www.npmjs.com/package/sui-cli-web-server" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">
+                  NPM
+                </a>
+                <button onClick={() => navigate('/app/membership')} className="hover:text-rose-400 transition-colors">
+                  Join
+                </button>
               </div>
             </div>
           </div>
         </footer>
       </div>
+    </div>
+  );
+}
 
-      {/* Membership Join Modal */}
-      {showMembershipModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-background border border-border rounded-xl shadow-2xl max-w-md w-full mx-4">
-            <MembershipJoin onClose={() => setShowMembershipModal(false)} />
-          </div>
+// ============ COMPONENTS ============
+
+interface AnimatedSectionWrapperProps {
+  id: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function AnimatedSectionWrapper({ id, children, className = '' }: AnimatedSectionWrapperProps) {
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+
+  return (
+    <motion.section
+      ref={ref as React.RefObject<HTMLElement>}
+      id={id}
+      className={className}
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 40 }}
+      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      {children}
+    </motion.section>
+  );
+}
+
+interface FeatureCardProps {
+  feature: {
+    id: string;
+    icon: React.ReactNode;
+    title: string;
+    status: 'stable' | 'beta';
+  };
+  index: number;
+}
+
+function FeatureCard({ feature, index }: FeatureCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="group p-4 bg-black/40 border border-white/5 hover:border-rose-500/30 rounded-lg transition-all hover:bg-black/60"
+    >
+      <div className="flex flex-col items-center text-center gap-3">
+        <div className={`p-2.5 rounded-lg ${feature.status === 'stable' ? 'bg-green-500/10 text-green-400' : 'bg-rose-500/10 text-rose-400'} group-hover:scale-110 transition-transform`}>
+          {feature.icon}
         </div>
-      )}
-    </div>
-  );
-}
-
-// Component: Platform Badge
-interface PlatformBadgeProps {
-  icon: React.ReactNode;
-  name: string;
-}
-
-function PlatformBadge({ icon, name }: PlatformBadgeProps) {
-  return (
-    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm rounded-full border border-white/10 hover:bg-white/10 hover:border-rose-500/30 transition-all group">
-      <div className="text-white/70 group-hover:text-rose-400 transition-colors">{icon}</div>
-      <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">{name}</span>
-    </div>
-  );
-}
-
-// Component: Stat Card
-interface StatCardProps {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-  color: 'rose' | 'pink' | 'purple' | 'green';
-}
-
-function StatCard({ icon, value, label, color }: StatCardProps) {
-  const colors = {
-    rose: 'text-rose-400',
-    pink: 'text-pink-400',
-    purple: 'text-purple-400',
-    green: 'text-green-400',
-  };
-
-  return (
-    <div className="p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:bg-white/10 hover:border-rose-500/20 transition-all group">
-      <div className={`${colors[color]} mb-3 group-hover:scale-110 transition-transform`}>{icon}</div>
-      <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{value}</div>
-      <div className="text-sm text-white/60">{label}</div>
-    </div>
-  );
-}
-
-// Component: Feature Bento Card
-interface FeatureBentoCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  gradient: 'rose' | 'pink' | 'purple' | 'green' | 'ocean';
-  badge?: string;
-}
-
-function FeatureBentoCard({ icon, title, description, gradient, badge }: FeatureBentoCardProps) {
-  return (
-    <AnimatedGradient variant={gradient} className="p-6 rounded-xl border border-white/10 hover:border-rose-500/30 transition-all hover:scale-[1.02] group">
-      <div className="flex items-start justify-between mb-4">
-        <div className="text-rose-500 group-hover:scale-110 transition-transform">{icon}</div>
-        {badge && (
-          <span className="px-2 py-1 text-xs font-medium bg-rose-500/20 text-rose-400 rounded-full border border-rose-500/30">
-            {badge}
+        <div>
+          <h3 className="text-white/90 font-medium text-sm font-mono">{feature.title}</h3>
+          <span className={`text-xs font-mono ${feature.status === 'stable' ? 'text-green-400/60' : 'text-rose-400/60'}`}>
+            {feature.status}
           </span>
-        )}
+        </div>
       </div>
-      <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-rose-400 transition-colors">
-        {title}
-      </h3>
-      <p className="text-sm text-white/60 leading-relaxed">{description}</p>
-    </AnimatedGradient>
+    </motion.div>
   );
 }
 
-// Component: Tech Stack Card
-interface TechStackCardProps {
-  name: string;
-  icon: string;
-  color: 'cyan' | 'blue' | 'yellow' | 'teal' | 'sky' | 'purple';
-}
-
-function TechStackCard({ name, icon, color }: TechStackCardProps) {
-  const colors = {
-    cyan: 'group-hover:border-cyan-500/30 group-hover:shadow-cyan-500/10',
-    blue: 'group-hover:border-blue-500/30 group-hover:shadow-blue-500/10',
-    yellow: 'group-hover:border-yellow-500/30 group-hover:shadow-yellow-500/10',
-    teal: 'group-hover:border-teal-500/30 group-hover:shadow-teal-500/10',
-    sky: 'group-hover:border-sky-500/30 group-hover:shadow-sky-500/10',
-    purple: 'group-hover:border-purple-500/30 group-hover:shadow-purple-500/10',
-  };
-
-  return (
-    <div className={`group relative bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-xl p-6 text-center transition-all hover:scale-105 hover:shadow-lg ${colors[color]}`}>
-      <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{icon}</div>
-      <div className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">{name}</div>
-    </div>
-  );
-}
-
-// Component: Tier Showcase Card
-interface TierShowcaseCardProps {
+interface TierCardProps {
   tier: number;
   requirement: string;
-  description: string;
-  benefits: string[];
 }
 
-function TierShowcaseCard({ tier, requirement, description, benefits }: TierShowcaseCardProps) {
+function TierCard({ tier, requirement }: TierCardProps) {
   const metadata = TIER_METADATA[tier as keyof typeof TIER_METADATA];
 
   return (
-    <div className={`p-6 rounded-xl border backdrop-blur-sm hover:scale-105 transition-all ${metadata.bgClass} ${metadata.borderClass} ${metadata.glowClass} group`}>
-      <div className="text-center mb-4">
-        <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">{metadata.icon}</div>
-        <TierBadge tier={tier} size="md" showGlow={false} className="mx-auto mb-2" />
-        <div className="text-xs text-white/50 mb-1">{description}</div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      className={`p-6 rounded-xl border backdrop-blur-sm hover:scale-105 transition-all ${metadata.bgClass} ${metadata.borderClass} group`}
+    >
+      <div className="text-center">
+        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{metadata.icon}</div>
+        <TierBadge tier={tier} size="sm" showGlow={false} className="mx-auto mb-2" />
+        <div className={`text-xs font-mono ${metadata.textClass}`}>{requirement}</div>
       </div>
-      <div className={`text-sm font-semibold ${metadata.textClass} mb-3 text-center`}>{requirement}</div>
-      <ul className="space-y-2 text-xs text-white/70">
-        {benefits.map((benefit, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <span className="text-rose-400 mt-0.5">✓</span>
-            <span>{benefit}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-// Component: Roadmap Card
-interface RoadmapCardProps {
-  title: string;
-  status: string;
-}
-
-function RoadmapCard({ title, status }: RoadmapCardProps) {
-  const statusColors = {
-    'In Progress': 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-    'Planned': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    'Research': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  } as const;
-
-  return (
-    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:bg-white/10 transition-all">
-      <h4 className="text-white font-medium mb-2">{title}</h4>
-      <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${statusColors[status as keyof typeof statusColors]}`}>
-        {status}
-      </span>
-    </div>
+    </motion.div>
   );
 }

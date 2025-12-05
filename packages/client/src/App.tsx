@@ -37,7 +37,7 @@ export function App() {
   return (
     <>
       {/* Dynamic background based on route */}
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <FaultyTerminal
           tint={isMoveDevStudio ? "#22c55e" : isAppRoute ? "#4da2ff" : "#ff0000"}
           brightness={isMoveDevStudio ? 0.3 : isAppRoute ? 0.5 : 0.8}
