@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SetupInstructions } from '../SetupInstructions';
+import { StructuredData } from '../SEO/StructuredData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -62,6 +63,8 @@ export function SetupPage() {
   }, [serverConnected, showSuccessState, navigate]);
 
   return (
+    <>
+      <StructuredData type="setup" />
     <div className="relative w-full h-screen overflow-y-auto overflow-x-hidden">
       {/* Gradient overlay */}
       <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
@@ -165,5 +168,6 @@ export function SetupPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

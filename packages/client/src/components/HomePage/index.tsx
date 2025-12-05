@@ -8,6 +8,7 @@ import { TypingText } from '@/components/ui/typing-text';
 import { GlitchText } from '@/components/ui/glitch-text';
 import { ScrollDownIndicator } from '@/components/ui/scroll-down-indicator';
 import { SectionDots } from '@/components/ui/section-dots';
+import { StructuredData } from '../SEO/StructuredData';
 import { suiService } from '@/services/SuiService';
 import {
   Terminal,
@@ -96,6 +97,8 @@ export function HomePage() {
   }, []);
 
   return (
+    <>
+      <StructuredData type="homepage" />
     <div className="relative w-full min-h-screen overflow-y-auto overflow-x-hidden font-mono">
       {/* Scroll Progress Bar */}
       <motion.div
@@ -513,6 +516,7 @@ export function HomePage() {
         </footer>
       </div>
     </div>
+    </>
   );
 }
 

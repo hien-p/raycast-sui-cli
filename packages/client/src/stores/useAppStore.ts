@@ -24,6 +24,7 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
   themeMode: ThemeMode;
+  gridEnabled: boolean;
 
   // Connection state
   isServerConnected: boolean | null; // null = checking, true = connected, false = disconnected
@@ -50,6 +51,7 @@ interface AppState {
   setSelectedIndex: (index: number) => void;
   setError: (error: string | null) => void;
   setThemeMode: (mode: ThemeMode) => void;
+  setGridEnabled: (enabled: boolean) => void;
 
   // Data fetching
   fetchStatus: () => Promise<void>;
@@ -97,6 +99,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isLoading: false,
   error: null,
   themeMode: (typeof window !== 'undefined' && localStorage.getItem('sui-cli-theme') as ThemeMode) || 'glass',
+  gridEnabled: typeof window !== 'undefined' ? localStorage.getItem('sui-cli-grid') !== 'false' : true,
 
   // Connection state
   isServerConnected: null,
@@ -127,6 +130,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       localStorage.setItem('sui-cli-theme', mode);
     }
     set({ themeMode: mode });
+  },
+  setGridEnabled: (enabled) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sui-cli-grid', enabled ? 'true' : 'false');
+    }
+    set({ gridEnabled: enabled });
   },
 
   // Data fetching

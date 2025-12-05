@@ -114,17 +114,18 @@ async function main() {
   });
 
   // Register CORS - allow localhost and deployed UI domains only
+  // Security: Only allow specific Vercel deployments, not all *.vercel.app
   await fastify.register(cors, {
     origin: [
       // Local development (allow any localhost port)
       /^http:\/\/localhost:\d+$/,
       /^http:\/\/127\.0\.0\.1:\d+$/,
-      // Deployed UI domains
+      // Production domains
       'https://www.harriweb3.dev',
       'https://harriweb3.dev',
-      /^https:\/\/client.*\.vercel\.app$/,
-      /^https:\/\/sui-cli.*\.vercel\.app$/,
-      /^https:\/\/.*\.vercel\.app$/,
+      // Specific Vercel preview deployments (project-specific patterns only)
+      /^https:\/\/raycast-sui-cli-[a-z0-9]+-[a-z0-9]+\.vercel\.app$/,
+      /^https:\/\/sui-cli-web-[a-z0-9]+-[a-z0-9]+\.vercel\.app$/,
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,

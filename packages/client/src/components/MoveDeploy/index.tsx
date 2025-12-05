@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
@@ -276,7 +275,7 @@ export function MoveDeploy() {
       // Auto-save UpgradeCap if enabled
       if (saveUpgradeCap && data.createdObjects) {
         const upgradeCap = data.createdObjects.find((obj: any) =>
-          obj.type?.includes('UpgradeCap')
+          obj.type === 'created' && obj.objectType?.includes('UpgradeCap')
         );
         if (upgradeCap?.objectId) {
           setUpgradeCapId(upgradeCap.objectId);
@@ -771,35 +770,35 @@ export function MoveDeploy() {
 
             {/* Main Workflow Tabs - Compact */}
             <Tabs defaultValue="develop" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-black/30 border border-green-500/30 h-8">
-                <TabsTrigger value="develop" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
-                  <Code className="w-3 h-3" />
+              <TabsList className="grid w-full grid-cols-4 bg-black/30 border border-green-500/30 h-9">
+                <TabsTrigger value="develop" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+                  <Code className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="hidden sm:inline">Develop</span>
                 </TabsTrigger>
-                <TabsTrigger value="deploy" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
-                  <Rocket className="w-3 h-3" />
+                <TabsTrigger value="deploy" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+                  <Rocket className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="hidden sm:inline">Deploy</span>
                 </TabsTrigger>
-                <TabsTrigger value="upgrade" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
-                  <RefreshCw className="w-3 h-3" />
+                <TabsTrigger value="upgrade" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+                  <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="hidden sm:inline">Upgrade</span>
                 </TabsTrigger>
-                <TabsTrigger value="interact" className="flex items-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-7">
-                  <Zap className="w-3 h-3" />
+                <TabsTrigger value="interact" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+                  <Zap className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="hidden sm:inline">Interact</span>
                 </TabsTrigger>
               </TabsList>
 
               {/* Develop Tab - Compact */}
-              <TabsContent value="develop" className="space-y-2 mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <TabsContent value="develop" className="space-y-3 mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Build Card - Compact */}
-                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors h-full relative overflow-hidden shadow-md">
-                    <div className={`absolute top-0 left-0 right-0 h-0.5 transition-all ${
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors min-h-[160px] relative shadow-md rounded-xl">
+                    <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl transition-all z-10 ${
                       building ? 'bg-green-500 animate-pulse' :
                       buildOutput && !buildOutput.includes('error') ? 'bg-green-500' :
                       buildOutput && buildOutput.includes('error') ? 'bg-red-500' :
-                      'bg-green-500/20'
+                      'bg-green-500/30'
                     }`} />
                     <CardHeader className="py-2 px-3">
                       <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
@@ -855,12 +854,12 @@ export function MoveDeploy() {
                   </Card>
 
                   {/* Test Card - Compact */}
-                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors h-full relative overflow-hidden shadow-md">
-                    <div className={`absolute top-0 left-0 right-0 h-0.5 transition-all ${
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors min-h-[160px] relative shadow-md rounded-xl">
+                    <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl transition-all z-10 ${
                       testing ? 'bg-green-500 animate-pulse' :
                       testOutput && testOutput.includes('Failed: 0') ? 'bg-green-500' :
                       testOutput && testOutput.includes('Failed') ? 'bg-red-500' :
-                      'bg-green-500/20'
+                      'bg-green-500/30'
                     }`} />
                     <CardHeader className="py-2 px-3">
                       <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
@@ -922,12 +921,12 @@ export function MoveDeploy() {
                 </div>
 
                 {/* Pro Tip - Very Compact */}
-                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
-                  <Lightbulb className="h-3 w-3 text-green-400" />
-                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                <div className="flex items-center gap-2 px-3 py-2 border border-green-500/30 bg-green-500/10 backdrop-blur-md rounded-lg">
+                  <Lightbulb className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                  <span className="text-[10px] text-green-300/80 font-mono">
                     <strong className="text-green-400">Pro Tip:</strong> Always build before testing. Use the One-Click Workflow for the complete process.
-                  </AlertDescription>
-                </Alert>
+                  </span>
+                </div>
               </TabsContent>
 
               {/* Deploy Tab - Compact */}
@@ -985,10 +984,16 @@ export function MoveDeploy() {
                           fields={[
                             ...(publishResult.packageId ? [{ label: 'PACKAGE_ID', value: publishResult.packageId, copyable: true }] : []),
                             ...(publishResult.digest ? [{ label: 'TX_DIGEST', value: publishResult.digest, copyable: true }] : []),
-                            ...(publishResult.createdObjects || []).map((obj: any) => ({
-                              label: obj.type?.includes('UpgradeCap') ? 'UPGRADE_CAP' : obj.type?.includes('Package') ? 'PACKAGE_OBJECT' : 'CREATED_OBJECT',
-                              value: obj.objectId || 'N/A', copyable: true
-                            }))
+                            ...(publishResult.createdObjects || [])
+                              .filter((obj: any) => {
+                                // Only include objects that have a valid objectId
+                                // Skip 'published' type (package info) and objects without objectId
+                                return obj.type === 'created' && obj.objectId && typeof obj.objectId === 'string' && obj.objectId.startsWith('0x');
+                              })
+                              .map((obj: any) => ({
+                                label: obj.objectType?.includes('UpgradeCap') ? 'UPGRADE_CAP' : 'CREATED_OBJECT',
+                                value: obj.objectId, copyable: true
+                              }))
                           ]}
                         />
                       ) : (
@@ -998,12 +1003,12 @@ export function MoveDeploy() {
                     </>
                   )}
                 </AnimatePresence>
-                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
-                  <AlertCircle className="h-3 w-3 text-green-400" />
-                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                <div className="flex items-center gap-2 px-3 py-2 border border-green-500/30 bg-green-500/10 backdrop-blur-md rounded-lg">
+                  <AlertCircle className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                  <span className="text-[10px] text-green-300/80 font-mono">
                     <strong className="text-green-400">Before Publishing:</strong> Ensure your package builds and all tests pass.
-                  </AlertDescription>
-                </Alert>
+                  </span>
+                </div>
               </TabsContent>
 
               {/* Upgrade Tab - Compact */}
@@ -1060,12 +1065,12 @@ export function MoveDeploy() {
                     </AnimatePresence>
                   </CardContent>
                 </Card>
-                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
-                  <AlertCircle className="h-3 w-3 text-green-400" />
-                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                <div className="flex items-center gap-2 px-3 py-2 border border-green-500/30 bg-green-500/10 backdrop-blur-md rounded-lg">
+                  <AlertCircle className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                  <span className="text-[10px] text-green-300/80 font-mono">
                     <strong className="text-green-400">Requirements:</strong> Own the UpgradeCap, build updated package first.
-                  </AlertDescription>
-                </Alert>
+                  </span>
+                </div>
               </TabsContent>
 
               {/* Interact Tab - Compact */}
@@ -1271,12 +1276,12 @@ export function MoveDeploy() {
                   )}
                 </AnimatePresence>
                 {/* Tips - Compact */}
-                <Alert className="border-green-500/30 bg-green-500/10 backdrop-blur-md py-1.5">
-                  <Lightbulb className="h-3 w-3 text-green-400" />
-                  <AlertDescription className="text-[10px] text-green-300/80 font-mono">
+                <div className="flex items-center gap-2 px-3 py-2 border border-green-500/30 bg-green-500/10 backdrop-blur-md rounded-lg">
+                  <Lightbulb className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                  <span className="text-[10px] text-green-300/80 font-mono">
                     <strong className="text-green-400">Tips:</strong> Package ID auto-filled from publish. Type args use full paths: <code className="bg-black/50 px-0.5 rounded text-green-400">0x2::sui::SUI</code>
-                  </AlertDescription>
-                </Alert>
+                  </span>
+                </div>
               </TabsContent>
             </Tabs>
           </motion.div>

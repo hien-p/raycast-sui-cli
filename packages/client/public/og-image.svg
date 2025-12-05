@@ -1,0 +1,72 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1929"/>
+      <stop offset="50%" style="stop-color:#0d2137"/>
+      <stop offset="100%" style="stop-color:#0a1929"/>
+    </linearGradient>
+    <linearGradient id="sui-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4da2ff"/>
+      <stop offset="100%" style="stop-color:#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="text-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f43f5e"/>
+      <stop offset="100%" style="stop-color:#ec4899"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)"/>
+
+  <!-- Grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(77,162,255,0.08)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="200" fill="url(#sui-gradient)" opacity="0.1" filter="url(#glow)"/>
+  <circle cx="1100" cy="530" r="250" fill="url(#sui-gradient)" opacity="0.08" filter="url(#glow)"/>
+
+  <!-- Terminal window frame -->
+  <rect x="100" y="140" width="1000" height="350" rx="16" fill="rgba(0,0,0,0.4)" stroke="rgba(77,162,255,0.3)" stroke-width="2"/>
+
+  <!-- Terminal header -->
+  <rect x="100" y="140" width="1000" height="50" rx="16" fill="rgba(26,26,26,0.8)"/>
+  <rect x="100" y="174" width="1000" height="16" fill="rgba(26,26,26,0.8)"/>
+
+  <!-- Traffic lights -->
+  <circle cx="135" cy="165" r="8" fill="#ff5f57"/>
+  <circle cx="165" cy="165" r="8" fill="#febc2e"/>
+  <circle cx="195" cy="165" r="8" fill="#28c840"/>
+
+  <!-- Terminal title -->
+  <text x="600" y="172" font-family="SF Mono, Monaco, monospace" font-size="14" fill="rgba(255,255,255,0.6)" text-anchor="middle">sui-cli-web</text>
+
+  <!-- Main title -->
+  <text x="600" y="280" font-family="SF Pro Display, -apple-system, sans-serif" font-size="56" font-weight="700" fill="white" text-anchor="middle">Sui CLI Web</text>
+
+  <!-- Subtitle with gradient -->
+  <text x="600" y="340" font-family="SF Pro Display, -apple-system, sans-serif" font-size="28" fill="url(#text-gradient)" text-anchor="middle">Raycast-style Interface for Sui Blockchain</text>
+
+  <!-- Features -->
+  <text x="600" y="410" font-family="SF Mono, Monaco, monospace" font-size="18" fill="rgba(255,255,255,0.7)" text-anchor="middle">Transfer SUI  |  Deploy Contracts  |  Manage Addresses  |  Inspect Transactions</text>
+
+  <!-- Bottom tagline -->
+  <text x="600" y="460" font-family="SF Mono, Monaco, monospace" font-size="16" fill="rgba(77,162,255,0.8)" text-anchor="middle">Open Source  |  Privacy-Focused  |  Developer Tools</text>
+
+  <!-- URL -->
+  <text x="600" y="560" font-family="SF Mono, Monaco, monospace" font-size="24" fill="rgba(255,255,255,0.5)" text-anchor="middle">harriweb3.dev</text>
+
+  <!-- Sui logo hint (simplified) -->
+  <circle cx="600" cy="80" r="30" fill="none" stroke="url(#sui-gradient)" stroke-width="3" opacity="0.6"/>
+  <path d="M585 80 L600 65 L615 80 L600 95 Z" fill="url(#sui-gradient)" opacity="0.6"/>
+</svg>

@@ -1,29 +1,61 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense, useMemo } from 'react';
 import { HomePage } from './components/HomePage';
 import { SetupPage } from './components/SetupPage';
 import { AppGuard } from './components/guards/AppGuard';
-import { CommandPalette } from './components/CommandPalette';
-import { AddressList } from './components/AddressList';
-import { EnvironmentList } from './components/EnvironmentList';
-import { ObjectList } from './components/ObjectList';
-import { GasList } from './components/GasList';
-import { FaucetForm } from './components/FaucetForm';
-import { MembershipProfile } from './components/MembershipProfile';
-import { TransferSui } from './components/TransferSui';
-import { MoveDeploy } from './components/MoveDeploy';
-import { TransactionBuilder } from './components/TransactionBuilder';
 import { MembershipGuard } from './components/guards/MembershipGuard';
-import FaultyTerminal from './components/backgrounds/FaultyTerminal';
 import { trackPageView } from './lib/analytics';
+
+// Lazy load heavy components for better initial load
+const CommandPalette = lazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const AddressList = lazy(() => import('./components/AddressList').then(m => ({ default: m.AddressList })));
+const EnvironmentList = lazy(() => import('./components/EnvironmentList').then(m => ({ default: m.EnvironmentList })));
+const ObjectList = lazy(() => import('./components/ObjectList').then(m => ({ default: m.ObjectList })));
+const GasList = lazy(() => import('./components/GasList').then(m => ({ default: m.GasList })));
+const FaucetForm = lazy(() => import('./components/FaucetForm').then(m => ({ default: m.FaucetForm })));
+const MembershipProfile = lazy(() => import('./components/MembershipProfile').then(m => ({ default: m.MembershipProfile })));
+const TransferSui = lazy(() => import('./components/TransferSui').then(m => ({ default: m.TransferSui })));
+const MoveDeploy = lazy(() => import('./components/MoveDeploy').then(m => ({ default: m.MoveDeploy })));
+const TransactionBuilder = lazy(() => import('./components/TransactionBuilder').then(m => ({ default: m.TransactionBuilder })));
+
+// Lazy load heavy background component
+const FaultyTerminal = lazy(() => import('./components/backgrounds/FaultyTerminal'));
+
+// Simple loading fallback
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <div className="w-6 h-6 border-2 border-sui-blue border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
+// Check if device is mobile or low-power
+const isLowPowerDevice = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  // Check for mobile/tablet
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  // Check for low memory (if available)
+  const lowMemory = (navigator as { deviceMemory?: number }).deviceMemory !== undefined &&
+                    (navigator as { deviceMemory?: number }).deviceMemory! < 4;
+  // Check for reduced motion preference
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return isMobile || lowMemory || prefersReducedMotion;
+};
 
 export function App() {
   const location = useLocation();
 
+  // Check for low power device once
+  const shouldReduceAnimations = useMemo(() => isLowPowerDevice(), []);
+
   // Determine if we're in app routes
   const isAppRoute = location.pathname.startsWith('/app');
   const isMoveDevStudio = location.pathname === '/app/move';
+
+  // Only show background on landing page for performance
+  // On mobile/low-power devices, use simple gradient instead
+  const isLandingPage = location.pathname === '/';
+  const showAnimatedBackground = isLandingPage && !shouldReduceAnimations;
 
   // Track page views on route change
   useEffect(() => {
@@ -36,61 +68,71 @@ export function App() {
 
   return (
     <>
-      {/* Dynamic background based on route */}
+      {/* Dynamic background - only on landing page for performance */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <FaultyTerminal
-          tint={isMoveDevStudio ? "#22c55e" : isAppRoute ? "#4da2ff" : "#ff0000"}
-          brightness={isMoveDevStudio ? 0.3 : isAppRoute ? 0.5 : 0.8}
-          scale={isMoveDevStudio ? 0.5 : isAppRoute ? 1.2 : 1.9}
-          gridMul={isMoveDevStudio ? [4, 2] : [2, 1]}
-          digitSize={isMoveDevStudio ? 1.2 : 1.3}
-          glitchAmount={isMoveDevStudio ? 0.8 : 0}
-          flickerAmount={isMoveDevStudio ? 0.5 : 0}
-          scanlineIntensity={isMoveDevStudio ? 0.3 : 0.5}
-          curvature={isMoveDevStudio ? 0.1 : isAppRoute ? 1.5 : 0.4}
-          mouseReact={isMoveDevStudio}
-          mouseStrength={isMoveDevStudio ? 0.2 : 0}
-          timeScale={0.5}
-          noiseAmp={isMoveDevStudio ? 0 : isAppRoute ? 0.5 : 0.7}
-          className="curved-panel"
-          style={{
-            transformStyle: "preserve-3d",
-            perspective: "2000px",
-          }}
-        />
+        {showAnimatedBackground ? (
+          <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />}>
+            <FaultyTerminal
+              tint={isMoveDevStudio ? "#22c55e" : isAppRoute ? "#4da2ff" : "#ff0000"}
+              brightness={isMoveDevStudio ? 0.3 : isAppRoute ? 0.5 : 0.8}
+              scale={isMoveDevStudio ? 0.5 : isAppRoute ? 1.2 : 1.9}
+              gridMul={isMoveDevStudio ? [4, 2] : [2, 1]}
+              digitSize={isMoveDevStudio ? 1.2 : 1.3}
+              glitchAmount={isMoveDevStudio ? 0.8 : 0}
+              flickerAmount={isMoveDevStudio ? 0.5 : 0}
+              scanlineIntensity={isMoveDevStudio ? 0.3 : 0.5}
+              curvature={isMoveDevStudio ? 0.1 : isAppRoute ? 1.5 : 0.4}
+              mouseReact={isMoveDevStudio}
+              mouseStrength={isMoveDevStudio ? 0.2 : 0}
+              timeScale={0.5}
+              noiseAmp={isMoveDevStudio ? 0 : isAppRoute ? 0.5 : 0.7}
+              className="curved-panel"
+              dpr={1} // Lower DPR for better performance
+              style={{
+                transformStyle: "preserve-3d",
+                perspective: "2000px",
+              }}
+            />
+          </Suspense>
+        ) : (
+          // Simple gradient for non-landing pages or low-power devices
+          <div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />
+        )}
       </div>
 
       {/* Content */}
       <div className="relative z-10">
-        <Routes>
-          {/* Marketing/Landing Page - No server check */}
-          <Route path="/" element={<HomePage />} />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            {/* Marketing/Landing Page - No server check */}
+            <Route path="/" element={<HomePage />} />
 
-          {/* Setup Guide Page - Has server check, shows instructions */}
-          <Route path="/setup" element={<SetupPage />} />
+            {/* Setup Guide Page - Has server check, shows instructions */}
+            <Route path="/setup" element={<SetupPage />} />
 
-          {/* App Routes - Protected by AppGuard */}
-          <Route path="/app" element={<AppGuard />}>
-            <Route index element={<CommandPalette />} />
-            <Route path="addresses" element={<AddressList />} />
-            <Route path="environments" element={<EnvironmentList />} />
-            <Route path="objects" element={<ObjectList />} />
-            <Route path="objects/:objectId" element={<ObjectList />} />
-            <Route path="gas" element={<GasList />} />
-            <Route path="faucet" element={<FaucetForm />} />
-            <Route path="membership" element={<MembershipProfile />} />
-            <Route path="transfer" element={<TransferSui />} />
-            <Route path="move" element={<MoveDeploy />} />
-            <Route
-              path="inspector"
-              element={
-                <MembershipGuard featureName="Transaction Inspector">
-                  <TransactionBuilder />
-                </MembershipGuard>
-              }
-            />
-          </Route>
-        </Routes>
+            {/* App Routes - Protected by AppGuard */}
+            <Route path="/app" element={<AppGuard />}>
+              <Route index element={<CommandPalette />} />
+              <Route path="addresses" element={<AddressList />} />
+              <Route path="environments" element={<EnvironmentList />} />
+              <Route path="objects" element={<ObjectList />} />
+              <Route path="objects/:objectId" element={<ObjectList />} />
+              <Route path="gas" element={<GasList />} />
+              <Route path="faucet" element={<FaucetForm />} />
+              <Route path="membership" element={<MembershipProfile />} />
+              <Route path="transfer" element={<TransferSui />} />
+              <Route path="move" element={<MoveDeploy />} />
+              <Route
+                path="inspector"
+                element={
+                  <MembershipGuard featureName="Transaction Inspector">
+                    <TransactionBuilder />
+                  </MembershipGuard>
+                }
+              />
+            </Route>
+          </Routes>
+        </Suspense>
       </div>
 
       <Toaster

@@ -313,74 +313,21 @@
     animation: scale-3d-curve 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Curved Monitor Effect - Only for wide layouts */
-  .curved-terminal-wrapper {
-    perspective: 2500px;
-    perspective-origin: 50% 50%;
-  }
-
-  /* Normal panel - no curve effect */
+  /* Normal panel - clean, no effects */
   .curved-panel {
-    transform-style: preserve-3d;
     position: relative;
     border-radius: 1.5rem;
   }
 
-  /* Wide panel with curved monitor effect */
+  /* Wide panel - clean, no curve effects */
   .curved-panel-wide {
-    transform-style: preserve-3d;
     position: relative;
     border-radius: 1.5rem;
-    /* Slight forward tilt for center */
-    transform: translateZ(20px);
   }
 
-  /* Left edge - recedes backward with shadow */
-  .curved-panel-wide::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 18%;
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.5),
-      rgba(0, 0, 0, 0.25) 60%,
-      transparent
-    );
-    transform-origin: right center;
-    transform: rotateY(-12deg) translateZ(-20px);
-    pointer-events: none;
-    z-index: 5;
-    border-radius: 1.5rem 0 0 1.5rem;
-  }
-
-  /* Right edge - recedes backward with shadow */
-  .curved-panel-wide::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 18%;
-    background: linear-gradient(
-      to left,
-      rgba(0, 0, 0, 0.5),
-      rgba(0, 0, 0, 0.25) 60%,
-      transparent
-    );
-    transform-origin: left center;
-    transform: rotateY(12deg) translateZ(-20px);
-    pointer-events: none;
-    z-index: 5;
-    border-radius: 0 1.5rem 1.5rem 0;
-  }
-
-  .curved-panel > *,
-  .curved-panel-wide > * {
+  /* Wrapper - only used for layout */
+  .curved-terminal-wrapper {
     position: relative;
-    z-index: 10;
   }
 
   /* Terminal cursor blink animation */

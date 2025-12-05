@@ -1,0 +1,13 @@
+# Sui CLI Web - Robots.txt
+# https://www.harriweb3.dev
+
+User-agent: *
+Allow: /
+Allow: /setup
+Disallow: /app/
+
+# Sitemap
+Sitemap: https://www.harriweb3.dev/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

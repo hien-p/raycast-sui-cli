@@ -1,0 +1,31 @@
+{
+  "name": "Sui CLI Web",
+  "short_name": "Sui CLI",
+  "description": "Raycast-style interface for Sui blockchain. Manage addresses, transfer SUI, deploy Move contracts from a beautiful web UI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1929",
+  "theme_color": "#4da2ff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["developer tools", "finance", "utilities"],
+  "icons": [
+    {
+      "src": "/sui-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Setup",
+      "short_name": "Setup",
+      "description": "Installation guide",
+      "url": "/setup",
+      "icons": [{ "src": "/sui-logo.svg", "sizes": "any" }]
+    }
+  ]
+}

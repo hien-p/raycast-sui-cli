@@ -35,6 +35,8 @@ export function MainLayout() {
     checkServerConnection,
     themeMode,
     setThemeMode,
+    gridEnabled,
+    setGridEnabled,
   } = useAppStore();
 
   const isHome = location.pathname === '/app';
@@ -85,11 +87,15 @@ export function MainLayout() {
   const isDark = themeMode === 'dark';
 
   // Determine max width based on current route
+  // Wide layout fills more screen space, normal layout has max width
   const isWideLayout = ['/app/transfer', '/app/move', '/app/inspector'].includes(location.pathname);
-  const maxWidthClass = isWideLayout ? 'max-w-[1800px]' : 'max-w-2xl';
+  // Use percentage-based max-width for better zoom support
+  const maxWidthClass = isWideLayout
+    ? 'max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[1800px]'
+    : 'max-w-[95vw] sm:max-w-xl md:max-w-2xl';
 
   return (
-    <div className="min-h-screen flex items-start justify-center pt-[15vh] px-4">
+    <div className="min-h-screen flex items-start justify-center pt-[5vh] sm:pt-[8vh] md:pt-[12vh] lg:pt-[15vh] px-2 sm:px-4">
       <div className={`w-full ${maxWidthClass} relative group curved-terminal-wrapper`}>
         {/* Animated gradient orbs - only in glass mode */}
         {!isDark && (
@@ -118,13 +124,15 @@ export function MainLayout() {
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-[#0ea5e9]/10 via-[#0284c7]/5 to-[#0369a1]/8 pointer-events-none z-[1]" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(14,165,233,0.15),transparent_60%)] pointer-events-none z-[1]" />
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.2)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-[2]" />
+              {gridEnabled && (
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.2)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-[2]" />
+              )}
               <FloatingParticles />
             </>
           )}
 
           {/* Dark mode grid pattern */}
-          {isDark && (
+          {isDark && gridEnabled && (
             <div className="absolute inset-0 bg-[linear-gradient(rgba(77,162,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(77,162,255,0.06)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-[2]" />
           )}
 
@@ -155,6 +163,24 @@ export function MainLayout() {
             )}
             <span className="text-sm font-medium text-foreground">{title}</span>
             <div className="flex-1" />
+
+            {/* Grid Toggle */}
+            <button
+              onClick={() => setGridEnabled(!gridEnabled)}
+              className="p-1.5 hover:bg-secondary rounded-lg transition-all group"
+              title={gridEnabled ? 'Hide grid pattern' : 'Show grid pattern'}
+            >
+              {gridEnabled ? (
+                <svg className="w-4 h-4 text-muted-foreground group-hover:text-[#4da2ff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 9h16M4 15h16M9 4v16M15 4v16" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                </svg>
+              )}
+            </button>
 
             {/* Theme Toggle */}
             <button
@@ -204,7 +230,7 @@ export function MainLayout() {
         )}
 
         {/* Content */}
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[80vh] sm:max-h-[75vh] md:max-h-[70vh] lg:max-h-[65vh] overflow-y-auto">
           {isServerConnected === false ? (
             // User wants to run backend manually, so we show the app even if not connected
             // The app will show errors if API calls fail, which is expected
@@ -254,10 +280,10 @@ export function MainLayout() {
         </div>
 
         {/* Footer with enhanced effects */}
-        <div className={`relative flex items-center justify-between px-4 py-2 border-t ${isDark ? 'border-[#2a2a2a] bg-[#1a1a1a]' : 'border-[#1e3a5f]/40 bg-[#0a1929]/60'}`}>
+        <div className={`relative flex items-center justify-between px-3 sm:px-4 py-2 border-t ${isDark ? 'border-[#2a2a2a] bg-[#1a1a1a]' : 'border-[#1e3a5f]/40 bg-[#0a1929]/60'}`}>
           {/* Bottom shine effect - only glass mode */}
           {!isDark && <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#0ea5e9]/50 to-transparent pointer-events-none" />}
-          <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-4">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd>
@@ -271,6 +297,10 @@ export function MainLayout() {
               <Kbd>esc</Kbd>
               <span>Back</span>
             </div>
+          </div>
+          {/* Mobile: simplified footer */}
+          <div className="flex sm:hidden items-center gap-2 text-xs text-muted-foreground">
+            <span>Tap to select</span>
           </div>
           <div className="text-xs text-muted-foreground">Sui CLI Web</div>
         </div>
