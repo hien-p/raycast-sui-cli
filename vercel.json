@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd sui-cli-web && npm install && npm run build",
-  "outputDirectory": "sui-cli-web/packages/client/dist",
-  "installCommand": "npm install --prefix sui-cli-web",
+  "buildCommand": "npm run build:client",
+  "outputDirectory": "packages/client/dist",
+  "installCommand": "npm install",
   "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
