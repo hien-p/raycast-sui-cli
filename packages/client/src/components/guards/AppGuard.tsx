@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useMobileDetect } from '@/hooks/useMobileDetect';
 
 export function AppGuard() {
   const [serverConnected, setServerConnected] = useState<boolean | null>(null);
   const [hasChecked, setHasChecked] = useState(false);
+  const isMobile = useMobileDetect();
 
   useEffect(() => {
     const checkServerConnection = async () => {
@@ -18,7 +20,8 @@ export function AppGuard() {
         const isConnected = response.ok;
         setServerConnected(isConnected);
 
-        if (!isConnected && !hasChecked) {
+        // Don't show toast on mobile - they'll see the friendly message instead
+        if (!isConnected && !hasChecked && !isMobile) {
           toast.error('⚠️ Server not running. Please start the server first.', {
             duration: 4000,
             position: 'top-center',
@@ -26,7 +29,8 @@ export function AppGuard() {
         }
       } catch (error) {
         setServerConnected(false);
-        if (!hasChecked) {
+        // Don't show toast on mobile
+        if (!hasChecked && !isMobile) {
           toast.error('⚠️ Server not running. Please start the server first.', {
             duration: 4000,
             position: 'top-center',
@@ -38,7 +42,7 @@ export function AppGuard() {
     };
 
     checkServerConnection();
-  }, [hasChecked]);
+  }, [hasChecked, isMobile]);
 
   // Show loading state while checking
   if (serverConnected === null) {
