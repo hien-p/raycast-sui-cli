@@ -88,13 +88,13 @@ export function EnvironmentList() {
     <div className="px-2 py-2">
       {/* Add new environment button/form */}
       {showAddForm ? (
-        <div className="mb-4 p-3 bg-background-tertiary rounded-lg">
-          <div className="text-sm font-medium text-text-primary mb-3">
+        <div className="mb-4 p-4 bg-black/40 border border-white/10 rounded-lg">
+          <div className="text-sm font-medium text-white/90 mb-4 font-mono">
             Add New Environment
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs text-text-secondary mb-1">
+              <label className="block text-xs text-white/50 mb-1.5 font-mono">
                 Alias
               </label>
               <input
@@ -102,11 +102,11 @@ export function EnvironmentList() {
                 value={newAlias}
                 onChange={(e) => setNewAlias(e.target.value)}
                 placeholder="my-network"
-                className="w-full px-3 py-2 bg-background-primary border border-border rounded text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
+                className="w-full px-3 py-2.5 bg-black/60 border border-white/20 rounded-md text-sm text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50"
               />
             </div>
             <div>
-              <label className="block text-xs text-text-secondary mb-1">
+              <label className="block text-xs text-white/50 mb-1.5 font-mono">
                 RPC URL
               </label>
               <input
@@ -114,19 +114,19 @@ export function EnvironmentList() {
                 value={newRpc}
                 onChange={(e) => setNewRpc(e.target.value)}
                 placeholder="https://fullnode.devnet.sui.io:443"
-                className="w-full px-3 py-2 bg-background-primary border border-border rounded text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
+                className="w-full px-3 py-2.5 bg-black/60 border border-white/20 rounded-md text-sm text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={handleAdd}
-                className="flex-1 px-3 py-2 bg-accent text-white rounded text-sm font-medium hover:bg-accent-hover transition-colors"
+                className="flex-1 px-4 py-2.5 bg-accent text-white rounded-md text-sm font-medium font-mono hover:bg-accent-hover transition-colors"
               >
                 Add
               </button>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="px-3 py-2 bg-background-hover text-text-secondary rounded text-sm hover:bg-background-active transition-colors"
+                className="px-4 py-2.5 text-white/60 hover:text-white/90 text-sm font-mono transition-colors"
               >
                 Cancel
               </button>

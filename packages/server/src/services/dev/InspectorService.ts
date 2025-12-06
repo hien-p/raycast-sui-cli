@@ -149,8 +149,12 @@ export class InspectorService {
                         // Pattern: "entry public function_name(Arg0: type, Arg1: type, ...)" or "public function_name(...): return_type"
 
                         // Match function signatures with parameters
+                        // Pattern handles both regular functions and generic functions like:
+                        // - public function_name(Arg0: type): return_type {
+                        // - public function_name<Ty0>(Arg0: type): return_type {
+                        // - public function_name<Ty0, Ty1>(Arg0: type): return_type {
                         const functionSignatureMatches = moduleData.matchAll(
-                            /(entry\s+)?public\s+(\w+)\s*\((.*?)\)\s*(?::\s*(.+?))?\s*\{/gs
+                            /(entry\s+)?public\s+(\w+)(?:<[^>]+>)?\s*\((.*?)\)\s*(?::\s*(.+?))?\s*\{/gs
                         );
 
                         for (const match of functionSignatureMatches) {
