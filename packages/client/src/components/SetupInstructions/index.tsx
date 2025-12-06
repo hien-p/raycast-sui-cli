@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Terminal, Copy, Check, RefreshCw, Monitor, Apple, Shield, Zap, Server, ChevronRight } from 'lucide-react';
+import { Terminal, Copy, Check, RefreshCw, Monitor, Apple, Shield, Zap, Server, ChevronRight, Laptop, Smartphone } from 'lucide-react';
+import { useMobileDetect } from '@/hooks/useMobileDetect';
 
 interface SetupInstructionsProps {
   onRetry: () => void;
@@ -7,6 +8,7 @@ interface SetupInstructionsProps {
 }
 
 export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProps) {
+  const isMobile = useMobileDetect();
   const [activeOS, setActiveOS] = useState<'mac' | 'linux' | 'windows'>('mac');
   const [copied, setCopied] = useState<string | null>(null);
   const [typingText, setTypingText] = useState('');
@@ -154,6 +156,79 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
       ],
     },
   };
+
+  // Mobile-friendly message - show instead of server error
+  if (isMobile) {
+    return (
+      <div className="relative w-full max-w-lg mx-auto px-4">
+        <div className="text-center space-y-8">
+          {/* Icon */}
+          <div className="inline-flex items-center justify-center relative">
+            <div className="absolute w-32 h-32 bg-rose-500/20 rounded-full blur-3xl animate-pulse" />
+            <div className="relative w-24 h-24 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl">
+              <Laptop className="w-12 h-12 text-rose-400" />
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="space-y-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              Desktop <span className="text-rose-400">Required</span>
+            </h1>
+            <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+              Sui CLI Web runs a local server on your computer to keep your keys secure.
+            </p>
+          </div>
+
+          {/* Info Card */}
+          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-left space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-rose-500/20 rounded-lg shrink-0">
+                <Shield className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white mb-1">Why Desktop?</h3>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Your private keys stay on your machine. We need a local terminal to run Sui CLI commands securely.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-emerald-500/20 rounded-lg shrink-0">
+                <Terminal className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white mb-1">How to Use</h3>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Open this site on a Mac, Windows, or Linux computer with Node.js installed.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Device indicator */}
+          <div className="flex items-center justify-center gap-3 text-white/40 text-sm">
+            <Smartphone className="w-4 h-4" />
+            <span>You're on mobile</span>
+            <span className="text-white/20">•</span>
+            <span>Switch to desktop</span>
+            <Laptop className="w-4 h-4" />
+          </div>
+
+          {/* Quick setup hint */}
+          <div className="bg-gradient-to-r from-rose-500/10 to-pink-500/10 border border-rose-500/20 rounded-xl p-4">
+            <p className="text-xs text-white/70 font-mono">
+              <span className="text-rose-400">$</span> npx sui-cli-web-server
+            </p>
+            <p className="text-xs text-white/50 mt-2">
+              Run this command on your laptop to start
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full max-w-5xl mx-auto min-h-[600px]">
