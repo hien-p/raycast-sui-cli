@@ -471,7 +471,7 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
                         </div>
                         <span className="text-sm font-medium text-rose-400">Disconnected</span>
                       </div>
-                      <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded">localhost:3001</span>
+                      <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded">scanning ports...</span>
                     </div>
 
                     {/* Retry Button - Rose/orange gradient */}

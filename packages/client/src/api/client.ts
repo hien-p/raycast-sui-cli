@@ -10,14 +10,75 @@ import type {
 // In development (vite dev), use proxy
 const isDev = import.meta.env.DEV;
 
-// Try multiple localhost variants for browser compatibility
-const LOCALHOST_URLS = [
-  'http://localhost:3001/api',
-  'http://127.0.0.1:3001/api',
-];
+// Common ports to scan for server
+const COMMON_PORTS = [3001, 3002, 3003, 3004, 3005, 4001, 4002, 8001, 8080];
 
-let API_BASE = isDev ? '/api' : LOCALHOST_URLS[0];
-let currentUrlIndex = 0;
+// Build localhost URLs for all common ports
+function buildLocalhostUrls(port: number): string[] {
+  return [
+    `http://localhost:${port}/api`,
+    `http://127.0.0.1:${port}/api`,
+  ];
+}
+
+// Get saved port from localStorage or URL param
+function getSavedPort(): number | null {
+  // Check URL param first (highest priority)
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const portParam = urlParams.get('port');
+    if (portParam) {
+      const port = parseInt(portParam, 10);
+      if (port >= 1 && port <= 65535) {
+        return port;
+      }
+    }
+
+    // Check localStorage
+    const savedPort = localStorage.getItem('sui-cli-server-port');
+    if (savedPort) {
+      const port = parseInt(savedPort, 10);
+      if (port >= 1 && port <= 65535) {
+        return port;
+      }
+    }
+  }
+  return null;
+}
+
+// Save discovered port to localStorage
+function savePort(port: number): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('sui-cli-server-port', String(port));
+  }
+}
+
+// Get current server port
+export function getServerPort(): number | null {
+  return currentServerPort;
+}
+
+// Get all ports to try (saved port first, then common ports)
+function getPortsToTry(): number[] {
+  const savedPort = getSavedPort();
+  const ports = [...COMMON_PORTS];
+
+  if (savedPort && !ports.includes(savedPort)) {
+    ports.unshift(savedPort);
+  } else if (savedPort) {
+    // Move saved port to front
+    const idx = ports.indexOf(savedPort);
+    if (idx > 0) {
+      ports.splice(idx, 1);
+      ports.unshift(savedPort);
+    }
+  }
+
+  return ports;
+}
+
+let API_BASE = isDev ? '/api' : 'http://localhost:3001/api';
+let currentServerPort: number | null = null;
 
 // Connection state
 let isServerConnected = false;
@@ -27,6 +88,11 @@ const REQUEST_TIMEOUT_MS = 30000;
 
 export function getConnectionStatus() {
   return isServerConnected;
+}
+
+// Get current API base URL
+export function getApiBaseUrl(): string {
+  return API_BASE;
 }
 
 async function fetchApi<T>(
@@ -102,7 +168,7 @@ async function fetchApi<T>(
     // Check if it's a network error (server not running)
     if (error instanceof TypeError && error.message.includes('fetch')) {
       isServerConnected = false;
-      throw new Error('Cannot connect to local server. Make sure the server is running on port 3001.');
+      throw new Error('Cannot connect to local server. Make sure the server is running (npx sui-cli-web-server).');
     }
     // Check for JSON parse error
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
@@ -113,11 +179,16 @@ async function fetchApi<T>(
   }
 }
 
-// Check server connection - tries multiple localhost URLs for browser compatibility
+// Check server connection - scans multiple ports to find the server
 export async function checkConnection(): Promise<boolean> {
   if (isDev) {
     try {
-      await fetch(`${API_BASE}/health`, { method: 'GET' });
+      const response = await fetch(`${API_BASE}/health`, { method: 'GET' });
+      const data = await response.json();
+      // Server returns port in health response
+      if (data.port) {
+        currentServerPort = data.port;
+      }
       isServerConnected = true;
       return true;
     } catch {
@@ -126,18 +197,45 @@ export async function checkConnection(): Promise<boolean> {
     }
   }
 
-  // In production, try multiple localhost URLs (some browsers block certain variants)
-  for (let i = 0; i < LOCALHOST_URLS.length; i++) {
-    const url = LOCALHOST_URLS[(currentUrlIndex + i) % LOCALHOST_URLS.length];
-    try {
-      await fetch(`${url}/health`, { method: 'GET' });
-      // Found working URL, update API_BASE
-      API_BASE = url;
-      currentUrlIndex = (currentUrlIndex + i) % LOCALHOST_URLS.length;
-      isServerConnected = true;
-      return true;
-    } catch {
-      // Try next URL
+  // In production, scan ports to find the server
+  const portsToTry = getPortsToTry();
+
+  for (const port of portsToTry) {
+    const urls = buildLocalhostUrls(port);
+
+    for (const url of urls) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout per attempt
+
+        const response = await fetch(`${url}/health`, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        // Try to get port from response
+        try {
+          const data = await response.json();
+          if (data.port) {
+            currentServerPort = data.port;
+          } else {
+            currentServerPort = port;
+          }
+        } catch {
+          currentServerPort = port;
+        }
+
+        // Found working server, update API_BASE and save port
+        API_BASE = url;
+        if (currentServerPort) {
+          savePort(currentServerPort);
+        }
+        isServerConnected = true;
+        return true;
+      } catch {
+        // Try next URL/port
+      }
     }
   }
 

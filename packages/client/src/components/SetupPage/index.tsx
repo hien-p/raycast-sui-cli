@@ -4,28 +4,29 @@ import { SetupInstructions } from '../SetupInstructions';
 import { StructuredData } from '../SEO/StructuredData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { checkConnection, getServerPort } from '@/api/client';
 
 export function SetupPage() {
   const navigate = useNavigate();
   const [serverConnected, setServerConnected] = useState<boolean | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [showSuccessState, setShowSuccessState] = useState(false);
+  const [connectedPort, setConnectedPort] = useState<number | null>(null);
 
   const checkServerConnection = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/health', {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      const isConnected = response.ok;
+      const isConnected = await checkConnection();
       setServerConnected(isConnected);
 
-      if (isConnected && !showSuccessState) {
-        setShowSuccessState(true);
-        toast.success('✅ Server connected successfully!', {
-          duration: 3000,
-          position: 'top-center',
-        });
+      if (isConnected) {
+        setConnectedPort(getServerPort());
+        if (!showSuccessState) {
+          setShowSuccessState(true);
+          toast.success('✅ Server connected successfully!', {
+            duration: 3000,
+            position: 'top-center',
+          });
+        }
       }
     } catch (error) {
       setServerConnected(false);
@@ -124,7 +125,7 @@ export function SetupPage() {
                       <span className="text-green-400 font-semibold">Connected</span>
                     </div>
                     <div className="mt-2 text-sm text-white/50">
-                      localhost:3001
+                      localhost:{connectedPort || 3001}
                     </div>
                   </div>
 

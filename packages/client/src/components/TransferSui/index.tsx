@@ -18,9 +18,9 @@ import {
   FileText,
   ExternalLink,
   Terminal,
-  ChevronRight,
 } from 'lucide-react';
 import { showErrorToast, showSuccessToast, showInfoToast } from '@/lib/toast';
+import { getApiBaseUrl } from '@/api/client';
 
 interface TransferableCoin {
   coinObjectId: string;
@@ -93,7 +93,7 @@ export function TransferSui() {
     if (!activeAddress) return;
     setIsLoadingCoins(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/transfers/sui/coins/${activeAddress.address}`);
+      const response = await fetch(`${getApiBaseUrl()}/transfers/sui/coins/${activeAddress.address}`);
       const data = await response.json();
       if (data.success && data.data) setCoins(data.data);
     } catch (error) {
@@ -182,7 +182,7 @@ export function TransferSui() {
     setIsTransferring(true);
     setTransferResult(null);
     try {
-      const response = await fetch('http://localhost:3001/api/transfers/sui', {
+      const response = await fetch(`${getApiBaseUrl()}/transfers/sui`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: finalToAddress, amount, coinId: selectedCoin }),

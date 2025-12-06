@@ -138,7 +138,7 @@ async function main() {
 
   // Health check endpoint (no rate limit)
   fastify.get('/api/health', async () => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    return { status: 'ok', timestamp: new Date().toISOString(), port: PORT };
   });
 
   // Sui CLI status endpoint (read rate limit)

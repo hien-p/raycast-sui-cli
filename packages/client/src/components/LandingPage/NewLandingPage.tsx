@@ -8,6 +8,7 @@ import { ScrollIndicator } from '@/components/ui/scroll-indicator';
 import { TypingText } from '@/components/ui/typing-text';
 import { GlitchText } from '@/components/ui/glitch-text';
 import { ProgressDots } from '@/components/ui/progress-dots';
+import { checkConnection } from '@/api/client';
 import {
   Terminal,
   Wallet,
@@ -64,11 +65,8 @@ export function NewLandingPage() {
 
   const checkServerConnection = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/health', {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      setServerConnected(response.ok);
+      const isConnected = await checkConnection();
+      setServerConnected(isConnected);
     } catch (error) {
       setServerConnected(false);
     }

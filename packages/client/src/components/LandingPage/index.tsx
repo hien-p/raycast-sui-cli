@@ -4,6 +4,7 @@ import { MembershipJoin } from '../MembershipJoin';
 import { SetupInstructions } from '../SetupInstructions';
 import { TIER_DROPLET, TIER_WAVE, TIER_TSUNAMI, TIER_OCEAN, TIER_METADATA } from '../TierBadge';
 import { useAppStore } from '@/stores/useAppStore';
+import { checkConnection } from '@/api/client';
 import {
   Terminal,
   Wallet,
@@ -78,11 +79,8 @@ export function LandingPage() {
 
   const checkServerConnection = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/health', {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      setServerConnected(response.ok);
+      const isConnected = await checkConnection();
+      setServerConnected(isConnected);
     } catch (error) {
       setServerConnected(false);
     }

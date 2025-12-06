@@ -4,6 +4,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMobileDetect } from '@/hooks/useMobileDetect';
+import { checkConnection } from '@/api/client';
 
 export function AppGuard() {
   const [serverConnected, setServerConnected] = useState<boolean | null>(null);
@@ -13,11 +14,7 @@ export function AppGuard() {
   useEffect(() => {
     const checkServerConnection = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/health', {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000),
-        });
-        const isConnected = response.ok;
+        const isConnected = await checkConnection();
         setServerConnected(isConnected);
 
         // Don't show toast on mobile - they'll see the friendly message instead

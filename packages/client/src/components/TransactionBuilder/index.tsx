@@ -22,6 +22,7 @@ import { TransactionSummary } from '@/components/TransactionInspector/Transactio
 import { GasBreakdown } from '@/components/TransactionInspector/GasBreakdown';
 import { EnhancedReplaySummary } from '@/components/TransactionInspector/EnhancedReplaySummary';
 import { analyzeTransaction } from '@/utils/transactionAnalyzer';
+import { getApiBaseUrl } from '@/api/client';
 
 interface InspectResult {
   success: boolean;
@@ -71,7 +72,7 @@ export function TransactionBuilder() {
     setOperationProgress(33);
 
     try {
-      const response = await fetch('http://localhost:3001/api/inspector/inspect', {
+      const response = await fetch(`${getApiBaseUrl()}/inspector/inspect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txDigest: inspectDigest.trim() }),
@@ -125,7 +126,7 @@ export function TransactionBuilder() {
     setOperationProgress(33);
 
     try {
-      const response = await fetch('http://localhost:3001/api/inspector/replay', {
+      const response = await fetch(`${getApiBaseUrl()}/inspector/replay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txDigest: replayDigest.trim() }),
