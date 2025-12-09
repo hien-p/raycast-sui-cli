@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { useAppStore } from '@/stores/useAppStore';
 import { Spinner } from '../shared/Spinner';
@@ -113,12 +114,28 @@ const networks: { id: Network; name: string; icon: string; description: string }
 
 export function FaucetForm() {
   const { addresses, isLoading, requestFaucet, environments } = useAppStore();
+  const [searchParams] = useSearchParams();
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('testnet');
   const [isRequesting, setIsRequesting] = useState(false);
   const [lastResult, setLastResult] = useState<{ success: boolean; message: string; txDigest?: string } | null>(null);
+  const [customAddress, setCustomAddress] = useState('');
 
   const activeAddress = addresses.find((a) => a.isActive);
   const activeEnv = environments.find((e) => e.isActive);
+
+  // Support requesting for external addresses via query param (e.g., multi-sig addresses)
+  const queryAddress = searchParams.get('address');
+
+  // Initialize custom address from query param
+  useEffect(() => {
+    if (queryAddress && queryAddress !== activeAddress?.address) {
+      setCustomAddress(queryAddress);
+    }
+  }, [queryAddress, activeAddress?.address]);
+
+  // Target address: custom address (for multi-sig) or active address
+  const targetAddress = customAddress || activeAddress?.address;
+  const isExternalAddress = !!customAddress && customAddress !== activeAddress?.address;
 
   // Auto-detect network from active environment
   const detectNetwork = (): Network | null => {
@@ -138,15 +155,16 @@ export function FaucetForm() {
   );
 
   const handleRequest = async () => {
-    if (!activeAddress) {
-      toast.error('No active address');
+    if (!targetAddress) {
+      toast.error('No address specified');
       return;
     }
 
     setIsRequesting(true);
     setLastResult(null);
     try {
-      await requestFaucet(selectedNetwork);
+      // Pass target address for external/multi-sig addresses
+      await requestFaucet(selectedNetwork, isExternalAddress ? targetAddress : undefined);
       const result = {
         success: true,
         message: `Tokens requested from ${selectedNetwork} faucet!`,
@@ -175,16 +193,21 @@ export function FaucetForm() {
   };
 
   const copyAddress = () => {
-    if (activeAddress) {
-      navigator.clipboard.writeText(activeAddress.address);
+    if (targetAddress) {
+      navigator.clipboard.writeText(targetAddress);
       toast.success('Address copied to clipboard');
     }
   };
 
-  if (!activeAddress) {
+  // Clear custom address to switch back to active address
+  const clearCustomAddress = () => {
+    setCustomAddress('');
+  };
+
+  if (!targetAddress && !activeAddress) {
     return (
       <div className="px-3 py-8 text-center text-muted-foreground">
-        No active address selected
+        No address selected
       </div>
     );
   }
@@ -194,16 +217,38 @@ export function FaucetForm() {
       {/* Active address display */}
       <div className="p-3 bg-muted/30 rounded-lg">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-muted-foreground">Request tokens for</span>
-          <button
-            onClick={copyAddress}
-            className="text-xs text-primary hover:underline"
-          >
-            Copy
-          </button>
+          <span className="text-xs text-muted-foreground flex items-center gap-2">
+            Request tokens for
+            {isExternalAddress && (
+              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded">
+                Multi-Sig Address
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            {isExternalAddress && (
+              <button
+                onClick={clearCustomAddress}
+                className="text-xs text-muted-foreground hover:text-foreground"
+                title="Switch to active address"
+              >
+                ✕
+              </button>
+            )}
+            <button
+              onClick={copyAddress}
+              className="text-xs text-primary hover:underline"
+            >
+              Copy
+            </button>
+          </div>
         </div>
         <div className="text-sm font-mono text-foreground truncate">
-          {activeAddress.alias ? (
+          {isExternalAddress ? (
+            <span>
+              {targetAddress?.slice(0, 10)}...{targetAddress?.slice(-6)}
+            </span>
+          ) : activeAddress?.alias ? (
             <span>
               <span className="text-primary">{activeAddress.alias}</span>
               <span className="text-muted-foreground ml-2">
@@ -211,12 +256,19 @@ export function FaucetForm() {
               </span>
             </span>
           ) : (
-            activeAddress.address
+            activeAddress?.address
           )}
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          Current balance: <span className="text-foreground font-medium">{activeAddress.balance || '0'} SUI</span>
-        </div>
+        {!isExternalAddress && activeAddress && (
+          <div className="text-xs text-muted-foreground mt-1">
+            Current balance: <span className="text-foreground font-medium">{activeAddress.balance || '0'} SUI</span>
+          </div>
+        )}
+        {isExternalAddress && (
+          <div className="text-xs text-muted-foreground mt-1">
+            💡 This is an external address (e.g., multi-sig). Balance will update after faucet request.
+          </div>
+        )}
       </div>
 
       {/* Network detection hint */}

@@ -308,18 +308,18 @@ export function FileBrowser({ onSelect, onClose }: FileBrowserProps) {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.15 }}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           if (entry.isDirectory) {
                             if (isPackage) {
+                              // Move package: select it
                               setSelectedPath(entry.path);
                             } else {
-                              handleDirectoryClick(entry);
+                              // Regular folder: navigate into it
+                              setSelectedPath(null);
+                              loadDirectory(entry.path);
                             }
-                          }
-                        }}
-                        onDoubleClick={() => {
-                          if (entry.isDirectory && !isPackage) {
-                            handleDirectoryClick(entry);
                           }
                         }}
                         className={`w-full px-4 py-3 rounded-xl text-left transition-all flex items-center gap-3 group ${

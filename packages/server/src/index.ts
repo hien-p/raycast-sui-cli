@@ -6,10 +6,14 @@ import { faucetRoutes } from './routes/faucet';
 import { communityRoutes } from './routes/community';
 import { transferRoutes } from './routes/transfer';
 import { keyManagementRoutes } from './routes/key-management';
+import { keytoolRoutes } from './routes/keytool';
 import { moveRoutes } from './routes/move';
 import { packageRoutes } from './routes/package';
 import { inspectorRoutes } from './routes/inspector';
 import { filesystemRoutes } from './routes/filesystem';
+import { dynamicFieldsRoutes } from './routes/dynamic-fields';
+import { devtoolsRoutes } from './routes/devtools';
+import { securityRoutes } from './routes/security';
 import { SuiCliExecutor } from './cli/SuiCliExecutor';
 import { createRateLimitHook } from './utils/rateLimiter';
 import { createRequire } from 'module';
@@ -167,6 +171,7 @@ async function main() {
   // Rate limiting hooks
   const readRateLimit = createRateLimitHook('read');
   const writeRateLimit = createRateLimitHook('write');
+  const keytoolRateLimit = createRateLimitHook('keytool');
   const faucetRateLimit = createRateLimitHook('faucet');
 
   // Health check endpoint (no rate limit)
@@ -268,6 +273,16 @@ async function main() {
     { prefix: '/api' }
   );
 
+  // Keytool routes - cryptographic operations (signing, multi-sig, etc.)
+  // Uses dedicated keytool rate limit (more generous for local dev)
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', keytoolRateLimit);
+      await instance.register(keytoolRoutes);
+    },
+    { prefix: '/api/keytool' }
+  );
+
   // Move routes - development operations
   await fastify.register(
     async (instance) => {
@@ -300,6 +315,33 @@ async function main() {
     async (instance) => {
       instance.addHook('onRequest', readRateLimit);
       await instance.register(filesystemRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Dynamic fields routes - read operations (query object dynamic fields)
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', readRateLimit);
+      await instance.register(dynamicFieldsRoutes);
+    },
+    { prefix: '/api/dynamic-fields' }
+  );
+
+  // DevTools routes - development operations (coverage, disassemble, summary)
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', writeRateLimit);
+      await instance.register(devtoolsRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Security routes - verification operations (source, bytecode, decode)
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', writeRateLimit);
+      await instance.register(securityRoutes);
     },
     { prefix: '/api' }
   );

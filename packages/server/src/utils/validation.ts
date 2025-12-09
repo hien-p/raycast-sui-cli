@@ -389,3 +389,74 @@ export function validateMnemonic(mnemonic: unknown, fieldName = 'mnemonic'): str
   }
   return mnemonic;
 }
+
+// Base64 string validation (for public keys, signatures, etc.)
+const BASE64_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
+
+export function isValidBase64(str: string): boolean {
+  if (typeof str !== 'string' || str.length === 0) return false;
+  // Must be valid base64 and reasonable length
+  return BASE64_REGEX.test(str) && str.length >= 4 && str.length <= 10000;
+}
+
+export function validateBase64(data: unknown, fieldName = 'data'): string {
+  if (typeof data !== 'string' || !isValidBase64(data)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid base64 string' },
+    ]);
+  }
+  return data;
+}
+
+// Hex string validation (for transaction bytes, data to sign, etc.)
+const HEX_STRING_REGEX = /^(0x)?[a-fA-F0-9]+$/;
+
+export function isValidHexString(str: string): boolean {
+  if (typeof str !== 'string' || str.length === 0) return false;
+  return HEX_STRING_REGEX.test(str) && str.length <= 100000;
+}
+
+export function validateHexString(data: unknown, fieldName = 'data'): string {
+  if (typeof data !== 'string' || !isValidHexString(data)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid hex string (expected hex digits with optional 0x prefix)' },
+    ]);
+  }
+  return data;
+}
+
+// Public key validation (Base64 or hex)
+export function validatePublicKey(publicKey: unknown, fieldName = 'publicKey'): string {
+  if (typeof publicKey !== 'string' || publicKey.length === 0) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Public key is required' },
+    ]);
+  }
+
+  // Accept either base64 or hex format
+  if (!isValidBase64(publicKey) && !isValidHexString(publicKey)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid public key format (expected base64 or hex)' },
+    ]);
+  }
+
+  return publicKey;
+}
+
+// Signature validation (Base64 or hex)
+export function validateSignature(signature: unknown, fieldName = 'signature'): string {
+  if (typeof signature !== 'string' || signature.length === 0) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Signature is required' },
+    ]);
+  }
+
+  // Accept either base64 or hex format
+  if (!isValidBase64(signature) && !isValidHexString(signature)) {
+    throw new ValidationException([
+      { field: fieldName, message: 'Invalid signature format (expected base64 or hex)' },
+    ]);
+  }
+
+  return signature;
+}

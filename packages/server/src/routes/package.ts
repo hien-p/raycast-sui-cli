@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { PackageService } from '../services/dev/PackageService';
+import { PackageService, PublishedPackageInfo } from '../services/dev/PackageService';
 import type { ApiResponse } from '@sui-cli-web/shared';
 import {
   validateObjectId,
@@ -14,6 +14,31 @@ import { handleRouteError } from '../utils/errorHandler';
 const packageService = new PackageService();
 
 export async function packageRoutes(fastify: FastifyInstance) {
+  // Get user's published packages (via UpgradeCap objects)
+  fastify.get<{
+    Querystring: { address?: string };
+    Reply: ApiResponse<{ packages: PublishedPackageInfo[] }>;
+  }>('/packages/published', async (request, reply) => {
+    try {
+      const { address } = request.query;
+
+      const result = await packageService.getPublishedPackages(address);
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'Failed to get published packages' };
+      }
+
+      return {
+        success: true,
+        data: {
+          packages: result.packages || [],
+        },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
   // Publish a Move package
   fastify.post<{
     Body: {

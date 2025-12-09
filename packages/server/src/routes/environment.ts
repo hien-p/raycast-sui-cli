@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { EnvironmentService } from '../services/EnvironmentService';
+import { EnvironmentService, ChainIdentifierResult } from '../services/EnvironmentService';
 import type { ApiResponse, SuiEnvironment } from '@sui-cli-web/shared';
 import {
   validateOptionalAlias,
@@ -52,6 +52,16 @@ export async function environmentRoutes(fastify: FastifyInstance) {
     try {
       const alias = await environmentService.getActiveEnvironment();
       return { success: true, data: { alias } };
+    } catch (error) {
+      return handleError(error, reply);
+    }
+  });
+
+  // Get chain identifier from current RPC
+  fastify.get<{ Reply: ApiResponse<ChainIdentifierResult> }>('/environments/chain-id', async (request, reply) => {
+    try {
+      const result = await environmentService.getChainIdentifier();
+      return { success: true, data: result };
     } catch (error) {
       return handleError(error, reply);
     }

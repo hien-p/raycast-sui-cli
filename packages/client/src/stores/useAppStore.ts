@@ -77,7 +77,7 @@ interface AppState {
   mergeCoins: (primaryCoinId: string, coinIdsToMerge: string[]) => Promise<void>;
 
   // Faucet
-  requestFaucet: (network: 'testnet' | 'devnet' | 'localnet') => Promise<void>;
+  requestFaucet: (network: 'testnet' | 'devnet' | 'localnet', address?: string) => Promise<void>;
 
   // Object detail
   viewObjectDetail: (objectId: string) => void;
@@ -364,15 +364,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Faucet
-  requestFaucet: async (network: 'testnet' | 'devnet' | 'localnet') => {
+  requestFaucet: async (network: 'testnet' | 'devnet' | 'localnet', address?: string) => {
     set({ isLoading: true, error: null });
     try {
-      await api.requestFaucet(network);
+      await api.requestFaucet(network, address);
       // Wait for transaction to finalize on blockchain before refreshing balance
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      // Invalidate addresses cache after faucet request
-      apiCache.invalidate(cacheKeys.addresses());
-      await get().fetchAddresses();
+      // Invalidate addresses cache after faucet request (only for known addresses)
+      if (!address) {
+        apiCache.invalidate(cacheKeys.addresses());
+        await get().fetchAddresses();
+      }
       set({ isLoading: false });
       trackEvent(ClarityEvents.FAUCET_REQUESTED);
     } catch (error) {

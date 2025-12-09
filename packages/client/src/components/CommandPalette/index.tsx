@@ -10,12 +10,16 @@ const VIEW_TO_ROUTE: Record<string, string> = {
   addresses: '/app/addresses',
   environments: '/app/environments',
   objects: '/app/objects',
+  'dynamic-fields': '/app/dynamic-fields',
   gas: '/app/gas',
   faucet: '/app/faucet',
   membership: '/app/membership',
   transfer: '/app/transfer',
   move: '/app/move',
   inspector: '/app/inspector',
+  devtools: '/app/devtools',
+  security: '/app/security',
+  keytool: '/app/keytool',
 };
 
 export function CommandPalette() {

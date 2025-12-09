@@ -12,12 +12,15 @@ interface RateLimitConfig {
 }
 
 // Different limits for different endpoint types
+// Local server limits are generous since it's running on user's own machine
 export const RATE_LIMITS = {
-  // Read operations - generous limits
-  read: { windowMs: 60_000, maxRequests: 100 }, // 100 req/min
-  // Write operations - more restrictive
-  write: { windowMs: 60_000, maxRequests: 30 }, // 30 req/min
-  // Faucet - very restrictive (external API)
+  // Read operations - very generous for local dev
+  read: { windowMs: 60_000, maxRequests: 1000 }, // 1000 req/min
+  // Write operations - generous for local
+  write: { windowMs: 60_000, maxRequests: 300 }, // 300 req/min
+  // Keytool operations - generous for local key management
+  keytool: { windowMs: 60_000, maxRequests: 200 }, // 200 req/min
+  // Faucet - restrictive (external API has its own limits)
   faucet: { windowMs: 60_000, maxRequests: 5 }, // 5 req/min
 } as const;
 

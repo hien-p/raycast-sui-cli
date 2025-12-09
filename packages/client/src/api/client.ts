@@ -559,6 +559,21 @@ export async function getDeployedPackages(address: string) {
   return fetchApi<DeployedPackage[]>(`/community/packages/${address}`);
 }
 
+// Get user's published packages (via UpgradeCap on-chain)
+export interface PublishedPackageInfo {
+  packageId: string;
+  upgradeCapId: string;
+  version: string;
+  policy: number;
+}
+
+export async function getPublishedPackages(address?: string) {
+  const endpoint = address
+    ? `/packages/published?address=${encodeURIComponent(address)}`
+    : '/packages/published';
+  return fetchApi<{ packages: PublishedPackageInfo[] }>(endpoint);
+}
+
 // Filesystem API
 export interface DirectoryEntry {
   name: string;
@@ -744,5 +759,214 @@ export async function convertToVectorU8(value: string, format: 'string' | 'hex')
   return fetchApi<{ result: string }>('/inspector/convert-to-vector-u8', {
     method: 'POST',
     body: JSON.stringify({ value, format }),
+  });
+}
+
+// DevTools API
+export async function getPackageModules(packagePath: string) {
+  return fetchApi<{ modules: string[]; packagePath: string }>(`/devtools/modules?packagePath=${encodeURIComponent(packagePath)}`);
+}
+
+export async function runCoverage(packagePath: string, mode: string = 'summary', moduleName?: string) {
+  return fetchApi<{ output: string; mode: string; moduleName?: string }>('/devtools/coverage', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, mode, moduleName }),
+  });
+}
+
+export async function disassembleModule(modulePath: string, showDebug?: boolean, showBytecodeMap?: boolean) {
+  return fetchApi<{ output: string; modulePath: string }>('/devtools/disassemble', {
+    method: 'POST',
+    body: JSON.stringify({ modulePath, showDebug, showBytecodeMap }),
+  });
+}
+
+export async function generatePackageSummary(packagePath?: string, packageId?: string, format: string = 'json') {
+  return fetchApi<{ summary: any; format: string }>('/devtools/summary', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, packageId, format }),
+  });
+}
+
+// Security Tools API
+export async function verifySource(packagePath: string, verifyDeps?: boolean, skipSource?: boolean) {
+  return fetchApi<{ verified: boolean; output: string; packagePath: string }>('/security/verify-source', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, verifyDeps, skipSource }),
+  });
+}
+
+export async function verifyBytecode(packagePath?: string, modulePaths?: string[], protocolVersion?: number) {
+  return fetchApi<{ output: string; withinLimits: boolean; meterUsage?: { current: number; limit: number } }>('/security/verify-bytecode', {
+    method: 'POST',
+    body: JSON.stringify({ packagePath, modulePaths, protocolVersion }),
+  });
+}
+
+export async function decodeTransaction(txBytes: string, signature?: string) {
+  return fetchApi<{ decoded: any; signatureValid?: boolean }>('/security/decode-tx', {
+    method: 'POST',
+    body: JSON.stringify({ txBytes, signature }),
+  });
+}
+
+// Dynamic Fields API
+export async function getDynamicFields(objectId: string, cursor?: string, limit?: number) {
+  const params = new URLSearchParams();
+  if (cursor) params.set('cursor', cursor);
+  if (limit) params.set('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchApi<{
+    objectId: string;
+    data: any[];
+    nextCursor: string | null;
+    hasNextPage: boolean;
+  }>(`/dynamic-fields/${objectId}${query}`);
+}
+
+// Keytool API
+export async function listKeys() {
+  return fetchApi<any[]>('/keytool/list');
+}
+
+export async function generateKey(scheme?: 'ed25519' | 'secp256k1' | 'secp256r1', wordLength?: number) {
+  return fetchApi<{
+    address: string;
+    publicKey: string;
+    keyScheme: string;
+    mnemonic?: string;
+  }>('/keytool/generate', {
+    method: 'POST',
+    body: JSON.stringify({ scheme, wordLength }),
+  });
+}
+
+export async function signMessage(address: string, data: string) {
+  return fetchApi<{ signature: string; publicKey: string }>('/keytool/sign', {
+    method: 'POST',
+    body: JSON.stringify({ address, data }),
+  });
+}
+
+export async function createMultiSigAddress(publicKeys: string[], weights: number[], threshold: number) {
+  return fetchApi<{
+    address: string;
+    threshold: number;
+    publicKeys: string[];
+    weights: number[];
+  }>('/keytool/multisig-address', {
+    method: 'POST',
+    body: JSON.stringify({ publicKeys, weights, threshold }),
+  });
+}
+
+export async function decodeTransactionKeytool(txBytes: string, signature?: string) {
+  return fetchApi<{ decoded: any; signatureValid?: boolean }>('/keytool/decode-tx', {
+    method: 'POST',
+    body: JSON.stringify({ txBytes, signature }),
+  });
+}
+
+export type SampleTxType = 'self-transfer' | 'split-coin' | 'merge-coins';
+
+export async function generateSampleTx(address: string, txType?: SampleTxType) {
+  return fetchApi<{ txBytes: string; description: string }>('/keytool/generate-sample-tx', {
+    method: 'POST',
+    body: JSON.stringify({ address, txType }),
+  });
+}
+
+export async function combineMultiSigSignatures(
+  publicKeys: string[],
+  weights: number[],
+  threshold: number,
+  signatures: string[]
+) {
+  return fetchApi<{ combinedSignature: string; multiSigAddress?: string }>('/keytool/combine-signatures', {
+    method: 'POST',
+    body: JSON.stringify({ publicKeys, weights, threshold, signatures }),
+  });
+}
+
+// Build unsigned transfer transaction for multi-sig
+export async function buildTransferTransaction(
+  from: string,
+  to: string,
+  amount: string,
+  coinObjectId?: string,
+  gasBudget?: string
+) {
+  return fetchApi<{ txBytes: string; description: string }>('/keytool/build-transfer-tx', {
+    method: 'POST',
+    body: JSON.stringify({ from, to, amount, coinObjectId, gasBudget }),
+  });
+}
+
+// Execute a signed transaction
+export async function executeSignedTransaction(txBytes: string, signature: string) {
+  return fetchApi<{ digest: string; status: string; gasUsed: string }>('/keytool/execute-signed-tx', {
+    method: 'POST',
+    body: JSON.stringify({ txBytes, signature }),
+  });
+}
+
+// Get chain identifier from current RPC
+export async function getChainIdentifier() {
+  return fetchApi<{ chainId: string; network?: string }>('/environments/chain-id');
+}
+
+// Execute pre-signed transaction (for hardware wallets)
+export async function executePreSignedTransaction(txBytes: string, signatures: string[]) {
+  return fetchApi<{
+    digest?: string;
+    effects?: any;
+    events?: any[];
+  }>('/inspector/execute-signed-tx', {
+    method: 'POST',
+    body: JSON.stringify({ txBytes, signatures }),
+  });
+}
+
+// Execute combined signed transaction data
+export async function executeCombinedSignedTransaction(serializedSignedTx: string) {
+  return fetchApi<{
+    digest?: string;
+    effects?: any;
+    events?: any[];
+  }>('/inspector/execute-combined-signed-tx', {
+    method: 'POST',
+    body: JSON.stringify({ serializedSignedTx }),
+  });
+}
+
+// PTB types
+export interface PtbCommand {
+  type: 'split-coins' | 'merge-coins' | 'transfer-objects' | 'move-call' | 'assign' | 'make-move-vec';
+  args: string[];
+}
+
+export interface PtbOptions {
+  gasBudget?: number;
+  gasPrice?: number;
+  gasCoin?: string;
+  gasSponsor?: string;
+  dryRun?: boolean;
+  devInspect?: boolean;
+  preview?: boolean;
+}
+
+export interface PtbResult {
+  output?: string;
+  digest?: string;
+  effects?: any;
+  events?: any[];
+  preview?: string;
+}
+
+// Execute Programmable Transaction Block
+export async function executePtb(commands: PtbCommand[], options?: PtbOptions) {
+  return fetchApi<PtbResult>('/inspector/ptb', {
+    method: 'POST',
+    body: JSON.stringify({ commands, options }),
   });
 }

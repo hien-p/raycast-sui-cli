@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
 import { Spinner } from '../shared/Spinner';
 import { ObjectDetail } from './ObjectDetail';
@@ -30,17 +31,27 @@ export function ObjectList() {
     fetchObjects,
   } = useAppStore();
 
+  const [searchParams] = useSearchParams();
   const [selectedObject, setSelectedObject] = useState<Record<string, unknown> | null>(null);
   const [activeCategory, setActiveCategory] = useState<ObjectCategory>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
+  // Support viewing objects for any address via query param (e.g., multi-sig addresses)
+  const queryAddress = searchParams.get('address');
   const activeAddress = addresses.find((a) => a.isActive);
 
+  // Use query address if provided, otherwise use active address
+  const targetAddress = queryAddress || activeAddress?.address;
+  const displayLabel = queryAddress
+    ? `${queryAddress.slice(0, 10)}...${queryAddress.slice(-6)}`
+    : (activeAddress?.alias || `${activeAddress?.address.slice(0, 16)}...`);
+  const isExternalAddress = !!queryAddress && queryAddress !== activeAddress?.address;
+
   useEffect(() => {
-    if (activeAddress) {
-      fetchObjects(activeAddress.address);
+    if (targetAddress) {
+      fetchObjects(targetAddress);
     }
-  }, [activeAddress, fetchObjects]);
+  }, [targetAddress, fetchObjects]);
 
   // Group objects by type
   const { filteredObjects, categoryCounts } = useMemo(() => {
@@ -142,10 +153,10 @@ export function ObjectList() {
     );
   }
 
-  if (!activeAddress) {
+  if (!targetAddress) {
     return (
       <div className="px-3 py-8 text-center text-muted-foreground">
-        No active address selected
+        No address selected
       </div>
     );
   }
@@ -163,9 +174,20 @@ export function ObjectList() {
       {/* Header with address */}
       <div className="mb-3 px-3 py-2 bg-muted/30 rounded-lg flex items-center justify-between">
         <div className="min-w-0 flex-1">
-          <div className="text-xs text-muted-foreground">Objects owned by</div>
-          <div className="text-sm font-mono text-foreground truncate">
-            {activeAddress.alias || `${activeAddress.address.slice(0, 16)}...`}
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            Objects owned by
+            {isExternalAddress && (
+              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded">
+                External Address
+              </span>
+            )}
+          </div>
+          <div
+            className="text-sm font-mono text-foreground truncate cursor-pointer hover:text-accent transition-colors"
+            onClick={() => { navigator.clipboard.writeText(targetAddress); toast.success('Address copied'); }}
+            title="Click to copy"
+          >
+            {displayLabel}
           </div>
         </div>
         {/* View toggle */}
@@ -227,9 +249,36 @@ export function ObjectList() {
 
       {filteredObjects.length === 0 ? (
         <div className="px-3 py-8 text-center text-muted-foreground">
-          <div className="text-4xl mb-2">🔍</div>
-          <div>No objects found</div>
-          {activeCategory !== 'all' && (
+          <div className="text-4xl mb-2">{objects.length === 0 ? '📭' : '🔍'}</div>
+          <div className="mb-2">{objects.length === 0 ? 'This address has no objects yet' : 'No objects match your filter'}</div>
+
+          {objects.length === 0 && (
+            <div className="mt-4 p-4 bg-muted/30 rounded-lg text-left max-w-sm mx-auto">
+              <p className="text-xs text-muted-foreground mb-3">
+                {isExternalAddress
+                  ? 'This might be a new multi-sig address. To start using it:'
+                  : 'To add objects to this address:'}
+              </p>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span>Get test SUI from faucet</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span>Transfer assets to this address</span>
+                </div>
+              </div>
+              <a
+                href={`/app/faucet?address=${targetAddress}`}
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-xs transition-colors"
+              >
+                💧 Request from Faucet
+              </a>
+            </div>
+          )}
+
+          {activeCategory !== 'all' && objects.length > 0 && (
             <button
               onClick={() => setActiveCategory('all')}
               className="mt-2 text-xs text-primary hover:underline"

@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { InspectorService } from '../services/dev/InspectorService';
+import { InspectorService, ExecuteSignedTxResult, PtbCommand, PtbOptions, PtbResult } from '../services/dev/InspectorService';
 import { ParameterHelperService, AnalyzedParameter } from '../services/ParameterHelperService';
 import type { ApiResponse } from '@sui-cli-web/shared';
 import { handleRouteError } from '../utils/errorHandler';
@@ -230,6 +230,111 @@ export async function inspectorRoutes(fastify: FastifyInstance) {
       return {
         success: true,
         data: { result },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Execute a pre-signed transaction (for hardware wallet users)
+  fastify.post<{
+    Body: { txBytes: string; signatures: string[] };
+    Reply: ApiResponse<ExecuteSignedTxResult>;
+  }>('/inspector/execute-signed-tx', async (request, reply) => {
+    try {
+      const { txBytes, signatures } = request.body;
+
+      if (!txBytes) {
+        reply.status(400);
+        return { success: false, error: 'txBytes is required' };
+      }
+
+      if (!signatures || !Array.isArray(signatures) || signatures.length === 0) {
+        reply.status(400);
+        return { success: false, error: 'At least one signature is required' };
+      }
+
+      const result = await inspectorService.executeSignedTransaction(txBytes, signatures);
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'Execution failed' };
+      }
+
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Execute a combined serialized SenderSignedData
+  fastify.post<{
+    Body: { serializedSignedTx: string };
+    Reply: ApiResponse<ExecuteSignedTxResult>;
+  }>('/inspector/execute-combined-signed-tx', async (request, reply) => {
+    try {
+      const { serializedSignedTx } = request.body;
+
+      if (!serializedSignedTx) {
+        reply.status(400);
+        return { success: false, error: 'serializedSignedTx is required' };
+      }
+
+      const result = await inspectorService.executeCombinedSignedTransaction(serializedSignedTx);
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'Execution failed' };
+      }
+
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Execute a Programmable Transaction Block (PTB)
+  fastify.post<{
+    Body: { commands: PtbCommand[]; options?: PtbOptions };
+    Reply: ApiResponse<PtbResult>;
+  }>('/inspector/ptb', async (request, reply) => {
+    try {
+      const { commands, options } = request.body;
+
+      if (!commands || !Array.isArray(commands) || commands.length === 0) {
+        reply.status(400);
+        return { success: false, error: 'At least one command is required' };
+      }
+
+      // Validate command types
+      const validTypes = ['split-coins', 'merge-coins', 'transfer-objects', 'move-call', 'assign', 'make-move-vec'];
+      for (const cmd of commands) {
+        if (!validTypes.includes(cmd.type)) {
+          reply.status(400);
+          return { success: false, error: `Invalid command type: ${cmd.type}. Valid types: ${validTypes.join(', ')}` };
+        }
+        if (!cmd.args || !Array.isArray(cmd.args)) {
+          reply.status(400);
+          return { success: false, error: `Command ${cmd.type} requires args array` };
+        }
+      }
+
+      const result = await inspectorService.executePtb(commands, options || {});
+
+      if (!result.success) {
+        reply.status(500);
+        return { success: false, error: result.error || 'PTB execution failed' };
+      }
+
+      return {
+        success: true,
+        data: result,
       };
     } catch (error) {
       return handleRouteError(error, reply);

@@ -19,6 +19,10 @@ const TransferSui = lazy(() => import('./components/TransferSui').then(m => ({ d
 const MoveDeploy = lazy(() => import('./components/MoveDeploy').then(m => ({ default: m.MoveDeploy })));
 const TransactionBuilder = lazy(() => import('./components/TransactionBuilder').then(m => ({ default: m.TransactionBuilder })));
 const MembershipLookup = lazy(() => import('./components/MembershipLookup').then(m => ({ default: m.MembershipLookup })));
+const DynamicFieldExplorer = lazy(() => import('./components/DynamicFieldExplorer').then(m => ({ default: m.DynamicFieldExplorer })));
+const DevTools = lazy(() => import('./components/DevTools').then(m => ({ default: m.DevTools })));
+const SecurityTools = lazy(() => import('./components/SecurityTools').then(m => ({ default: m.SecurityTools })));
+const KeytoolManager = lazy(() => import('./components/KeytoolManager').then(m => ({ default: m.KeytoolManager })));
 
 // Lazy load heavy background component
 const FaultyTerminal = lazy(() => import('./components/backgrounds/FaultyTerminal'));
@@ -58,7 +62,7 @@ export function App() {
           <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />}>
             <FaultyTerminal
               tint={isMoveDevStudio ? "#22c55e" : (isAppRoute || isMembershipPage) ? "#4da2ff" : "#ff0000"}
-              brightness={isMoveDevStudio ? 0.2 : (isAppRoute || isMembershipPage) ? 0.3 : 0.8}
+              brightness={isMoveDevStudio ? 0.2 : (isAppRoute || isMembershipPage) ? 0.3 : 0.25}
               scale={isMoveDevStudio ? 0.5 : (isAppRoute || isMembershipPage) ? 1.0 : 1.9}
               gridMul={isMoveDevStudio ? [4, 2] : [2, 1]}
               digitSize={isMoveDevStudio ? 1.2 : 1.3}
@@ -69,7 +73,7 @@ export function App() {
               mouseReact={isMoveDevStudio}
               mouseStrength={isMoveDevStudio ? 0.2 : 0}
               timeScale={0.5}
-              noiseAmp={isMoveDevStudio ? 0 : (isAppRoute || isMembershipPage) ? 0.3 : 0.7}
+              noiseAmp={isMoveDevStudio ? 0 : (isAppRoute || isMembershipPage) ? 0.3 : 0.5}
               className="curved-panel"
               dpr={1} // Lower DPR for better performance
               style={{
@@ -83,9 +87,9 @@ export function App() {
           <div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />
         )}
 
-        {/* Dark blur overlay for app routes and membership page - makes terminal stand out more */}
+        {/* Subtle blur overlay for app routes and membership page - makes terminal stand out more */}
         {(isAppRoute || isMembershipPage) && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
         )}
       </div>
 
@@ -109,11 +113,15 @@ export function App() {
               <Route path="environments" element={<EnvironmentList />} />
               <Route path="objects" element={<ObjectList />} />
               <Route path="objects/:objectId" element={<ObjectList />} />
+              <Route path="dynamic-fields" element={<DynamicFieldExplorer />} />
               <Route path="gas" element={<GasList />} />
               <Route path="faucet" element={<FaucetForm />} />
               <Route path="membership" element={<MembershipProfile />} />
               <Route path="transfer" element={<TransferSui />} />
               <Route path="move" element={<MoveDeploy />} />
+              <Route path="devtools" element={<DevTools />} />
+              <Route path="security" element={<SecurityTools />} />
+              <Route path="keytool" element={<KeytoolManager />} />
               <Route
                 path="inspector"
                 element={

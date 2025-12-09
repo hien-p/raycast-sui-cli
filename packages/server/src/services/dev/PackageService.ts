@@ -37,6 +37,19 @@ export interface CallFunctionResult {
     error?: string;
 }
 
+export interface PublishedPackageInfo {
+    packageId: string;
+    upgradeCapId: string;
+    version: string;
+    policy: number;
+}
+
+export interface GetPublishedPackagesResult {
+    success: boolean;
+    packages?: PublishedPackageInfo[];
+    error?: string;
+}
+
 export class PackageService {
     private executor: SuiCliExecutor;
 
@@ -170,6 +183,59 @@ export class PackageService {
      * @param typeArgs Optional type arguments for generics
      * @param gasBudget Gas budget
      */
+    /**
+     * Get all published packages owned by an address by querying UpgradeCap objects
+     * Each UpgradeCap represents a package that was published
+     * @param address Owner address (optional, defaults to active address)
+     */
+    public async getPublishedPackages(address?: string): Promise<GetPublishedPackagesResult> {
+        try {
+            // Get objects owned by address, filtering for UpgradeCap type
+            const args = ['client', 'objects'];
+            if (address) {
+                args.push(address);
+            }
+            args.push('--json');
+
+            const output = await this.executor.execute(args);
+            const objects = JSON.parse(output);
+
+            // Filter for UpgradeCap objects and extract package info
+            const packages: PublishedPackageInfo[] = [];
+
+            for (const obj of objects) {
+                const data = obj.data || obj;
+                const type = data.type || data.content?.type;
+
+                // Check if this is an UpgradeCap
+                if (type === '0x2::package::UpgradeCap') {
+                    const fields = data.content?.fields || data.fields;
+                    if (fields?.package) {
+                        packages.push({
+                            packageId: fields.package,
+                            upgradeCapId: data.objectId,
+                            version: fields.version || '1',
+                            policy: fields.policy || 0,
+                        });
+                    }
+                }
+            }
+
+            console.log(`[PackageService] Found ${packages.length} published packages for ${address || 'active address'}`);
+
+            return {
+                success: true,
+                packages,
+            };
+        } catch (error: any) {
+            console.error('[PackageService] Get published packages failed:', error);
+            return {
+                success: false,
+                error: sanitizeErrorMessage(error),
+            };
+        }
+    }
+
     public async callPackageFunction(
         packageId: string,
         module: string,

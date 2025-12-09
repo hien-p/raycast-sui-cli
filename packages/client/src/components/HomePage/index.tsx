@@ -1,33 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { TierBadge, TIER_DROPLET, TIER_WAVE, TIER_TSUNAMI, TIER_OCEAN, TIER_METADATA } from '../TierBadge';
-import { useScrollReveal, useActiveSection, scrollToSection } from '@/hooks/useScrollReveal';
-import { useScrollProgress, useReducedMotion } from '@/hooks/useScrollProgress';
-import { TypingText } from '@/components/ui/typing-text';
-import { GlitchText } from '@/components/ui/glitch-text';
-import { ScrollDownIndicator } from '@/components/ui/scroll-down-indicator';
-import { SectionDots } from '@/components/ui/section-dots';
+import { motion, useMotionTemplate, useScroll, useTransform } from 'framer-motion';
+import ReactLenis from 'lenis/react';
+import { TierBadge, TIER_DROPLET, TIER_METADATA } from '../TierBadge';
 import { StructuredData } from '../SEO/StructuredData';
+import { StickyCardsSection } from '@/components/ui/sticky-cards';
+import { FeaturesGrid } from './FeaturesGrid';
 import { suiService } from '@/services/SuiService';
+import TierBounceCards from '@/components/ui/tier-bounce-cards';
+import ProfileCard from '@/components/ui/profile-card';
+import { Droplet } from 'lucide-react';
 import {
   Terminal,
-  Wallet,
-  Network,
   Zap,
   Shield,
   Github,
   Users,
   ChevronRight,
   Package,
-  Eye,
-  Droplets,
-  Send,
   ExternalLink,
   Copy,
   CheckCircle2,
-  Database,
-  ChevronDown,
 } from 'lucide-react';
 
 // Contract addresses for verification
@@ -38,37 +31,23 @@ const CONTRACT_INFO = {
   explorerBase: 'https://suiscan.xyz/testnet',
 };
 
-// Beta features list with status
-const BETA_FEATURES = [
-  { id: 'address', icon: <Wallet className="w-5 h-5" />, title: 'Address Management', status: 'stable' as const },
-  { id: 'transfer', icon: <Send className="w-5 h-5" />, title: 'Transfer System', status: 'stable' as const },
-  { id: 'gas', icon: <Zap className="w-5 h-5" />, title: 'Gas Management', status: 'stable' as const },
-  { id: 'network', icon: <Network className="w-5 h-5" />, title: 'Network Switch', status: 'stable' as const },
-  { id: 'faucet', icon: <Droplets className="w-5 h-5" />, title: 'Faucet Integration', status: 'stable' as const },
-  { id: 'community', icon: <Users className="w-5 h-5" />, title: 'Community & Tiers', status: 'stable' as const },
-  { id: 'move', icon: <Package className="w-5 h-5" />, title: 'Move Development', status: 'beta' as const },
-  { id: 'inspector', icon: <Eye className="w-5 h-5" />, title: 'Transaction Inspector', status: 'beta' as const },
-];
-
-// Section IDs for navigation
-const SECTIONS = [
-  { id: 'hero', label: 'Home' },
-  { id: 'features', label: 'Features' },
-  { id: 'contract', label: 'Contract' },
-  { id: 'community', label: 'Community' },
-  { id: 'cta', label: 'Get Started' },
-];
-
 export function HomePage() {
   const navigate = useNavigate();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-  const [heroTypingComplete, setHeroTypingComplete] = useState(false);
   const [memberCount, setMemberCount] = useState<number>(0);
-  const scrollProgress = useScrollProgress();
-  const activeSection = useActiveSection(SECTIONS.map(s => s.id));
-  const prefersReducedMotion = useReducedMotion();
 
-  // Fetch community stats directly from blockchain on mount
+  // 3D Scroll refs
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+  });
+
+  // Start below (300px), scroll up brings text to center then up
+  const yMotionValue = useTransform(scrollYProgress, [0, 1], [300, -300]);
+  const opacityValue = useTransform(scrollYProgress, [0, 0.7, 1], [1, 1, 0]);
+  const transform = useMotionTemplate`rotateX(20deg) translateY(${yMotionValue}px) translateZ(10px)`;
+
+  // Fetch community stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -81,7 +60,6 @@ export function HomePage() {
     fetchStats();
   }, []);
 
-  // Copy address to clipboard
   const copyToClipboard = async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -92,259 +70,202 @@ export function HomePage() {
     }
   };
 
-  const handleScrollToFeatures = useCallback(() => {
-    scrollToSection('features');
-  }, []);
-
   return (
-    <>
+    <ReactLenis root>
       <StructuredData type="homepage" />
-    <div className="relative w-full min-h-screen overflow-y-auto overflow-x-hidden font-mono">
-      {/* Scroll Progress Bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 z-50 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 origin-left"
-        style={{ scaleX: scrollProgress / 100 }}
-        initial={{ scaleX: 0 }}
-      />
 
-      {/* Section Navigation Dots - Hidden on mobile */}
-      <div className="hidden md:block">
-        <SectionDots
-          sections={SECTIONS}
-          activeIndex={activeSection}
-          onDotClick={scrollToSection}
-        />
-      </div>
-
-      {/* Darker overlay for hacker aesthetic */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/40 via-black/20 to-black/60 pointer-events-none" />
-
-      {/* Scanline effect */}
-      <div className="fixed inset-0 z-[2] pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,0,0.1) 2px, rgba(255,0,0,0.1) 4px)',
-        }}
-      />
-
-      {/* Content */}
-      <div className="relative z-10">
-        {/* ============ HERO SECTION ============ */}
-        <section id="hero" className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 relative">
-          <div className="max-w-4xl w-full text-center space-y-8">
-            {/* Terminal-style header */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-rose-500/30 rounded-lg text-rose-400 text-sm"
-            >
-              <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
-              <span className="font-mono">v1.2.0</span>
-              <span className="text-white/30">|</span>
-              <span className="text-white/50">sui-cli-web</span>
-            </motion.div>
-
-            {/* Main Headline with Typing Effect */}
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-tight">
-                {prefersReducedMotion ? (
-                  <>
-                    <span className="text-rose-500">$</span> sui-cli
-                    <br />
-                    <GlitchText className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
-                      supercharged
-                    </GlitchText>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-rose-500">$</span>{' '}
-                    <TypingText
-                      text="sui-cli"
-                      speed={80}
-                      delay={500}
-                      onComplete={() => setHeroTypingComplete(true)}
-                    />
-                    <br />
-                    <AnimatePresence>
-                      {heroTypingComplete && (
-                        <motion.span
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-clip-text text-transparent"
-                        >
-                          <GlitchText>supercharged</GlitchText>
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </>
-                )}
-              </h1>
-
-              <motion.p
-                className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: heroTypingComplete || prefersReducedMotion ? 1 : 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                Raycast-style interface for Sui blockchain.
-                <br />
-                <span className="text-rose-400/80">100% local. 100% secure.</span>
-              </motion.p>
-            </div>
-
-            {/* CTA Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: heroTypingComplete || prefersReducedMotion ? 1 : 0, y: heroTypingComplete || prefersReducedMotion ? 0 : 20 }}
-              transition={{ delay: 0.5 }}
-            >
-              <button
-                onClick={() => navigate('/setup')}
-                className="group relative px-8 py-4 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 hover:border-rose-500 text-rose-400 font-bold rounded-lg transition-all duration-200 min-w-[200px] overflow-hidden"
-              >
-                <span className="relative flex items-center justify-center gap-2 font-mono">
-                  <Terminal className="w-5 h-5" />
-                  ./install.sh
-                  <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </span>
-              </button>
-
-              <button
-                onClick={() => navigate('/app')}
-                className="group px-8 py-4 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white font-bold rounded-lg transition-all duration-200 border border-white/10 hover:border-white/20 min-w-[200px] font-mono"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  launch --now
-                </span>
-              </button>
-
-              <a
-                href="https://github.com/hien-p/raycast-sui-cli"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-mono rounded-lg transition-all border border-white/10 hover:border-white/20"
-              >
-                <span className="flex items-center gap-2">
-                  <Github className="w-5 h-5" />
-                  src
-                </span>
-              </a>
-            </motion.div>
-
-            {/* Quick Stats */}
-            <motion.div
-              className="flex flex-wrap items-center justify-center gap-6 text-sm font-mono"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: heroTypingComplete || prefersReducedMotion ? 1 : 0 }}
-              transition={{ delay: 0.7 }}
-            >
-              <div className="flex items-center gap-2 text-white/50">
-                <Users className="w-4 h-4 text-rose-400" />
-                <span>{memberCount.toLocaleString()} members</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/50">
-                <Shield className="w-4 h-4 text-green-400" />
-                <span>open source</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/50">
-                <Package className="w-4 h-4 text-purple-400" />
-                <span>8 modules</span>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Scroll Down Indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-            <ScrollDownIndicator onClick={handleScrollToFeatures} />
-          </div>
-        </section>
-
-        {/* ============ FEATURES SECTION ============ */}
-        <AnimatedSectionWrapper id="features" className="py-24 px-4 sm:px-6">
+      <div className="relative w-full min-h-screen font-mono">
+        {/* ============ TOP NAV BAR (CTA) ============ */}
+        <div className="fixed top-0 left-0 right-0 z-50 pt-2 sm:pt-4 pb-2 sm:pb-3 px-2 sm:px-4">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-rose-500/30 rounded-lg text-sm mb-6"
-              >
-                <span className="text-rose-400 font-mono">cat</span>
-                <span className="text-white/50">features.md</span>
-              </motion.div>
-
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 font-mono">
-                <span className="text-rose-500">#</span> What's{' '}
-                <GlitchText className="text-rose-400">included</GlitchText>
-              </h2>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              {BETA_FEATURES.map((feature, index) => (
-                <FeatureCard key={feature.id} feature={feature} index={index} />
-              ))}
-            </div>
-
-            {/* Status Summary */}
-            <motion.div
-              className="mt-8 text-center"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="inline-flex items-center gap-4 px-6 py-3 bg-black/40 border border-white/10 rounded-lg font-mono text-sm">
-                <span className="flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-400 rounded-full" />
-                  <span className="text-green-400">6 stable</span>
-                </span>
-                <span className="text-white/20">|</span>
-                <span className="flex items-center gap-2">
-                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-pulse" />
-                  <span className="text-rose-400">2 beta</span>
-                </span>
+            {/* Navbar container with glass effect */}
+            <div className="flex flex-row items-center justify-center gap-1.5 sm:gap-3 px-2 sm:px-6 py-2 sm:py-3 bg-black/70 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl shadow-2xl shadow-black/50">
+              {/* Version badge - hidden on very small screens */}
+              <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-rose-500/10 border border-rose-500/40 rounded-full text-[10px] sm:text-xs">
+                <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                <span className="text-rose-400 font-medium">v1.2</span>
               </div>
+
+              {/* CTA Buttons */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                <button
+                  onClick={() => navigate('/setup')}
+                  className="group px-2 sm:px-4 py-1.5 sm:py-2 bg-rose-500/30 hover:bg-rose-500/50 border border-rose-500/60 hover:border-rose-500 text-rose-300 hover:text-white font-bold rounded-lg transition-all text-xs sm:text-sm shadow-lg shadow-rose-500/20"
+                >
+                  <span className="flex items-center gap-1 sm:gap-1.5">
+                    <Terminal className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">./install.sh</span>
+                    <span className="sm:hidden">Install</span>
+                    <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => navigate('/app')}
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white font-bold rounded-lg transition-all border border-white/20 hover:border-white/40 text-xs sm:text-sm"
+                >
+                  <span className="flex items-center gap-1 sm:gap-1.5">
+                    <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">launch --now</span>
+                    <span className="sm:hidden">Launch</span>
+                  </span>
+                </button>
+
+                <a
+                  href="https://github.com/hien-p/raycast-sui-cli"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-lg transition-all border border-white/20 hover:border-white/40 text-xs sm:text-sm"
+                >
+                  <span className="flex items-center gap-1 sm:gap-1.5">
+                    <Github className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">src</span>
+                  </span>
+                </a>
+
+                {/* Blog - Coming Soon */}
+                <button
+                  disabled
+                  className="relative px-2 sm:px-4 py-1.5 sm:py-2 bg-white/5 text-white/40 rounded-lg border border-white/10 text-xs sm:text-sm cursor-not-allowed"
+                  title="Coming soon"
+                >
+                  <span className="flex items-center gap-1 sm:gap-1.5">
+                    <span className="hidden sm:inline">Blog</span>
+                    <span className="sm:hidden text-[10px]">Blog</span>
+                  </span>
+                  <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-amber-500/80 text-[8px] text-black font-bold rounded uppercase">
+                    soon
+                  </span>
+                </button>
+              </div>
+
+              {/* Stats - hidden on mobile */}
+              <div className="hidden lg:flex items-center gap-4 text-xs text-white/60">
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{memberCount.toLocaleString()} members</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-green-400" />
+                  <span>open source</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ============ 3D PERSPECTIVE HERO ============ */}
+        <div
+          ref={heroRef}
+          className="relative z-10 h-[130vh] w-full"
+        >
+          {/* Scroll indicator at top */}
+          <div className="absolute left-1/2 top-[15%] sm:top-[12%] -translate-x-1/2 text-center z-20">
+            <div className="flex flex-col items-center gap-2 sm:gap-3">
+              <span className="text-xs sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-white/70 font-light">
+                scroll down
+              </span>
+              <span className="text-[10px] sm:text-xs text-white/40">to explore</span>
+              <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-white/50 to-transparent" />
+            </div>
+          </div>
+
+          {/* 3D Text Container */}
+          <div
+            className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
+            style={{
+              transformStyle: "preserve-3d",
+              perspective: "150px",
+            }}
+          >
+            <motion.div
+              style={{
+                transformStyle: "preserve-3d",
+                transform,
+                opacity: opacityValue,
+              }}
+              className="relative w-full max-w-6xl px-4 sm:px-6 text-center"
+            >
+              {/* Main 3D Text */}
+              <div className="space-y-1">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black leading-[0.9] tracking-tighter">
+                  <span className="block bg-gradient-to-r from-rose-400 via-rose-500 to-pink-500 bg-clip-text text-transparent">
+                    Your terminal.
+                  </span>
+                  <span className="block text-white/95 mt-1 sm:mt-2">
+                    Your keys.
+                  </span>
+                  <span className="block bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 bg-clip-text text-transparent mt-1 sm:mt-2">
+                    Your Sui.
+                  </span>
+                </h1>
+
+                {/* Subtitle features - max brightness text */}
+                <div className="mt-6 sm:mt-12 space-y-2 sm:space-y-4 font-bold">
+                  <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl text-white">
+                    Transfer SUI instantly
+                  </p>
+                  <p className="text-lg sm:text-2xl md:text-3xl lg:text-4xl text-white/95">
+                    Deploy Move contracts
+                  </p>
+                  <p className="text-base sm:text-xl md:text-2xl lg:text-3xl text-white/85">
+                    Manage gas & NFTs
+                  </p>
+                  <p className="text-sm sm:text-lg md:text-xl lg:text-2xl text-white/75">
+                    Switch networks seamlessly
+                  </p>
+                  <p className="hidden sm:block text-base md:text-lg lg:text-xl text-white/65">
+                    Build & publish Move packages
+                  </p>
+                </div>
+
+                {/* Tagline */}
+                <p className="mt-8 sm:mt-14 text-xs sm:text-lg md:text-xl text-white/40 tracking-wider font-semibold">
+                  100% local • Zero cloud • Max security
+                </p>
+              </div>
+
+              {/* Bottom gradient fade */}
+              <div className="pointer-events-none absolute -bottom-32 left-0 h-[50vh] w-full bg-gradient-to-b from-transparent via-black/50 to-black" />
             </motion.div>
           </div>
-        </AnimatedSectionWrapper>
+        </div>
+
+        {/* ============ STICKY CARDS SECTION ============ */}
+        <StickyCardsSection />
+
+        {/* ============ FEATURES GRID (Bento Style) ============ */}
+        <FeaturesGrid />
 
         {/* ============ CONTRACT SECTION ============ */}
-        <AnimatedSectionWrapper id="contract" className="py-24 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.02] to-transparent">
+        <section className="relative z-20 py-24 px-4">
           <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-green-500/30 rounded-lg text-sm mb-6"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 border border-green-500/30 rounded-full text-sm mb-4">
                 <Shield className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 font-mono">verified</span>
-              </motion.div>
-
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 font-mono">
-                <span className="text-rose-500">#</span> Smart Contract
+                <span className="text-green-400">verified on testnet</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">
+                Smart Contract
               </h2>
-              <p className="text-white/50 font-mono text-sm">
-                Sui {CONTRACT_INFO.network} • verify yourself
-              </p>
-            </div>
+            </motion.div>
 
-            {/* Contract Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-4"
+              className="bg-black/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-4"
             >
               {/* Package ID */}
               <div className="space-y-2">
-                <div className="text-xs text-white/40 font-mono uppercase tracking-wider">Package ID</div>
+                <div className="text-xs text-white/40 uppercase tracking-wider">Package ID</div>
                 <div className="flex items-center gap-2 p-3 bg-black/40 rounded-lg border border-white/5">
-                  <code className="flex-1 text-rose-300 text-xs sm:text-sm font-mono truncate">
+                  <code className="flex-1 text-rose-300 text-xs sm:text-sm truncate">
                     {CONTRACT_INFO.packageId}
                   </code>
                   <button
@@ -370,9 +291,9 @@ export function HomePage() {
 
               {/* Registry ID */}
               <div className="space-y-2">
-                <div className="text-xs text-white/40 font-mono uppercase tracking-wider">Registry ID</div>
+                <div className="text-xs text-white/40 uppercase tracking-wider">Registry ID</div>
                 <div className="flex items-center gap-2 p-3 bg-black/40 rounded-lg border border-white/5">
-                  <code className="flex-1 text-rose-300 text-xs sm:text-sm font-mono truncate">
+                  <code className="flex-1 text-rose-300 text-xs sm:text-sm truncate">
                     {CONTRACT_INFO.registryId}
                   </code>
                   <button
@@ -398,10 +319,10 @@ export function HomePage() {
 
               {/* Functions */}
               <div className="pt-4 border-t border-white/5">
-                <div className="text-xs text-white/40 font-mono uppercase tracking-wider mb-3">Functions</div>
+                <div className="text-xs text-white/40 uppercase tracking-wider mb-3">Functions</div>
                 <div className="flex flex-wrap gap-2">
                   {['join_community()', 'is_member()', 'get_total_members()'].map((fn) => (
-                    <span key={fn} className="px-3 py-1.5 bg-rose-500/10 text-rose-300 text-xs rounded border border-rose-500/20 font-mono">
+                    <span key={fn} className="px-3 py-1.5 bg-rose-500/10 text-rose-300 text-xs rounded border border-rose-500/20">
                       {fn}
                     </span>
                   ))}
@@ -409,57 +330,113 @@ export function HomePage() {
               </div>
             </motion.div>
           </div>
-        </AnimatedSectionWrapper>
+        </section>
 
-        {/* ============ COMMUNITY SECTION ============ */}
-        <AnimatedSectionWrapper id="community" className="py-24 px-4 sm:px-6">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-mono">
-                <span className="text-rose-500">#</span> Tier System
-              </h2>
-              <p className="text-white/50 font-mono text-sm">
-                level up by being active on Sui
-              </p>
-            </div>
-
-            {/* Tier Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <TierCard tier={TIER_DROPLET} requirement="Join" />
-              <TierCard tier={TIER_WAVE} requirement="25+ tx" />
-              <TierCard tier={TIER_TSUNAMI} requirement="100+ tx" />
-              <TierCard tier={TIER_OCEAN} requirement="500+ tx" />
-            </div>
-
-            {/* Join Stats */}
+        {/* ============ TIERS SECTION with BounceCards ============ */}
+        <section className="relative z-20 py-24 px-4 overflow-hidden">
+          <div className="max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-12 text-center"
+              className="text-center mb-8"
+            >
+              <span className="text-rose-400 text-sm tracking-wider uppercase">Community</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
+                Tier System
+              </h2>
+              <p className="text-white/40 mt-2 text-sm">Level up by being active on Sui</p>
+            </motion.div>
+
+            {/* TierBounceCards - Interactive Tier Display */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="flex justify-center mb-12"
+            >
+              <TierBounceCards
+                containerWidth={700}
+                containerHeight={280}
+                animationDelay={0.2}
+                animationStagger={0.1}
+                enableHover={true}
+              />
+            </motion.div>
+
+            {/* Join stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center"
             >
               <div className="inline-flex items-center gap-4 px-6 py-4 bg-black/40 border border-rose-500/20 rounded-xl">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-rose-400 font-mono">{memberCount.toLocaleString()}</div>
-                  <div className="text-xs text-white/40 font-mono">members</div>
+                  <div className="text-2xl font-bold text-rose-400">{memberCount.toLocaleString()}</div>
+                  <div className="text-xs text-white/40">members</div>
                 </div>
                 <div className="w-px h-10 bg-white/10" />
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400 font-mono">FREE</div>
-                  <div className="text-xs text-white/40 font-mono">~0.01 SUI gas</div>
+                  <div className="text-2xl font-bold text-green-400">FREE</div>
+                  <div className="text-xs text-white/40">~0.01 SUI gas</div>
                 </div>
                 <div className="w-px h-10 bg-white/10" />
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-400 font-mono">NFT</div>
-                  <div className="text-xs text-white/40 font-mono">on-chain</div>
+                  <div className="text-2xl font-bold text-purple-400">NFT</div>
+                  <div className="text-xs text-white/40">on-chain</div>
                 </div>
               </div>
             </motion.div>
           </div>
-        </AnimatedSectionWrapper>
+        </section>
 
-        {/* ============ CTA SECTION ============ */}
-        <AnimatedSectionWrapper id="cta" className="py-24 px-4 sm:px-6 bg-gradient-to-b from-transparent via-rose-500/[0.03] to-transparent">
+        {/* ============ PROFILE CARD PREVIEW ============ */}
+        <section className="relative z-20 py-24 px-4">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="text-cyan-400 text-sm tracking-wider uppercase">Membership Preview</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
+                Your On-Chain Identity
+              </h2>
+              <p className="text-white/40 mt-2 text-sm">Join the community and get your unique profile card</p>
+            </motion.div>
+
+            {/* ProfileCard with demo data */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="flex justify-center"
+            >
+              <ProfileCard
+                avatarUrl="/sui-logo.svg"
+                name="Sui Builder"
+                title="Community Member"
+                handle="suibuilder"
+                status="Active on Testnet"
+                contactText="Join Now"
+                onContactClick={() => navigate('/app/membership')}
+                innerGradient="linear-gradient(145deg, #1a365d8c 0%, #4da2ff44 100%)"
+                behindGlowColor="rgba(77, 162, 255, 0.4)"
+                tierBadge={
+                  <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-500/20 border border-blue-400/30 rounded-full mt-3">
+                    <Droplet className="w-3.5 h-3.5 text-blue-400" />
+                    <span className="text-xs font-medium text-blue-400">Droplet</span>
+                  </div>
+                }
+              />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ============ FINAL CTA ============ */}
+        <section className="relative z-20 py-24 px-4">
           <div className="max-w-2xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -467,34 +444,32 @@ export function HomePage() {
               viewport={{ once: true }}
               className="space-y-8"
             >
-              <h2 className="text-4xl sm:text-5xl font-bold text-white font-mono">
+              <h2 className="text-4xl sm:text-5xl font-bold text-white">
                 <span className="text-rose-500">$</span> ready?
               </h2>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button
-                  onClick={() => navigate('/setup')}
-                  className="group px-10 py-5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-all text-lg font-mono"
-                >
-                  <span className="flex items-center gap-3">
-                    <Terminal className="w-6 h-6" />
-                    npm i sui-cli-web-server
-                    <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </div>
+              <button
+                onClick={() => navigate('/setup')}
+                className="group px-10 py-5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-all text-lg"
+              >
+                <span className="flex items-center gap-3">
+                  <Terminal className="w-6 h-6" />
+                  npm i sui-cli-web-server
+                  <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
 
-              <p className="text-white/40 font-mono text-sm">
+              <p className="text-white/30 text-sm">
                 works on macOS, Linux, Windows
               </p>
             </motion.div>
           </div>
-        </AnimatedSectionWrapper>
+        </section>
 
         {/* ============ FOOTER ============ */}
-        <footer className="py-12 px-4 sm:px-6 border-t border-white/5">
+        <footer className="relative z-20 py-12 px-4 border-t border-white/5">
           <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/40 font-mono">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/40">
               <div className="flex items-center gap-2">
                 <span className="text-rose-400">v1.2.0</span>
                 <span>•</span>
@@ -515,90 +490,6 @@ export function HomePage() {
           </div>
         </footer>
       </div>
-    </div>
-    </>
-  );
-}
-
-// ============ COMPONENTS ============
-
-interface AnimatedSectionWrapperProps {
-  id: string;
-  children: React.ReactNode;
-  className?: string;
-}
-
-function AnimatedSectionWrapper({ id, children, className = '' }: AnimatedSectionWrapperProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
-
-  return (
-    <motion.section
-      ref={ref as React.RefObject<HTMLElement>}
-      id={id}
-      className={className}
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 40 }}
-      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      {children}
-    </motion.section>
-  );
-}
-
-interface FeatureCardProps {
-  feature: {
-    id: string;
-    icon: React.ReactNode;
-    title: string;
-    status: 'stable' | 'beta';
-  };
-  index: number;
-}
-
-function FeatureCard({ feature, index }: FeatureCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-      className="group p-4 bg-black/40 border border-white/5 hover:border-rose-500/30 rounded-lg transition-all hover:bg-black/60"
-    >
-      <div className="flex flex-col items-center text-center gap-3">
-        <div className={`p-2.5 rounded-lg ${feature.status === 'stable' ? 'bg-green-500/10 text-green-400' : 'bg-rose-500/10 text-rose-400'} group-hover:scale-110 transition-transform`}>
-          {feature.icon}
-        </div>
-        <div>
-          <h3 className="text-white/90 font-medium text-sm font-mono">{feature.title}</h3>
-          <span className={`text-xs font-mono ${feature.status === 'stable' ? 'text-green-400/60' : 'text-rose-400/60'}`}>
-            {feature.status}
-          </span>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-interface TierCardProps {
-  tier: number;
-  requirement: string;
-}
-
-function TierCard({ tier, requirement }: TierCardProps) {
-  const metadata = TIER_METADATA[tier as keyof typeof TIER_METADATA];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      className={`p-6 rounded-xl border backdrop-blur-sm hover:scale-105 transition-all ${metadata.bgClass} ${metadata.borderClass} group`}
-    >
-      <div className="text-center">
-        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{metadata.icon}</div>
-        <TierBadge tier={tier} size="sm" showGlow={false} className="mx-auto mb-2" />
-        <div className={`text-xs font-mono ${metadata.textClass}`}>{requirement}</div>
-      </div>
-    </motion.div>
+    </ReactLenis>
   );
 }

@@ -15,6 +15,39 @@ export interface ReplayResult {
     error?: string;
 }
 
+export interface ExecuteSignedTxResult {
+    success: boolean;
+    digest?: string;
+    effects?: any;
+    events?: any[];
+    error?: string;
+}
+
+export interface PtbCommand {
+    type: 'split-coins' | 'merge-coins' | 'transfer-objects' | 'move-call' | 'assign' | 'make-move-vec';
+    args: string[]; // Raw args for the command
+}
+
+export interface PtbOptions {
+    gasBudget?: number;
+    gasPrice?: number;
+    gasCoin?: string;
+    gasSponsor?: string;
+    dryRun?: boolean;
+    devInspect?: boolean;
+    preview?: boolean;
+}
+
+export interface PtbResult {
+    success: boolean;
+    output?: string;
+    digest?: string;
+    effects?: any;
+    events?: any[];
+    preview?: string;
+    error?: string;
+}
+
 export interface PackageInspectResult {
     success: boolean;
     modules?: ModuleInfo[];
@@ -212,6 +245,157 @@ export class InspectorService {
             };
         } catch (error: any) {
             console.error('[InspectorService] Package inspection failed:', error);
+            return {
+                success: false,
+                error: sanitizeErrorMessage(error),
+            };
+        }
+    }
+
+    /**
+     * Execute a pre-signed transaction
+     * Useful for hardware wallet users who sign elsewhere
+     * Uses `sui client execute-signed-tx` command
+     * @param txBytes Base64-encoded serialized transaction
+     * @param signatures Array of Base64-encoded signatures
+     */
+    public async executeSignedTransaction(
+        txBytes: string,
+        signatures: string[]
+    ): Promise<ExecuteSignedTxResult> {
+        try {
+            // Build command arguments
+            // Format: sui client execute-signed-tx --tx-bytes <TX_BYTES> --signatures <SIG1> [--signatures <SIG2>...]
+            const args = ['client', 'execute-signed-tx', '--tx-bytes', txBytes];
+
+            // Add each signature
+            for (const sig of signatures) {
+                args.push('--signatures', sig);
+            }
+
+            const output = await this.executor.execute(args, { json: true });
+            const data = JSON.parse(output);
+
+            return {
+                success: true,
+                digest: data.digest,
+                effects: data.effects,
+                events: data.events || [],
+            };
+        } catch (error: any) {
+            console.error('[InspectorService] Execute signed tx failed:', error);
+            return {
+                success: false,
+                error: sanitizeErrorMessage(error),
+            };
+        }
+    }
+
+    /**
+     * Execute a combined serialized SenderSignedData
+     * Uses `sui client execute-combined-signed-tx` command
+     * @param serializedSignedTx Base64-encoded SenderSignedData
+     */
+    public async executeCombinedSignedTransaction(
+        serializedSignedTx: string
+    ): Promise<ExecuteSignedTxResult> {
+        try {
+            const args = [
+                'client',
+                'execute-combined-signed-tx',
+                '--serialized-signature',
+                serializedSignedTx,
+            ];
+
+            const output = await this.executor.execute(args, { json: true });
+            const data = JSON.parse(output);
+
+            return {
+                success: true,
+                digest: data.digest,
+                effects: data.effects,
+                events: data.events || [],
+            };
+        } catch (error: any) {
+            console.error('[InspectorService] Execute combined signed tx failed:', error);
+            return {
+                success: false,
+                error: sanitizeErrorMessage(error),
+            };
+        }
+    }
+
+    /**
+     * Execute a Programmable Transaction Block (PTB)
+     * Uses `sui client ptb` command
+     * @param commands Array of PTB commands
+     * @param options PTB options (gas, dry-run, etc.)
+     */
+    public async executePtb(
+        commands: PtbCommand[],
+        options: PtbOptions = {}
+    ): Promise<PtbResult> {
+        try {
+            const args = ['client', 'ptb'];
+
+            // Add each command
+            for (const cmd of commands) {
+                args.push(`--${cmd.type}`, ...cmd.args);
+            }
+
+            // Add options
+            if (options.gasBudget) {
+                args.push('--gas-budget', String(options.gasBudget));
+            }
+            if (options.gasPrice) {
+                args.push('--gas-price', String(options.gasPrice));
+            }
+            if (options.gasCoin) {
+                args.push('--gas-coin', options.gasCoin);
+            }
+            if (options.gasSponsor) {
+                args.push('--gas-sponsor', options.gasSponsor);
+            }
+            if (options.dryRun) {
+                args.push('--dry-run');
+            }
+            if (options.devInspect) {
+                args.push('--dev-inspect');
+            }
+            if (options.preview) {
+                args.push('--preview');
+            }
+
+            // For preview mode, we don't want JSON output
+            const useJson = !options.preview && !options.dryRun && !options.devInspect;
+            const output = await this.executor.execute(args, useJson ? { json: true } : {});
+
+            // Preview mode returns text
+            if (options.preview) {
+                return {
+                    success: true,
+                    preview: output,
+                };
+            }
+
+            // Dry-run and dev-inspect return verbose output
+            if (options.dryRun || options.devInspect) {
+                return {
+                    success: true,
+                    output,
+                };
+            }
+
+            // Normal execution returns JSON
+            const data = JSON.parse(output);
+            return {
+                success: true,
+                digest: data.digest,
+                effects: data.effects,
+                events: data.events || [],
+            };
+        } catch (error: any) {
+            console.error('[InspectorService] PTB execution failed:', error);
             return {
                 success: false,
                 error: sanitizeErrorMessage(error),
