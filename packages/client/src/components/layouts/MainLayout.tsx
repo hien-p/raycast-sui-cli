@@ -93,12 +93,13 @@ export function MainLayout() {
   // Wide layout fills more screen space, normal layout has max width
   const isWideLayout = ['/app/transfer', '/app/move', '/app/inspector'].includes(location.pathname);
   // Use percentage-based max-width for better zoom support
+  // Increased default terminal size: sm:max-w-lg -> sm:max-w-xl, md:max-w-2xl -> md:max-w-3xl
   const maxWidthClass = isWideLayout
     ? 'max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[1800px]'
-    : 'max-w-[95vw] sm:max-w-xl md:max-w-2xl';
+    : 'max-w-[95vw] sm:max-w-xl md:max-w-3xl lg:max-w-4xl';
 
   return (
-    <div className="min-h-screen flex items-start justify-center pt-[5vh] sm:pt-[8vh] md:pt-[12vh] lg:pt-[15vh] px-2 sm:px-4">
+    <div className="min-h-screen flex items-start justify-center pt-[3vh] sm:pt-[5vh] md:pt-[8vh] lg:pt-[10vh] px-2 sm:px-4">
       <div className={`w-full ${maxWidthClass} relative group curved-terminal-wrapper`}>
         {/* Animated gradient orbs - only in glass mode */}
         {!isDark && (
@@ -233,7 +234,7 @@ export function MainLayout() {
         )}
 
         {/* Content */}
-        <div className="max-h-[80vh] sm:max-h-[75vh] md:max-h-[70vh] lg:max-h-[65vh] overflow-y-auto">
+        <div className="max-h-[85vh] sm:max-h-[82vh] md:max-h-[78vh] lg:max-h-[75vh] overflow-y-auto">
           {isServerConnected === false ? (
             // User wants to run backend manually, so we show the app even if not connected
             // The app will show errors if API calls fail, which is expected
