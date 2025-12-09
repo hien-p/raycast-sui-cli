@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { showErrorToast, showSuccessToast, showInfoToast } from '@/lib/toast';
 import { getApiBaseUrl } from '@/api/client';
+import { trackEvent, ClarityEvents } from '@/lib/clarity';
 
 interface TransferableCoin {
   coinObjectId: string;
@@ -199,6 +200,7 @@ export function TransferSui() {
           amountSent: parseFloat(amount),
         });
         showSuccessToast({ message: 'Transfer successful!' });
+        trackEvent(ClarityEvents.TRANSFER_COMPLETED);
         if (transferMode === 'external') addToRecent(finalToAddress);
         setToAddress('');
         setSelectedInternalAddress('');
@@ -209,11 +211,13 @@ export function TransferSui() {
       } else {
         setTransferResult({ success: false, error: data.error || 'Transfer failed' });
         showErrorToast({ message: data.error || 'Transfer failed' });
+        trackEvent(ClarityEvents.TRANSFER_FAILED);
       }
     } catch (error: any) {
       const msg = error.message || String(error);
       setTransferResult({ success: false, error: msg });
       showErrorToast({ message: 'Connection error: ' + msg });
+      trackEvent(ClarityEvents.TRANSFER_FAILED);
     } finally {
       setIsTransferring(false);
     }

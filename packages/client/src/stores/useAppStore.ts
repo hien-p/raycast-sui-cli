@@ -3,6 +3,7 @@ import type { SuiAddress, SuiEnvironment, GasCoin } from '@/types';
 import * as api from '@/api/client';
 import { checkConnection, TierInfo } from '@/api/client';
 import { suiService } from '@/services/SuiService';
+import { trackEvent, identifyUser, setTag, ClarityEvents } from '@/lib/clarity';
 
 export type View =
   | 'commands'
@@ -213,6 +214,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchAddresses();
       await get().fetchCommunityStatus();
       set({ isLoading: false });
+      trackEvent(ClarityEvents.ADDRESS_SWITCHED);
+      identifyUser(address);
     } catch (error) {
       set({ error: String(error), isLoading: false });
     }
@@ -224,6 +227,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const result = await api.createAddress(keyScheme, alias);
       await get().fetchAddresses();
       set({ isLoading: false });
+      trackEvent(ClarityEvents.ADDRESS_CREATED);
       return result;
     } catch (error) {
       set({ error: String(error), isLoading: false });
@@ -251,6 +255,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchEnvironments();
       await get().fetchAddresses();
       set({ isLoading: false });
+      trackEvent(ClarityEvents.ENVIRONMENT_SWITCHED);
+      setTag('network', alias);
     } catch (error) {
       set({ error: String(error), isLoading: false });
     }
@@ -320,6 +326,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       await new Promise((resolve) => setTimeout(resolve, 3000));
       await get().fetchAddresses();
       set({ isLoading: false });
+      trackEvent(ClarityEvents.FAUCET_REQUESTED);
     } catch (error) {
       set({ error: String(error), isLoading: false });
       throw error;
@@ -337,6 +344,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const connected = await checkConnection();
       set({ isServerConnected: connected, isCheckingConnection: false });
+      if (connected) {
+        trackEvent(ClarityEvents.SERVER_CONNECTED);
+      }
       return connected;
     } catch {
       set({ isServerConnected: false, isCheckingConnection: false });
@@ -384,6 +394,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Refresh stats
         const stats = await suiService.getCommunityStats().catch(() => get().communityStats);
         set({ communityStats: stats });
+        trackEvent(ClarityEvents.COMMUNITY_JOINED);
         return { success: true, txDigest: result.txDigest };
       }
       return { success: false, error: 'Join failed' };

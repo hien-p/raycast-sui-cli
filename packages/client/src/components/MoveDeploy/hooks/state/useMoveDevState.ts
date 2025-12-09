@@ -25,6 +25,7 @@ import type {
   WorkflowProgress,
 } from '../../types';
 import { apiClient } from '@/api/client';
+import { trackEvent, ClarityEvents } from '@/lib/clarity';
 
 // ============================================================================
 // Initial State
@@ -161,6 +162,7 @@ export const useMoveDevStore = create<MoveDevState & MoveDevActions>()(
             result,
           });
 
+          trackEvent(ClarityEvents.PACKAGE_BUILT);
           return result;
         } catch (error) {
           const endTime = Date.now();
@@ -315,6 +317,7 @@ export const useMoveDevStore = create<MoveDevState & MoveDevActions>()(
             result,
           });
 
+          trackEvent(ClarityEvents.PACKAGE_PUBLISHED);
           return result;
         } catch (error) {
           const endTime = Date.now();
