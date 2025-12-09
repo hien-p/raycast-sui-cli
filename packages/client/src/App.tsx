@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect, lazy, Suspense } from 'react';
 import { AppGuard } from './components/guards/AppGuard';
@@ -96,6 +96,9 @@ export function App() {
 
             {/* Setup Guide Page - Has server check, shows instructions */}
             <Route path="/setup" element={<SetupPage />} />
+
+            {/* Redirect shortcuts to app routes */}
+            <Route path="/membership" element={<Navigate to="/app/membership" replace />} />
 
             {/* App Routes - Protected by AppGuard */}
             <Route path="/app" element={<AppGuard />}>
