@@ -49,6 +49,7 @@ export default {
   		},
   		fontFamily: {
   			sans: [
+  				'Inter',
   				'-apple-system',
   				'BlinkMacSystemFont',
   				'SF Pro Text',
@@ -57,6 +58,7 @@ export default {
   				'sans-serif'
   			],
   			mono: [
+  				'JetBrains Mono',
   				'SF Mono',
   				'Menlo',
   				'Monaco',

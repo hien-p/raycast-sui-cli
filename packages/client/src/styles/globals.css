@@ -4,26 +4,30 @@
 
 @layer base {
   :root {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 18%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 18%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 211 100% 50%;
+    /* Enhanced dark theme with better contrast and consistency */
+    --background: 220 15% 6%;
+    --foreground: 0 0% 98%;
+    --card: 220 15% 11%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 15% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 211 100% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 25%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 30%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 211 100% 50%;
+    --secondary: 220 12% 16%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 220 12% 20%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 211 100% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 30%;
-    --input: 0 0% 25%;
-    --ring: 211 100% 50%;
-    --radius: 0.5rem;
+    --border: 220 12% 18%;
+    --input: 220 12% 14%;
+    --ring: 211 100% 55%;
+    --radius: 0.625rem;
+
+    /* Sui brand color */
+    --sui-blue: #4da2ff;
   }
 
   * {
@@ -34,14 +38,17 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     @apply bg-background text-foreground;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
       Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.011em;
     overflow-x: hidden;
     overflow-y: auto;
   }

@@ -120,8 +120,8 @@ export function MainLayout() {
 
         <div className={`${isWideLayout ? 'curved-panel-wide' : 'curved-panel'} relative rounded-xl shadow-2xl overflow-hidden animate-scale-in ${
           isDark
-            ? 'bg-[#1a1a1a]/60 backdrop-blur-md border border-[#2a2a2a]/50'
-            : 'bg-[#0a1929]/40 backdrop-blur-2xl border border-[#1e3a5f]/30'
+            ? 'bg-[#121218]/95 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.05)]'
+            : 'bg-[#0c1a2d]/90 backdrop-blur-2xl border border-[#4da2ff]/20 shadow-[0_0_40px_rgba(77,162,255,0.15)]'
         }`}>
           {/* Glass mode overlays */}
           {!isDark && (
@@ -141,7 +141,7 @@ export function MainLayout() {
           )}
 
           {/* Header with enhanced gradient and glow */}
-          <div className={`relative border-b ${isDark ? 'border-[#2a2a2a] bg-[#1a1a1a]' : 'border-[#1e3a5f]/40 bg-[#0a1929]/60'}`}>
+          <div className={`relative border-b ${isDark ? 'border-white/[0.06] bg-[#15151b]' : 'border-[#4da2ff]/10 bg-[#0a1525]/80'}`}>
             {/* Top shine effect - only glass mode */}
             {!isDark && <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#0ea5e9]/50 to-transparent pointer-events-none" />}
             <div className="flex items-center gap-2 px-4 py-2">
