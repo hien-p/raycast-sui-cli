@@ -7,7 +7,7 @@ import { StructuredData } from '../SEO/StructuredData';
 import { StickyCardsSection } from '@/components/ui/sticky-cards';
 import { FeaturesGrid } from './FeaturesGrid';
 import { suiService } from '@/services/SuiService';
-import TierBounceCards from '@/components/ui/tier-bounce-cards';
+import TierCardsGrid from '@/components/ui/tier-card';
 import ProfileCard from '@/components/ui/profile-card';
 import { Droplet } from 'lucide-react';
 import {
@@ -348,20 +348,15 @@ export function HomePage() {
               <p className="text-white/40 mt-2 text-sm">Level up by being active on Sui</p>
             </motion.div>
 
-            {/* TierBounceCards - Interactive Tier Display */}
+            {/* Holographic Tier Cards with 3D tilt */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="flex justify-center mb-12"
+              transition={{ duration: 0.6 }}
+              className="mb-12"
             >
-              <TierBounceCards
-                containerWidth={700}
-                containerHeight={280}
-                animationDelay={0.2}
-                animationStagger={0.1}
-                enableHover={true}
-              />
+              <TierCardsGrid />
             </motion.div>
 
             {/* Join stats */}
