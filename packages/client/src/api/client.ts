@@ -13,8 +13,8 @@ const isDev = import.meta.env.DEV;
 // Common ports to scan for server
 const COMMON_PORTS = [3001, 3002, 3003, 3004, 3005, 4001, 4002, 8001, 8080];
 
-// Connection timeout for port scanning (increase for slower networks/Windows)
-const PORT_SCAN_TIMEOUT_MS = 5000;
+// Connection timeout for port scanning
+const PORT_SCAN_TIMEOUT_MS = 2000; // 2s per attempt, scan in parallel
 
 // Build localhost URLs for all common ports
 function buildLocalhostUrls(port: number): string[] {
@@ -197,7 +197,41 @@ export function getLastConnectionError(): string | null {
   return lastConnectionError;
 }
 
-// Check server connection - scans multiple ports to find the server
+// Try to connect to a single URL
+async function tryConnect(url: string, port: number): Promise<{ success: boolean; url: string; port: number; error?: string }> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), PORT_SCAN_TIMEOUT_MS);
+
+    const response = await fetch(`${url}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return { success: false, url, port, error: `HTTP ${response.status}` };
+    }
+
+    // Try to get port from response
+    try {
+      const data = await response.json();
+      if (data.port) {
+        return { success: true, url, port: data.port };
+      }
+    } catch {
+      // Ignore JSON parse error
+    }
+
+    return { success: true, url, port };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    const errorName = error instanceof Error ? error.name : 'Error';
+    return { success: false, url, port, error: `${errorName} - ${errorMsg}` };
+  }
+}
+
+// Check server connection - scans multiple ports in PARALLEL for fast detection
 export async function checkConnection(): Promise<boolean> {
   logDebug('Starting connection check...');
   lastConnectionError = null;
@@ -221,68 +255,43 @@ export async function checkConnection(): Promise<boolean> {
     }
   }
 
-  // In production, scan ports to find the server
+  // In production, scan ALL ports in PARALLEL for fast detection
   const portsToTry = getPortsToTry();
-  logDebug('Scanning ports:', portsToTry);
+  logDebug('Scanning ports in parallel:', portsToTry);
 
-  const errors: string[] = [];
-
+  // Build all URLs to try
+  const allAttempts: Array<{ url: string; port: number }> = [];
   for (const port of portsToTry) {
     const urls = buildLocalhostUrls(port);
-
     for (const url of urls) {
-      try {
-        logDebug(`Trying ${url}/health...`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), PORT_SCAN_TIMEOUT_MS);
-
-        const response = await fetch(`${url}/health`, {
-          method: 'GET',
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        logDebug(`Response from ${url}:`, response.status, response.statusText);
-
-        if (!response.ok) {
-          errors.push(`${url}: HTTP ${response.status}`);
-          continue;
-        }
-
-        // Try to get port from response
-        try {
-          const data = await response.json();
-          logDebug('Health response:', data);
-          if (data.port) {
-            currentServerPort = data.port;
-          } else {
-            currentServerPort = port;
-          }
-        } catch {
-          currentServerPort = port;
-        }
-
-        // Found working server, update API_BASE and save port
-        API_BASE = url;
-        if (currentServerPort) {
-          savePort(currentServerPort);
-        }
-        isServerConnected = true;
-        logDebug('Connected successfully to', url);
-        return true;
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        const errorName = error instanceof Error ? error.name : 'Error';
-        errors.push(`${url}: ${errorName} - ${errorMsg}`);
-        logDebug(`Failed ${url}:`, errorName, errorMsg);
-        // Try next URL/port
-      }
+      allAttempts.push({ url, port });
     }
   }
 
+  // Try all connections in parallel
+  const results = await Promise.all(
+    allAttempts.map(({ url, port }) => tryConnect(url, port))
+  );
+
+  // Find first successful connection
+  const successResult = results.find(r => r.success);
+  if (successResult) {
+    API_BASE = successResult.url;
+    currentServerPort = successResult.port;
+    savePort(currentServerPort);
+    isServerConnected = true;
+    logDebug('Connected successfully to', successResult.url);
+    return true;
+  }
+
+  // All failed - collect errors
+  const errors = results
+    .filter(r => !r.success && r.error)
+    .map(r => `${r.url}: ${r.error}`);
+
   isServerConnected = false;
-  lastConnectionError = errors.join('; ');
-  logDebug('All connection attempts failed:', lastConnectionError);
+  lastConnectionError = errors.length > 0 ? errors.slice(0, 5).join('; ') + (errors.length > 5 ? '...' : '') : 'No server found';
+  logDebug('All connection attempts failed');
   return false;
 }
 
