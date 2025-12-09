@@ -18,6 +18,7 @@ const MembershipProfile = lazy(() => import('./components/MembershipProfile').th
 const TransferSui = lazy(() => import('./components/TransferSui').then(m => ({ default: m.TransferSui })));
 const MoveDeploy = lazy(() => import('./components/MoveDeploy').then(m => ({ default: m.MoveDeploy })));
 const TransactionBuilder = lazy(() => import('./components/TransactionBuilder').then(m => ({ default: m.TransactionBuilder })));
+const MembershipLookup = lazy(() => import('./components/MembershipLookup').then(m => ({ default: m.MembershipLookup })));
 
 // Lazy load heavy background component
 const FaultyTerminal = lazy(() => import('./components/backgrounds/FaultyTerminal'));
@@ -35,6 +36,7 @@ export function App() {
   // Determine if we're in app routes
   const isAppRoute = location.pathname.startsWith('/app');
   const isMoveDevStudio = location.pathname === '/app/move';
+  const isMembershipPage = location.pathname === '/membership';
 
   // Show animated background on all pages
   const showAnimatedBackground = true;
@@ -55,19 +57,19 @@ export function App() {
         {showAnimatedBackground ? (
           <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />}>
             <FaultyTerminal
-              tint={isMoveDevStudio ? "#22c55e" : isAppRoute ? "#4da2ff" : "#ff0000"}
-              brightness={isMoveDevStudio ? 0.2 : isAppRoute ? 0.3 : 0.8}
-              scale={isMoveDevStudio ? 0.5 : isAppRoute ? 1.0 : 1.9}
+              tint={isMoveDevStudio ? "#22c55e" : (isAppRoute || isMembershipPage) ? "#4da2ff" : "#ff0000"}
+              brightness={isMoveDevStudio ? 0.2 : (isAppRoute || isMembershipPage) ? 0.3 : 0.8}
+              scale={isMoveDevStudio ? 0.5 : (isAppRoute || isMembershipPage) ? 1.0 : 1.9}
               gridMul={isMoveDevStudio ? [4, 2] : [2, 1]}
               digitSize={isMoveDevStudio ? 1.2 : 1.3}
               glitchAmount={isMoveDevStudio ? 0.8 : 0}
               flickerAmount={isMoveDevStudio ? 0.5 : 0}
               scanlineIntensity={isMoveDevStudio ? 0.3 : 0.5}
-              curvature={isMoveDevStudio ? 0.1 : isAppRoute ? 1.5 : 0.4}
+              curvature={isMoveDevStudio ? 0.1 : (isAppRoute || isMembershipPage) ? 1.5 : 0.4}
               mouseReact={isMoveDevStudio}
               mouseStrength={isMoveDevStudio ? 0.2 : 0}
               timeScale={0.5}
-              noiseAmp={isMoveDevStudio ? 0 : isAppRoute ? 0.3 : 0.7}
+              noiseAmp={isMoveDevStudio ? 0 : (isAppRoute || isMembershipPage) ? 0.3 : 0.7}
               className="curved-panel"
               dpr={1} // Lower DPR for better performance
               style={{
@@ -81,8 +83,8 @@ export function App() {
           <div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />
         )}
 
-        {/* Dark blur overlay for app routes - makes terminal stand out more */}
-        {isAppRoute && (
+        {/* Dark blur overlay for app routes and membership page - makes terminal stand out more */}
+        {(isAppRoute || isMembershipPage) && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
         )}
       </div>
@@ -97,8 +99,8 @@ export function App() {
             {/* Setup Guide Page - Has server check, shows instructions */}
             <Route path="/setup" element={<SetupPage />} />
 
-            {/* Redirect shortcuts to app routes */}
-            <Route path="/membership" element={<Navigate to="/app/membership" replace />} />
+            {/* Public Membership Lookup - No server required, queries blockchain directly */}
+            <Route path="/membership" element={<MembershipLookup />} />
 
             {/* App Routes - Protected by AppGuard */}
             <Route path="/app" element={<AppGuard />}>
