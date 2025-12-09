@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { promises as fs } from 'fs';
+import { promises as fs, realpathSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import type { ApiResponse } from '@sui-cli-web/shared';
@@ -18,6 +18,66 @@ interface BrowseResponse {
   entries: DirectoryEntry[];
 }
 
+// Security: Whitelist of allowed base directories
+function getAllowedBaseDirs(): string[] {
+  const homeDir = os.homedir();
+  const baseDirs = [homeDir];
+
+  // Common development directories
+  const commonDirs = [
+    path.join(homeDir, 'Documents'),
+    path.join(homeDir, 'Desktop'),
+    path.join(homeDir, 'Projects'),
+    path.join(homeDir, 'Development'),
+    path.join(homeDir, 'Code'),
+    path.join(homeDir, 'dev'),
+    '/tmp',
+    '/opt',
+  ];
+
+  // On Windows, also allow common drive roots for development
+  if (process.platform === 'win32') {
+    baseDirs.push('C:\\Users', 'D:\\', 'E:\\');
+  }
+
+  return [...baseDirs, ...commonDirs];
+}
+
+// Security: Validate path to prevent traversal attacks
+function isPathAllowed(targetPath: string): boolean {
+  const allowedDirs = getAllowedBaseDirs();
+
+  // Normalize and resolve the path to get canonical form
+  // This prevents attacks like /home/user/../../../etc/passwd
+  let canonicalPath: string;
+  try {
+    // Use realpathSync to resolve symlinks and get absolute path
+    canonicalPath = realpathSync(targetPath);
+  } catch {
+    // Path doesn't exist yet or not accessible, use normalized path
+    canonicalPath = path.normalize(path.resolve(targetPath));
+  }
+
+  // Check if canonical path starts with any allowed directory
+  for (const allowedDir of allowedDirs) {
+    // Normalize the allowed dir too
+    const normalizedAllowed = path.normalize(allowedDir);
+    if (canonicalPath.startsWith(normalizedAllowed)) {
+      return true;
+    }
+  }
+
+  // On Windows, allow any path under user's home or drive roots
+  if (process.platform === 'win32') {
+    const isWindowsDrive = /^[A-Za-z]:[/\\]/.test(canonicalPath);
+    if (isWindowsDrive) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function filesystemRoutes(fastify: FastifyInstance) {
   // Browse directory
   fastify.get<{
@@ -30,26 +90,17 @@ export async function filesystemRoutes(fastify: FastifyInstance) {
       // Default to home directory if no path provided
       let targetPath = requestedPath?.trim() || os.homedir();
 
-      // Resolve to absolute path
-      targetPath = path.resolve(targetPath);
+      // Security: Normalize path to prevent traversal attacks
+      // This handles cases like: ../../etc/passwd, /home/user/../../../etc/passwd
+      targetPath = path.normalize(path.resolve(targetPath));
 
-      // Security: Prevent browsing outside reasonable directories
-      const homeDir = os.homedir();
-      const isInHome = targetPath.startsWith(homeDir);
-      const isInTmp = targetPath.startsWith('/tmp');
-      const isInOpt = targetPath.startsWith('/opt');
-      const isInMnt = targetPath.startsWith('/mnt');
-
-      if (!isInHome && !isInTmp && !isInOpt && !isInMnt) {
-        // On Windows, allow browsing C:\Users or D:\, etc.
-        const isWindowsDrive = /^[A-Za-z]:[/\\]/.test(targetPath);
-        if (!isWindowsDrive) {
-          reply.status(403);
-          return {
-            success: false,
-            error: 'Access denied to this directory',
-          };
-        }
+      // Security: Validate against whitelist of allowed directories
+      if (!isPathAllowed(targetPath)) {
+        reply.status(403);
+        return {
+          success: false,
+          error: 'Access denied: Path is outside allowed directories',
+        };
       }
 
       // Check if directory exists and is readable

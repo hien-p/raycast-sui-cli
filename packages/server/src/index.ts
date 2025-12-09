@@ -20,7 +20,9 @@ const CURRENT_VERSION = pkg.version;
 const PACKAGE_NAME = pkg.name;
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+// Security: Bind to localhost only to prevent network exposure
+// Use 127.0.0.1 instead of 0.0.0.0 to ensure server is only accessible locally
+const HOST = process.env.HOST || '127.0.0.1';
 
 // Check for updates from npm registry
 async function checkForUpdates(): Promise<{ hasUpdate: boolean; latestVersion: string | null }> {

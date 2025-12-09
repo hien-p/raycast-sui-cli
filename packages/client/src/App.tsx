@@ -1,13 +1,13 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect, lazy, Suspense } from 'react';
-import { HomePage } from './components/HomePage';
-import { SetupPage } from './components/SetupPage';
 import { AppGuard } from './components/guards/AppGuard';
 import { MembershipGuard } from './components/guards/MembershipGuard';
 import { trackPageView } from './lib/analytics';
 
-// Lazy load heavy components for better initial load
+// Lazy load ALL route components for better initial load and code splitting
+const HomePage = lazy(() => import('./components/HomePage').then(m => ({ default: m.HomePage })));
+const SetupPage = lazy(() => import('./components/SetupPage').then(m => ({ default: m.SetupPage })));
 const CommandPalette = lazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const AddressList = lazy(() => import('./components/AddressList').then(m => ({ default: m.AddressList })));
 const EnvironmentList = lazy(() => import('./components/EnvironmentList').then(m => ({ default: m.EnvironmentList })));
