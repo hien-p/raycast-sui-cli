@@ -116,17 +116,48 @@ async function main() {
   // Register CORS - allow localhost and deployed UI domains only
   // Security: Only allow specific Vercel deployments, not all *.vercel.app
   await fastify.register(cors, {
-    origin: [
-      // Local development (allow any localhost port)
-      /^http:\/\/localhost:\d+$/,
-      /^http:\/\/127\.0\.0\.1:\d+$/,
-      // Production domains
-      'https://www.harriweb3.dev',
-      'https://harriweb3.dev',
-      // Specific Vercel preview deployments (project-specific patterns only)
-      /^https:\/\/raycast-sui-cli-[a-z0-9]+-[a-z0-9]+\.vercel\.app$/,
-      /^https:\/\/sui-cli-web-[a-z0-9]+-[a-z0-9]+\.vercel\.app$/,
-    ],
+    origin: (origin, cb) => {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) {
+        cb(null, true);
+        return;
+      }
+
+      // Allowed origins
+      const allowedOrigins = [
+        // Production domains
+        'https://www.harriweb3.dev',
+        'https://harriweb3.dev',
+      ];
+
+      // Regex patterns for dynamic origins
+      const allowedPatterns = [
+        // Local development (allow any localhost port)
+        /^http:\/\/localhost(:\d+)?$/,
+        /^http:\/\/127\.0\.0\.1(:\d+)?$/,
+        // Specific Vercel preview deployments (project-specific patterns only)
+        /^https:\/\/raycast-sui-cli(-[a-z0-9]+)*\.vercel\.app$/,
+        /^https:\/\/sui-cli-web(-[a-z0-9]+)*\.vercel\.app$/,
+      ];
+
+      // Check exact match
+      if (allowedOrigins.includes(origin)) {
+        cb(null, true);
+        return;
+      }
+
+      // Check pattern match
+      for (const pattern of allowedPatterns) {
+        if (pattern.test(origin)) {
+          cb(null, true);
+          return;
+        }
+      }
+
+      // Log rejected origin for debugging
+      console.log(`[CORS] Rejected origin: ${origin}`);
+      cb(new Error('Not allowed by CORS'), false);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
