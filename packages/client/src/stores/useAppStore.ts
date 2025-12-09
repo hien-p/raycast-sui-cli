@@ -4,6 +4,7 @@ import * as api from '@/api/client';
 import { checkConnection, TierInfo } from '@/api/client';
 import { suiService } from '@/services/SuiService';
 import { trackEvent, identifyUser, setTag, ClarityEvents } from '@/lib/clarity';
+import { apiCache, cacheKeys } from '@/api/cache';
 
 export type View =
   | 'commands'
@@ -164,7 +165,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     try {
-      const addresses = await api.getAddresses();
+      // Use cache and deduplication - prevents redundant calls
+      const addresses = await apiCache.dedupe(
+        cacheKeys.addresses(),
+        () => api.getAddresses(),
+        3000 // 3s cache for addresses
+      );
       set({ addresses, isLoading: false, error: null });
     } catch (error) {
       // If we had cached data, keep showing it despite error
@@ -179,7 +185,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchEnvironments: async () => {
     set({ isLoading: true, error: null });
     try {
-      const environments = await api.getEnvironments();
+      // Use cache and deduplication
+      const environments = await apiCache.dedupe(
+        cacheKeys.environments(),
+        () => api.getEnvironments(),
+        5000 // 5s cache for environments (changes less frequently)
+      );
       set({ environments, isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
@@ -189,7 +200,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchGasCoins: async (address: string) => {
     set({ isLoading: true, error: null });
     try {
-      const gasCoins = await api.getGasCoins(address);
+      // Use cache and deduplication
+      const gasCoins = await apiCache.dedupe(
+        cacheKeys.gasCoins(address),
+        () => api.getGasCoins(address),
+        2000 // 2s cache for gas coins
+      );
       set({ gasCoins, isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
@@ -199,7 +215,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchObjects: async (address: string) => {
     set({ isLoading: true, error: null });
     try {
-      const objects = await api.getObjects(address);
+      // Use cache and deduplication
+      const objects = await apiCache.dedupe(
+        cacheKeys.objects(address),
+        () => api.getObjects(address),
+        3000 // 3s cache for objects
+      );
       set({ objects, isLoading: false });
     } catch (error) {
       set({ error: String(error), isLoading: false });
@@ -211,8 +232,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await api.switchAddress(address);
-      await get().fetchAddresses();
-      await get().fetchCommunityStatus();
+      // Invalidate cache after address switch
+      apiCache.invalidate(cacheKeys.addresses());
+      apiCache.invalidatePattern(/^community:/);
+      apiCache.invalidatePattern(/^tier:/);
+      // Fetch in parallel for faster update
+      await Promise.all([
+        get().fetchAddresses(),
+        get().fetchCommunityStatus(),
+      ]);
       set({ isLoading: false });
       trackEvent(ClarityEvents.ADDRESS_SWITCHED);
       identifyUser(address);
@@ -225,6 +253,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const result = await api.createAddress(keyScheme, alias);
+      // Invalidate addresses cache
+      apiCache.invalidate(cacheKeys.addresses());
       await get().fetchAddresses();
       set({ isLoading: false });
       trackEvent(ClarityEvents.ADDRESS_CREATED);
@@ -239,6 +269,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await api.removeAddress(address);
+      // Invalidate addresses cache
+      apiCache.invalidate(cacheKeys.addresses());
       await get().fetchAddresses();
       set({ isLoading: false });
     } catch (error) {
@@ -252,8 +284,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await api.switchEnvironment(alias);
-      await get().fetchEnvironments();
-      await get().fetchAddresses();
+      // Invalidate environments and addresses cache
+      apiCache.invalidate(cacheKeys.environments());
+      apiCache.invalidate(cacheKeys.addresses());
+      // Fetch in parallel for faster update
+      await Promise.all([
+        get().fetchEnvironments(),
+        get().fetchAddresses(),
+      ]);
       set({ isLoading: false });
       trackEvent(ClarityEvents.ENVIRONMENT_SWITCHED);
       setTag('network', alias);
@@ -266,6 +304,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await api.addEnvironment(alias, rpc, ws);
+      // Invalidate environments cache
+      apiCache.invalidate(cacheKeys.environments());
       await get().fetchEnvironments();
       set({ isLoading: false });
     } catch (error) {
@@ -278,6 +318,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await api.removeEnvironment(alias);
+      // Invalidate environments cache
+      apiCache.invalidate(cacheKeys.environments());
       await get().fetchEnvironments();
       set({ isLoading: false });
     } catch (error) {
@@ -293,6 +335,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await api.splitCoin(coinId, amounts);
       const activeAddress = get().addresses.find((a) => a.isActive);
       if (activeAddress) {
+        // Invalidate gas coins cache after mutation
+        apiCache.invalidate(cacheKeys.gasCoins(activeAddress.address));
         await get().fetchGasCoins(activeAddress.address);
       }
       set({ isLoading: false });
@@ -308,6 +352,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await api.mergeCoins(primaryCoinId, coinIdsToMerge);
       const activeAddress = get().addresses.find((a) => a.isActive);
       if (activeAddress) {
+        // Invalidate gas coins cache after mutation
+        apiCache.invalidate(cacheKeys.gasCoins(activeAddress.address));
         await get().fetchGasCoins(activeAddress.address);
       }
       set({ isLoading: false });
@@ -324,6 +370,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await api.requestFaucet(network);
       // Wait for transaction to finalize on blockchain before refreshing balance
       await new Promise((resolve) => setTimeout(resolve, 3000));
+      // Invalidate addresses cache after faucet request
+      apiCache.invalidate(cacheKeys.addresses());
       await get().fetchAddresses();
       set({ isLoading: false });
       trackEvent(ClarityEvents.FAUCET_REQUESTED);
@@ -370,16 +418,24 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
 
-      const [statsData, isMember] = await Promise.all([
-        suiService.getCommunityStats().catch(() => ({ totalMembers: 0, isConfigured: false })),
-        activeAddress
-          ? suiService.checkMembership(activeAddress).catch(() => false)
-          : Promise.resolve(false),
-      ]);
+      // Use cache and deduplication to prevent redundant community status calls
+      const result = await apiCache.dedupe(
+        cacheKeys.communityStatus(activeAddress),
+        async () => {
+          const [statsData, isMember] = await Promise.all([
+            suiService.getCommunityStats().catch(() => ({ totalMembers: 0, isConfigured: false })),
+            activeAddress
+              ? suiService.checkMembership(activeAddress).catch(() => false)
+              : Promise.resolve(false),
+          ]);
+          return { statsData, isMember };
+        },
+        10000 // 10s cache for community status (changes infrequently)
+      );
 
       set({
-        communityStats: statsData,
-        isCommunityMember: isMember,
+        communityStats: result.statsData,
+        isCommunityMember: result.isMember,
       });
     } catch {
       // Silently fail
@@ -391,6 +447,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       const result = await api.joinCommunity();
       if (result.alreadyMember || result.txDigest) {
         set({ isCommunityMember: true });
+        // Invalidate community cache after joining
+        apiCache.invalidatePattern(/^community:/);
+        apiCache.invalidatePattern(/^tier:/);
         // Refresh stats
         const stats = await suiService.getCommunityStats().catch(() => get().communityStats);
         set({ communityStats: stats });
@@ -426,7 +485,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         return;
       }
 
-      const tierInfo = await api.getTierInfo(targetAddress);
+      // Use cache and deduplication
+      const tierInfo = await apiCache.dedupe(
+        cacheKeys.tierInfo(targetAddress),
+        () => api.getTierInfo(targetAddress),
+        8000 // 8s cache for tier info
+      );
       set({ tierInfo });
     } catch (error) {
       console.error('Failed to fetch tier info:', error);
@@ -445,6 +509,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         return;
       }
 
+      // Invalidate tier cache before refreshing
+      apiCache.invalidate(cacheKeys.tierInfo(targetAddress));
       const tierInfo = await api.refreshTier(targetAddress);
       set({ tierInfo });
     } catch (error) {

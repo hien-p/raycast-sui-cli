@@ -47,9 +47,12 @@ export function MainLayout() {
     const init = async () => {
       const connected = await checkServerConnection();
       if (connected) {
-        await fetchStatus();
-        await fetchAddresses();
-        await fetchEnvironments();
+        // Fetch all data in parallel for faster loading
+        await Promise.all([
+          fetchStatus(),
+          fetchAddresses(),
+          fetchEnvironments(),
+        ]);
       }
     };
     init();

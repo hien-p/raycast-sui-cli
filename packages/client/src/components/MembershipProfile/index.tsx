@@ -23,8 +23,11 @@ export function MembershipProfile() {
   const activeAddress = addresses.find((a) => a.isActive)?.address;
 
   useEffect(() => {
-    fetchCommunityStatus();
-    fetchTierInfo();
+    // Fetch community data in parallel
+    Promise.all([
+      fetchCommunityStatus(),
+      fetchTierInfo(),
+    ]);
     if (activeAddress) {
       fetchDeployedPackages();
     }

@@ -35,8 +35,11 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
   const activeAddress = addresses.find((a) => a.isActive);
 
   useEffect(() => {
-    fetchCommunityStatus();
-    fetchTierInfo();
+    // Fetch community data in parallel
+    Promise.all([
+      fetchCommunityStatus(),
+      fetchTierInfo(),
+    ]);
 
     // Check eligibility if not a member
     if (!isMember && activeAddress) {
@@ -76,8 +79,10 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
           });
           // Refresh community stats after successful join
           setTimeout(() => {
-            fetchCommunityStatus();
-            fetchTierInfo();
+            Promise.all([
+              fetchCommunityStatus(),
+              fetchTierInfo(),
+            ]);
           }, 1500);
         } else {
           showSuccessToast({
