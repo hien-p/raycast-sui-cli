@@ -7,6 +7,28 @@ import { initializeAnalytics } from './lib/analytics';
 import { initClarity } from './lib/clarity';
 import './styles/globals.css';
 
+// Handle chunk loading errors (happens after new deployments when user has cached old chunks)
+// Auto-reload page once to get fresh chunks
+window.addEventListener('error', (event) => {
+  if (
+    event.message?.includes('Failed to fetch dynamically imported module') ||
+    event.message?.includes('Loading chunk') ||
+    event.message?.includes('ChunkLoadError')
+  ) {
+    // Only reload once to prevent infinite loops
+    const hasReloaded = sessionStorage.getItem('chunk-reload');
+    if (!hasReloaded) {
+      sessionStorage.setItem('chunk-reload', 'true');
+      window.location.reload();
+    }
+  }
+});
+
+// Clear reload flag on successful load
+window.addEventListener('load', () => {
+  sessionStorage.removeItem('chunk-reload');
+});
+
 // Initialize Analytics
 initializeAnalytics();
 initClarity();
