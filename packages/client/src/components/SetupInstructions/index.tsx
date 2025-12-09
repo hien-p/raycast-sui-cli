@@ -5,9 +5,10 @@ import { useMobileDetect } from '@/hooks/useMobileDetect';
 interface SetupInstructionsProps {
   onRetry: () => void;
   isRetrying: boolean;
+  connectionError?: string | null;
 }
 
-export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProps) {
+export function SetupInstructions({ onRetry, isRetrying, connectionError }: SetupInstructionsProps) {
   const isMobile = useMobileDetect();
   const [activeOS, setActiveOS] = useState<'mac' | 'linux' | 'windows'>('mac');
   const [copied, setCopied] = useState<string | null>(null);
@@ -473,6 +474,21 @@ export function SetupInstructions({ onRetry, isRetrying }: SetupInstructionsProp
                       </div>
                       <span className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded">scanning ports...</span>
                     </div>
+
+                    {/* Debug info - show connection error */}
+                    {connectionError && (
+                      <details className="mb-4">
+                        <summary className="text-xs text-white/50 cursor-pointer hover:text-white/70 transition-colors">
+                          🔍 Debug: Click to see error details
+                        </summary>
+                        <div className="mt-2 p-2 bg-black/40 rounded-lg text-xs font-mono text-rose-300/70 max-h-24 overflow-y-auto break-all">
+                          {connectionError}
+                        </div>
+                        <p className="mt-2 text-xs text-white/40">
+                          💡 Open browser DevTools (F12) → Console for more details
+                        </p>
+                      </details>
+                    )}
 
                     {/* Retry Button - Rose/orange gradient */}
                     <button

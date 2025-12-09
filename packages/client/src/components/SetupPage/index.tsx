@@ -4,7 +4,7 @@ import { SetupInstructions } from '../SetupInstructions';
 import { StructuredData } from '../SEO/StructuredData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { checkConnection, getServerPort } from '@/api/client';
+import { checkConnection, getServerPort, getLastConnectionError } from '@/api/client';
 
 export function SetupPage() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export function SetupPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [showSuccessState, setShowSuccessState] = useState(false);
   const [connectedPort, setConnectedPort] = useState<number | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const checkServerConnection = async () => {
     try {
@@ -20,6 +21,7 @@ export function SetupPage() {
 
       if (isConnected) {
         setConnectedPort(getServerPort());
+        setConnectionError(null);
         if (!showSuccessState) {
           setShowSuccessState(true);
           toast.success('✅ Server connected successfully!', {
@@ -27,9 +29,13 @@ export function SetupPage() {
             position: 'top-center',
           });
         }
+      } else {
+        // Get detailed error for debugging
+        setConnectionError(getLastConnectionError());
       }
     } catch (error) {
       setServerConnected(false);
+      setConnectionError(error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -147,7 +153,7 @@ export function SetupPage() {
             </div>
           ) : (
             // Setup instructions (disconnected state)
-            <SetupInstructions onRetry={handleRetry} isRetrying={isRetrying} />
+            <SetupInstructions onRetry={handleRetry} isRetrying={isRetrying} connectionError={connectionError} />
           )}
         </div>
 

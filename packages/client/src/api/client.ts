@@ -13,6 +13,9 @@ const isDev = import.meta.env.DEV;
 // Common ports to scan for server
 const COMMON_PORTS = [3001, 3002, 3003, 3004, 3005, 4001, 4002, 8001, 8080];
 
+// Connection timeout for port scanning (increase for slower networks/Windows)
+const PORT_SCAN_TIMEOUT_MS = 5000;
+
 // Build localhost URLs for all common ports
 function buildLocalhostUrls(port: number): string[] {
   return [
@@ -179,8 +182,26 @@ async function fetchApi<T>(
   }
 }
 
+// Debug logging (only in development or when explicitly enabled)
+const DEBUG_CONNECTION = !isDev; // Enable debug in production to troubleshoot
+
+function logDebug(message: string, ...args: unknown[]) {
+  if (DEBUG_CONNECTION) {
+    console.log(`[SuiCLI] ${message}`, ...args);
+  }
+}
+
+// Get last connection error for debugging
+let lastConnectionError: string | null = null;
+export function getLastConnectionError(): string | null {
+  return lastConnectionError;
+}
+
 // Check server connection - scans multiple ports to find the server
 export async function checkConnection(): Promise<boolean> {
+  logDebug('Starting connection check...');
+  lastConnectionError = null;
+
   if (isDev) {
     try {
       const response = await fetch(`${API_BASE}/health`, { method: 'GET' });
@@ -190,23 +211,30 @@ export async function checkConnection(): Promise<boolean> {
         currentServerPort = data.port;
       }
       isServerConnected = true;
+      logDebug('Dev mode: Connected successfully');
       return true;
-    } catch {
+    } catch (error) {
       isServerConnected = false;
+      lastConnectionError = error instanceof Error ? error.message : 'Unknown error';
+      logDebug('Dev mode: Connection failed', lastConnectionError);
       return false;
     }
   }
 
   // In production, scan ports to find the server
   const portsToTry = getPortsToTry();
+  logDebug('Scanning ports:', portsToTry);
+
+  const errors: string[] = [];
 
   for (const port of portsToTry) {
     const urls = buildLocalhostUrls(port);
 
     for (const url of urls) {
       try {
+        logDebug(`Trying ${url}/health...`);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout per attempt
+        const timeoutId = setTimeout(() => controller.abort(), PORT_SCAN_TIMEOUT_MS);
 
         const response = await fetch(`${url}/health`, {
           method: 'GET',
@@ -214,9 +242,17 @@ export async function checkConnection(): Promise<boolean> {
         });
         clearTimeout(timeoutId);
 
+        logDebug(`Response from ${url}:`, response.status, response.statusText);
+
+        if (!response.ok) {
+          errors.push(`${url}: HTTP ${response.status}`);
+          continue;
+        }
+
         // Try to get port from response
         try {
           const data = await response.json();
+          logDebug('Health response:', data);
           if (data.port) {
             currentServerPort = data.port;
           } else {
@@ -232,14 +268,21 @@ export async function checkConnection(): Promise<boolean> {
           savePort(currentServerPort);
         }
         isServerConnected = true;
+        logDebug('Connected successfully to', url);
         return true;
-      } catch {
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorName = error instanceof Error ? error.name : 'Error';
+        errors.push(`${url}: ${errorName} - ${errorMsg}`);
+        logDebug(`Failed ${url}:`, errorName, errorMsg);
         // Try next URL/port
       }
     }
   }
 
   isServerConnected = false;
+  lastConnectionError = errors.join('; ');
+  logDebug('All connection attempts failed:', lastConnectionError);
   return false;
 }
 
