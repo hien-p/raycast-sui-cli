@@ -138,7 +138,7 @@ export const DEFAULT_COMMANDS: Command[] = [
     keywords: ['faucet', 'free', 'token', 'test'],
     action: 'faucet',
   },
-  // Development - dev workflow (controlled by beta feature flag)
+  // Development - dev workflow
   {
     id: 'move',
     title: 'Move Studio',
@@ -147,7 +147,6 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.DEVELOPMENT,
     keywords: ['move', 'smart contract', 'build', 'test', 'publish', 'upgrade', 'package', 'deploy', 'development'],
     action: 'move',
-    featureFlag: 'enable_beta_features',
   },
   {
     id: 'inspector',
@@ -157,7 +156,6 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.DEVELOPMENT,
     keywords: ['transaction', 'inspect', 'replay', 'debug', 'debugger', 'bytecode', 'tx'],
     action: 'inspector',
-    featureFlag: 'enable_beta_features',
   },
   {
     id: 'devtools',
@@ -167,9 +165,8 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.DEVELOPMENT,
     keywords: ['coverage', 'disassemble', 'summary', 'bytecode', 'test', 'debug'],
     action: 'devtools',
-    featureFlag: 'enable_new_ui_features',
   },
-  // Security - keys and verification (controlled by new UI features flag)
+  // Security - keys and verification
   {
     id: 'keytool',
     title: 'Key Management',
@@ -178,7 +175,6 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.SECURITY,
     keywords: ['key', 'generate', 'sign', 'multisig', 'signature', 'keypair'],
     action: 'keytool',
-    featureFlag: 'enable_new_ui_features',
   },
   {
     id: 'security',
@@ -188,7 +184,6 @@ export const DEFAULT_COMMANDS: Command[] = [
     category: CATEGORIES.SECURITY,
     keywords: ['verify', 'source', 'bytecode', 'security', 'decode', 'transaction', 'audit'],
     action: 'security',
-    featureFlag: 'enable_new_ui_features',
   },
   // Profile - membership
   {
