@@ -11,7 +11,7 @@ const VIEW_TO_ROUTE: Record<string, string> = {
   environments: '/app/environments',
   objects: '/app/objects',
   'dynamic-fields': '/app/dynamic-fields',
-  gas: '/app/gas',
+  gas: '/app/coins', // Redirected from gas to coins (all coin types)
   faucet: '/app/faucet',
   membership: '/app/membership',
   transfer: '/app/transfer',
@@ -20,6 +20,7 @@ const VIEW_TO_ROUTE: Record<string, string> = {
   devtools: '/app/devtools',
   security: '/app/security',
   keytool: '/app/keytool',
+  'game-demo': '/app/game-demo',
 };
 
 export function CommandPalette() {
@@ -261,7 +262,7 @@ export function CommandPalette() {
       </motion.div>
 
       {/* Commands by Category */}
-      {['Membership', 'Addresses', 'Environment', 'Objects & Assets', 'Gas', 'Faucet', 'Transfer', 'Development', 'Keys & Security'].map((category) => {
+      {['Profile', 'Account', 'Assets', 'Actions', 'Development', 'Security', 'Learn'].map((category) => {
         const categoryCommands = filteredCommands.filter((cmd) => cmd.category === category);
         if (categoryCommands.length === 0) return null;
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -82,6 +83,7 @@ interface PackageModule {
 }
 
 export function MoveDeploy() {
+  const [searchParams] = useSearchParams();
   const [packagePath, setPackagePath] = useState('');
   const [gasBudget, setGasBudget] = useState('100000000');
   const [upgradeCapId, setUpgradeCapId] = useState('');
@@ -121,9 +123,21 @@ export function MoveDeploy() {
   const [analyzedParams, setAnalyzedParams] = useState<AnalyzedParameter[]>([]);
   const [analyzingParams, setAnalyzingParams] = useState(false);
 
+  // Tab state (controlled for URL params support)
+  const [activeTab, setActiveTab] = useState('develop');
+
   // Get active address from store for parameter analysis
   const addresses = useAppStore((state) => state.addresses);
   const activeAddress = addresses.find((a) => a.isActive)?.address || null;
+
+  // Handle URL params for direct package interaction
+  const urlPackageId = searchParams.get('packageId');
+  useEffect(() => {
+    if (urlPackageId) {
+      setTargetPackageId(urlPackageId);
+      setActiveTab('interact');
+    }
+  }, [urlPackageId]);
 
   // Load recent projects from localStorage
   useEffect(() => {
@@ -527,8 +541,8 @@ export function MoveDeploy() {
   return (
     <>
       {/* Content */}
-      <div className="relative z-10 p-3 sm:p-4">
-        <div className="relative max-w-[1600px] mx-auto space-y-3">
+      <div className="relative z-10 p-3 sm:p-4 overflow-x-hidden">
+        <div className="relative max-w-7xl mx-auto space-y-3">
           {/* Compact Header */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -574,13 +588,13 @@ export function MoveDeploy() {
             </motion.div>
           )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full min-w-0">
           {/* Left Column: Package Selection - Compact */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
-            className="lg:col-span-1 space-y-2"
+            className="lg:col-span-1 space-y-2 min-w-0"
           >
             {/* Recent Projects - Compact */}
             <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md">
@@ -644,7 +658,7 @@ export function MoveDeploy() {
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.15 }}
-            className="lg:col-span-2 space-y-2"
+            className="lg:col-span-2 space-y-2 min-w-0 overflow-hidden"
           >
             {/* Package Configuration - Compact */}
             <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md relative overflow-hidden">
@@ -769,7 +783,7 @@ export function MoveDeploy() {
             </Card>
 
             {/* Main Workflow Tabs - Compact */}
-            <Tabs defaultValue="develop" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-black/30 border border-green-500/30 h-9">
                 <TabsTrigger value="develop" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
                   <Code className="w-3.5 h-3.5 flex-shrink-0" />

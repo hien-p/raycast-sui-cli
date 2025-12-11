@@ -12,7 +12,7 @@ const CommandPalette = lazy(() => import('./components/CommandPalette').then(m =
 const AddressList = lazy(() => import('./components/AddressList').then(m => ({ default: m.AddressList })));
 const EnvironmentList = lazy(() => import('./components/EnvironmentList').then(m => ({ default: m.EnvironmentList })));
 const ObjectList = lazy(() => import('./components/ObjectList').then(m => ({ default: m.ObjectList })));
-const GasList = lazy(() => import('./components/GasList').then(m => ({ default: m.GasList })));
+// GasList removed - redirecting to CoinList instead
 const FaucetForm = lazy(() => import('./components/FaucetForm').then(m => ({ default: m.FaucetForm })));
 const MembershipProfile = lazy(() => import('./components/MembershipProfile').then(m => ({ default: m.MembershipProfile })));
 const TransferSui = lazy(() => import('./components/TransferSui').then(m => ({ default: m.TransferSui })));
@@ -23,6 +23,11 @@ const DynamicFieldExplorer = lazy(() => import('./components/DynamicFieldExplore
 const DevTools = lazy(() => import('./components/DevTools').then(m => ({ default: m.DevTools })));
 const SecurityTools = lazy(() => import('./components/SecurityTools').then(m => ({ default: m.SecurityTools })));
 const KeytoolManager = lazy(() => import('./components/KeytoolManager').then(m => ({ default: m.KeytoolManager })));
+const CoinList = lazy(() => import('./components/CoinList').then(m => ({ default: m.CoinList })));
+const CoinSplit = lazy(() => import('./components/CoinSplit').then(m => ({ default: m.CoinSplit })));
+const CoinMerge = lazy(() => import('./components/CoinMerge').then(m => ({ default: m.CoinMerge })));
+const CoinTransfer = lazy(() => import('./components/CoinTransfer').then(m => ({ default: m.CoinTransfer })));
+const GameDemo = lazy(() => import('./components/GameDemo').then(m => ({ default: m.GameDemo })));
 
 // Lazy load heavy background component
 const FaultyTerminal = lazy(() => import('./components/backgrounds/FaultyTerminal'));
@@ -114,7 +119,11 @@ export function App() {
               <Route path="objects" element={<ObjectList />} />
               <Route path="objects/:objectId" element={<ObjectList />} />
               <Route path="dynamic-fields" element={<DynamicFieldExplorer />} />
-              <Route path="gas" element={<GasList />} />
+              <Route path="gas" element={<Navigate to="/app/coins" replace />} />
+              <Route path="coins" element={<CoinList />} />
+              <Route path="coins/split" element={<CoinSplit />} />
+              <Route path="coins/merge" element={<CoinMerge />} />
+              <Route path="coins/transfer" element={<CoinTransfer />} />
               <Route path="faucet" element={<FaucetForm />} />
               <Route path="membership" element={<MembershipProfile />} />
               <Route path="transfer" element={<TransferSui />} />
@@ -122,6 +131,7 @@ export function App() {
               <Route path="devtools" element={<DevTools />} />
               <Route path="security" element={<SecurityTools />} />
               <Route path="keytool" element={<KeytoolManager />} />
+              <Route path="game-demo" element={<GameDemo />} />
               <Route
                 path="inspector"
                 element={

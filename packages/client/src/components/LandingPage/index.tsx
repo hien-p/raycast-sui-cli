@@ -249,6 +249,70 @@ export function LandingPage() {
           </div>
         </section>
 
+        {/* App Preview Section */}
+        <section className="py-16 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                See it in <span className="text-rose-400">Action</span>
+              </h2>
+              <p className="text-white/60 max-w-xl mx-auto">
+                A beautiful, Raycast-inspired interface for all your Sui blockchain needs.
+              </p>
+            </div>
+
+            {/* Main App Screenshot */}
+            <div className="mb-8">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-rose-500/30 to-pink-500/30 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+                <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+                  <img
+                    src="/images/landing/app_commands.png"
+                    alt="Sui CLI Web - Command Palette"
+                    className="w-full h-auto"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+              <p className="text-center text-white/40 text-sm mt-4">Command Palette - Raycast-style access to all Sui CLI commands</p>
+            </div>
+
+            {/* Feature Screenshots Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <PreviewCard
+                image="/images/landing/addresses.png"
+                title="Address Management"
+                description="Create, switch, and label addresses with real-time balance"
+              />
+              <PreviewCard
+                image="/images/landing/coins_management.png"
+                title="Coin Management"
+                description="View coins, merge/split gas, and transfer tokens"
+              />
+              <PreviewCard
+                image="/images/landing/objects_management.png"
+                title="Object Explorer"
+                description="Browse NFTs, capabilities, and on-chain objects"
+              />
+              <PreviewCard
+                image="/images/landing/move-studio.png"
+                title="Move Studio"
+                description="Build, test, and publish Move packages"
+              />
+              <PreviewCard
+                image="/images/landing/package_workflows.png"
+                title="Package Workflows"
+                description="Visual build pipeline with progress tracking"
+              />
+              <PreviewCard
+                image="/images/landing/package_deployted_profiles.png"
+                title="Deployed Packages"
+                description="Inspect modules and call deployed contracts"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Beta Features Section */}
         <section className="py-16 px-4">
           <div className="max-w-5xl mx-auto">
@@ -679,6 +743,33 @@ function RoadmapCard({ status, title }: RoadmapCardProps) {
         {config.label}
       </span>
       <div className="text-white font-medium">{title}</div>
+    </div>
+  );
+}
+
+// Component: Preview Card for screenshots
+interface PreviewCardProps {
+  image: string;
+  title: string;
+  description: string;
+}
+
+function PreviewCard({ image, title, description }: PreviewCardProps) {
+  return (
+    <div className="group rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-rose-500/30 transition-all">
+      <div className="relative overflow-hidden">
+        <img
+          src={image}
+          alt={title}
+          className="w-full h-auto transform group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <div className="p-4">
+        <h3 className="text-white font-semibold mb-1">{title}</h3>
+        <p className="text-white/50 text-sm">{description}</p>
+      </div>
     </div>
   );
 }

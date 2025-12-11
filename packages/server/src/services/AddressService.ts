@@ -526,6 +526,12 @@ export class AddressService {
 
   public async getObject(objectId: string): Promise<any> {
     const output = await this.executor.execute(['client', 'object', objectId], { json: true });
+
+    // Handle "Object does not exist" case - CLI returns plain text instead of JSON
+    if (output.includes('does not exist') || output.includes('not found')) {
+      throw new Error(`Object ${objectId} does not exist`);
+    }
+
     return JSON.parse(output);
   }
 

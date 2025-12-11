@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Spinner } from '../shared/Spinner';
 import * as api from '@/api/client';
 import { useAppStore } from '@/stores/useAppStore';
 import { detectNetwork, openInExplorer, EXPLORERS, type NetworkType } from '@/lib/explorer';
+import { extractCoinType, isCoinType } from '@sui-cli-web/shared';
+import { Link2 } from 'lucide-react';
 
 type Tab = 'overview' | 'fields' | 'package' | 'transaction';
 
@@ -28,6 +31,7 @@ interface ObjectDetailProps {
 }
 
 export function ObjectDetail({ object, onBack, onCopy }: ObjectDetailProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [packageSummary, setPackageSummary] = useState<Record<string, unknown> | null>(null);
   const [txBlock, setTxBlock] = useState<Record<string, unknown> | null>(null);
@@ -58,6 +62,63 @@ export function ObjectDetail({ object, onBack, onCopy }: ObjectDetailProps) {
   // Check if this is an UpgradeCap
   const isUpgradeCap = type.includes('::package::UpgradeCap');
   const linkedPackageId = isUpgradeCap ? (fields.package as string | null) : null;
+
+  // Check if this is a Coin type
+  const isCoin = isCoinType(type);
+  const coinType = isCoin ? extractCoinType(type) : null;
+  const coinBalance = isCoin ? (fields.balance as string | undefined) : null;
+
+  // Check if object can have dynamic fields
+  // Objects with 'id' field (UID) can have dynamic fields attached
+  // Also include container types like Table, Bag, ObjectTable, etc.
+  const canHaveDynamicFields = (() => {
+    // Container types that store dynamic fields
+    const containerTypes = ['Table', 'Bag', 'ObjectBag', 'ObjectTable', 'LinkedTable', 'VecSet', 'VecMap'];
+    if (containerTypes.some(t => type.includes(`::${t.toLowerCase()}::`) || structName === t)) {
+      return true;
+    }
+    // Objects with 'id' field (UID) - most custom Move objects
+    if (fields.id) {
+      return true;
+    }
+    // Game objects that typically have inventory/dynamic storage
+    if (type.toLowerCase().includes('character') || type.toLowerCase().includes('inventory')) {
+      return true;
+    }
+    return false;
+  })();
+
+  // Format coin balance
+  const formatCoinBalance = (balance: string | undefined, decimals: number = 9) => {
+    if (!balance) return '0';
+    const balanceBigInt = BigInt(balance);
+    const divisor = BigInt(10 ** decimals);
+    const integerPart = balanceBigInt / divisor;
+    const fractionalPart = balanceBigInt % divisor;
+    let fractionalStr = fractionalPart.toString().padStart(decimals, '0');
+    fractionalStr = fractionalStr.replace(/0+$/, '') || '0';
+    if (fractionalStr.length < 4) fractionalStr = fractionalStr.padEnd(4, '0');
+    return `${integerPart}.${fractionalStr}`;
+  };
+
+  // Coin action handlers
+  const handleCoinTransfer = () => {
+    if (coinType) {
+      navigate(`/app/coins/transfer?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
+    }
+  };
+
+  const handleCoinSplit = () => {
+    if (coinType) {
+      navigate(`/app/coins/split?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
+    }
+  };
+
+  const handleCoinMerge = () => {
+    if (coinType) {
+      navigate(`/app/coins/merge?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
+    }
+  };
 
   // Load package summary when tab is selected
   useEffect(() => {
@@ -162,6 +223,51 @@ export function ObjectDetail({ object, onBack, onCopy }: ObjectDetailProps) {
       <div className="px-2">
         {activeTab === 'overview' && (
           <div className="space-y-3">
+            {/* Coin Actions Panel - shown only for Coin objects */}
+            {isCoin && coinType && (
+              <div className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-xs text-muted-foreground">Coin Balance</div>
+                  <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">
+                    {coinType.split('::').pop() || 'COIN'}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-foreground mb-4">
+                  {formatCoinBalance(coinBalance)} {coinType.split('::').pop() || ''}
+                </div>
+                <div className="text-xs text-muted-foreground mb-3">Quick Actions</div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={handleCoinTransfer}
+                    className="flex flex-col items-center gap-1.5 p-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    <span className="text-xs font-medium">Transfer</span>
+                  </button>
+                  <button
+                    onClick={handleCoinSplit}
+                    className="flex flex-col items-center gap-1.5 p-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span className="text-xs font-medium">Split</span>
+                  </button>
+                  <button
+                    onClick={handleCoinMerge}
+                    className="flex flex-col items-center gap-1.5 p-3 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a4 4 0 004-4V4M6 10a4 4 0 01-4-4V4m4 6v6a4 4 0 004 4h2" />
+                    </svg>
+                    <span className="text-xs font-medium">Merge</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Type */}
             <InfoRow
               label="Type"
@@ -216,6 +322,31 @@ export function ObjectDetail({ object, onBack, onCopy }: ObjectDetailProps) {
                 </div>
               </div>
             </div>
+
+            {/* Explore Dynamic Fields - only show for objects with UID (id field) */}
+            {canHaveDynamicFields && (
+              <button
+                onClick={() => navigate(`/app/dynamic-fields?objectId=${objectId}`)}
+                className="w-full p-3 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg hover:from-cyan-500/20 hover:to-purple-500/20 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                    <Link2 className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-medium text-foreground group-hover:text-cyan-400 transition-colors">
+                      Explore Dynamic Fields
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      View attached key-value data (Table, Bag, etc.)
+                    </div>
+                  </div>
+                  <svg className="w-4 h-4 text-muted-foreground group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            )}
 
             {/* Explorer Selector */}
             <div className="p-3 bg-muted/30 rounded-lg">

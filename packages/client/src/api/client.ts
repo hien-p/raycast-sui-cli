@@ -6,6 +6,15 @@ import type {
   FaucetResponse,
 } from '@/types';
 
+import type {
+  CoinGroupedResponse,
+  CoinInfo,
+  CoinMetadata,
+  CoinOperationResult,
+  GenericSplitRequest,
+  GenericMergeRequest,
+} from '@sui-cli-web/shared';
+
 // In production (deployed UI), connect to localhost server
 // In development (vite dev), use proxy
 const isDev = import.meta.env.DEV;
@@ -604,6 +613,20 @@ export async function getSuggestedDirectories() {
   return fetchApi<{ directories: SuggestedDirectory[] }>('/filesystem/suggested');
 }
 
+export interface ScannedPackage {
+  name: string;
+  path: string;
+  relativePath: string;
+}
+
+export async function scanMovePackages(basePath?: string, maxDepth?: number) {
+  const params = new URLSearchParams();
+  if (basePath) params.append('path', basePath);
+  if (maxDepth) params.append('maxDepth', String(maxDepth));
+  const query = params.toString();
+  return fetchApi<{ packages: ScannedPackage[] }>(`/filesystem/scan-packages${query ? `?${query}` : ''}`);
+}
+
 // Move Package Development APIs
 export async function buildMovePackage(packagePath: string) {
   return fetchApi<{ output: string }>('/move/build', {
@@ -968,5 +991,56 @@ export async function executePtb(commands: PtbCommand[], options?: PtbOptions) {
   return fetchApi<PtbResult>('/inspector/ptb', {
     method: 'POST',
     body: JSON.stringify({ commands, options }),
+  });
+}
+
+// ====== Coin Management API ======
+
+// Get all coins grouped by type for an address
+export async function getCoinsGrouped(address: string) {
+  return fetchApi<ApiResponse<CoinGroupedResponse>>(`/coins/${address}`).then(
+    (data) => ({ success: true, data } as ApiResponse<CoinGroupedResponse>)
+  ).catch((error) => ({ success: false, error: error.message } as ApiResponse<CoinGroupedResponse>));
+}
+
+// Get coins of a specific type
+export async function getCoinsByType(address: string, coinType: string) {
+  return fetchApi<CoinInfo[]>(`/coins/${address}/by-type?type=${encodeURIComponent(coinType)}`);
+}
+
+// Get coin metadata
+export async function getCoinMetadata(coinType: string) {
+  return fetchApi<CoinMetadata | null>(`/coins/metadata?type=${encodeURIComponent(coinType)}`);
+}
+
+// Split a coin (generic - works for any coin type)
+export async function splitGenericCoin(request: GenericSplitRequest) {
+  return fetchApi<CoinOperationResult>('/coins/split', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+// Dry run split
+export async function dryRunSplitCoin(request: GenericSplitRequest) {
+  return fetchApi<CoinOperationResult>('/coins/split/dry-run', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+// Merge coins (generic - works for any coin type)
+export async function mergeGenericCoins(request: GenericMergeRequest) {
+  return fetchApi<CoinOperationResult>('/coins/merge', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+// Dry run merge
+export async function dryRunMergeCoins(request: GenericMergeRequest) {
+  return fetchApi<CoinOperationResult>('/coins/merge/dry-run', {
+    method: 'POST',
+    body: JSON.stringify(request),
   });
 }

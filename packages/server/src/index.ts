@@ -14,6 +14,8 @@ import { filesystemRoutes } from './routes/filesystem';
 import { dynamicFieldsRoutes } from './routes/dynamic-fields';
 import { devtoolsRoutes } from './routes/devtools';
 import { securityRoutes } from './routes/security';
+import { coinRoutes } from './routes/coin';
+import { gameDemoRoutes } from './routes/game-demo';
 import { SuiCliExecutor } from './cli/SuiCliExecutor';
 import { createRateLimitHook } from './utils/rateLimiter';
 import { createRequire } from 'module';
@@ -342,6 +344,36 @@ async function main() {
     async (instance) => {
       instance.addHook('onRequest', writeRateLimit);
       await instance.register(securityRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Coin routes - generic coin management (split, merge for any coin type)
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(coinRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Game Demo routes - Dynamic Fields showcase with RPG inventory
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(gameDemoRoutes);
     },
     { prefix: '/api' }
   );

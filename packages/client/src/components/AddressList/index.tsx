@@ -1,10 +1,14 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { useAppStore } from '@/stores/useAppStore';
 import { Spinner } from '../shared/Spinner';
 import toast from 'react-hot-toast';
 import { addressMetadata, AddressMetadata } from '@/utils/addressMetadata';
 import { useSmartPolling } from '@/utils/useSmartPolling';
+import { detectNetwork, buildExplorerUrl, getDefaultExplorer, type NetworkType } from '@/lib/explorer';
+import { Tooltip } from '@/components/ui/tooltip';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { SuiAddress } from '@/types';
 
 // Format balance with thousand separators
@@ -35,9 +39,12 @@ interface AddressCardProps {
   editingField: 'label' | 'notes' | null;
   editValue: string;
   editInputRef: React.RefObject<HTMLInputElement>;
+  currentNetwork: NetworkType;
   onSwitch: (address: string) => void;
   onDelete: (address: string, alias?: string) => void;
   onCopy: (address: string) => void;
+  onViewObjects: (address: string) => void;
+  onOpenExplorer: (address: string) => void;
   onContextMenu: (e: React.MouseEvent, address: string) => void;
   startEdit: (address: string, field: 'label' | 'notes', value: string) => void;
   saveEdit: () => void;
@@ -53,9 +60,12 @@ const AddressCard = memo(({
   editingField,
   editValue,
   editInputRef,
+  currentNetwork,
   onSwitch,
   onDelete,
   onCopy,
+  onViewObjects,
+  onOpenExplorer,
   onContextMenu,
   startEdit,
   saveEdit,
@@ -190,41 +200,73 @@ const AddressCard = memo(({
 
         {/* Actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
+          {/* View Objects button */}
+          <Tooltip content="View objects owned by this address" side="bottom">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewObjects(addr.address);
+              }}
+              className="p-2 hover:bg-accent/10 rounded transition-colors group"
+            >
+              <svg className="w-4 h-4 text-text-tertiary group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </button>
+          </Tooltip>
+
+          {/* Explorer button */}
+          <Tooltip content={`View on explorer (${currentNetwork})`} side="bottom">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenExplorer(addr.address);
+              }}
+              className="p-2 hover:bg-accent/10 rounded transition-colors group"
+            >
+              <svg className="w-4 h-4 text-text-tertiary group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </button>
+          </Tooltip>
+
           {/* Copy button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCopy(addr.address);
-            }}
-            className="p-2 hover:bg-background-active rounded transition-colors"
-            title="Copy address"
-          >
-            <svg className="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </button>
+          <Tooltip content="Copy address" side="bottom">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCopy(addr.address);
+              }}
+              className="p-2 hover:bg-background-active rounded transition-colors"
+            >
+              <svg className="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </Tooltip>
 
           {/* Delete button (disabled for active address) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!addr.isActive) {
-                onDelete(addr.address, addr.alias);
-              }
-            }}
-            disabled={addr.isActive}
-            className={clsx(
-              'p-2 rounded transition-colors',
-              addr.isActive
-                ? 'opacity-30 cursor-not-allowed'
-                : 'hover:bg-red-500/10 text-red-400'
-            )}
-            title={addr.isActive ? 'Cannot delete active address' : 'Delete address'}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          <Tooltip content={addr.isActive ? 'Cannot delete active address' : 'Delete address'} side="bottom">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!addr.isActive) {
+                  onDelete(addr.address, addr.alias);
+                }
+              }}
+              disabled={addr.isActive}
+              className={clsx(
+                'p-2 rounded transition-colors',
+                addr.isActive
+                  ? 'opacity-30 cursor-not-allowed'
+                  : 'hover:bg-red-500/10 text-red-400'
+              )}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
@@ -244,13 +286,16 @@ const AddressCard = memo(({
     prevProps.editingField === nextProps.editingField &&
     prevProps.editValue === nextProps.editValue &&
     prevProps.addrMetadata?.label === nextProps.addrMetadata?.label &&
-    prevProps.addrMetadata?.notes === nextProps.addrMetadata?.notes
+    prevProps.addrMetadata?.notes === nextProps.addrMetadata?.notes &&
+    prevProps.currentNetwork === nextProps.currentNetwork
   );
 });
 
 export function AddressList() {
+  const navigate = useNavigate();
   const {
     addresses,
+    environments,
     isLoading,
     searchQuery,
     fetchAddresses,
@@ -258,6 +303,10 @@ export function AddressList() {
     createAddress,
     removeAddress,
   } = useAppStore();
+
+  // Get current network from active environment
+  const activeEnv = environments.find((e) => e.isActive);
+  const currentNetwork: NetworkType = detectNetwork(activeEnv?.alias, activeEnv?.rpc);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newAlias, setNewAlias] = useState('');
@@ -281,6 +330,9 @@ export function AddressList() {
   // Debounced search query for performance
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Delete confirmation dialog state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ address: string; alias?: string } | null>(null);
 
   // Initial load
   useEffect(() => {
@@ -383,12 +435,37 @@ export function AddressList() {
     toast.success('Address copied to clipboard');
   }, []);
 
-  // Delete address
-  const handleDelete = useCallback(async (address: string, alias?: string) => {
-    const displayName = alias || `${address.slice(0, 8)}...${address.slice(-6)}`;
-    if (!confirm(`Delete address "${displayName}"? This action cannot be undone.`)) {
-      return;
+  // View objects for an address - switch to it first then navigate
+  const handleViewObjects = useCallback(async (address: string) => {
+    try {
+      // Switch to the address first if not active
+      const targetAddr = addresses.find(a => a.address === address);
+      if (targetAddr && !targetAddr.isActive) {
+        await switchAddress(address);
+      }
+      // Navigate to objects page
+      navigate('/app/objects');
+    } catch (error) {
+      toast.error(String(error));
     }
+  }, [addresses, switchAddress, navigate]);
+
+  // Open address in explorer
+  const handleOpenExplorer = useCallback((address: string) => {
+    const explorer = getDefaultExplorer();
+    const url = buildExplorerUrl(explorer, currentNetwork, 'address', address);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, [currentNetwork]);
+
+  // Request delete confirmation (opens dialog)
+  const handleDelete = useCallback((address: string, alias?: string) => {
+    setDeleteConfirm({ address, alias });
+  }, []);
+
+  // Confirm delete (actual deletion)
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm) return;
+    const { address } = deleteConfirm;
     try {
       await removeAddress(address);
       // Also remove metadata
@@ -399,8 +476,10 @@ export function AddressList() {
       toast.success('Address deleted successfully');
     } catch (error) {
       toast.error(String(error));
+    } finally {
+      setDeleteConfirm(null);
     }
-  }, [removeAddress, metadata]);
+  }, [deleteConfirm, removeAddress, metadata]);
 
   // Start editing
   const startEdit = useCallback((address: string, field: 'label' | 'notes', currentValue: string) => {
@@ -655,9 +734,12 @@ export function AddressList() {
                 editingField={editingField}
                 editValue={editValue}
                 editInputRef={editInputRef}
+                currentNetwork={currentNetwork}
                 onSwitch={handleSwitch}
                 onDelete={handleDelete}
                 onCopy={copyAddress}
+                onViewObjects={handleViewObjects}
+                onOpenExplorer={handleOpenExplorer}
                 onContextMenu={(e, address) => {
                   setContextMenu({ x: e.clientX, y: e.clientY, address });
                 }}
@@ -728,6 +810,18 @@ export function AddressList() {
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Address"
+        message={`Are you sure you want to delete "${deleteConfirm?.alias || (deleteConfirm?.address ? `${deleteConfirm.address.slice(0, 8)}...${deleteConfirm.address.slice(-6)}` : '')}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/stores/useAppStore';
 import {
@@ -44,14 +45,19 @@ interface BatchRecipient {
 type TransferMode = 'external' | 'internal' | 'batch';
 
 export function TransferSui() {
+  const [searchParams] = useSearchParams();
   const { addresses, fetchAddresses } = useAppStore();
   const activeAddress = addresses.find((a) => a.isActive);
   const internalAddresses = addresses.filter((a) => !a.isActive);
 
+  // URL params for pre-selecting coin
+  const coinIdParam = searchParams.get('coinId');
+  const coinTypeParam = searchParams.get('type');
+
   const [transferMode, setTransferMode] = useState<TransferMode>('external');
   const [toAddress, setToAddress] = useState('');
   const [amount, setAmount] = useState('');
-  const [selectedCoin, setSelectedCoin] = useState<string>('');
+  const [selectedCoin, setSelectedCoin] = useState<string>(coinIdParam || '');
   const [selectedInternalAddress, setSelectedInternalAddress] = useState('');
   const [batchRecipients, setBatchRecipients] = useState<BatchRecipient[]>([
     { id: '1', address: '', amount: '' }
@@ -89,6 +95,16 @@ export function TransferSui() {
   useEffect(() => {
     if (activeAddress) loadCoins();
   }, [activeAddress?.address]);
+
+  // Pre-select coin from URL params
+  useEffect(() => {
+    if (coinIdParam && coins.length > 0) {
+      const coinExists = coins.some(c => c.coinObjectId === coinIdParam);
+      if (coinExists) {
+        setSelectedCoin(coinIdParam);
+      }
+    }
+  }, [coinIdParam, coins]);
 
   const loadCoins = async () => {
     if (!activeAddress) return;

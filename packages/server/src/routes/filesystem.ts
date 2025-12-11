@@ -12,6 +12,26 @@ interface DirectoryEntry {
   isPackage?: boolean;
 }
 
+// Cross-platform: Normalize path separators to forward slashes for consistent client handling
+function normalizePathForResponse(p: string): string {
+  return p.replace(/\\/g, '/');
+}
+
+// Cross-platform: Check for Move.toml with case variations (Windows is case-insensitive)
+const MOVE_TOML_VARIANTS = ['Move.toml', 'move.toml', 'MOVE.TOML', 'Move.TOML'];
+
+async function isMovePackage(dirPath: string): Promise<boolean> {
+  for (const variant of MOVE_TOML_VARIANTS) {
+    try {
+      await fs.access(path.join(dirPath, variant));
+      return true;
+    } catch {
+      // Try next variant
+    }
+  }
+  return false;
+}
+
 interface BrowseResponse {
   currentPath: string;
   parentPath: string | null;
@@ -139,17 +159,13 @@ export async function filesystemRoutes(fastify: FastifyInstance) {
           isDirectory: file.isDirectory(),
         };
 
-        // Check if directory is a Move package (contains Move.toml)
+        // Check if directory is a Move package (contains Move.toml - case insensitive for Windows)
         if (file.isDirectory()) {
-          try {
-            const moveTomlPath = path.join(fullPath, 'Move.toml');
-            await fs.access(moveTomlPath);
-            entry.isPackage = true;
-          } catch {
-            entry.isPackage = false;
-          }
+          entry.isPackage = await isMovePackage(fullPath);
         }
 
+        // Normalize path for cross-platform consistency
+        entry.path = normalizePathForResponse(entry.path);
         entries.push(entry);
       }
 
@@ -167,10 +183,79 @@ export async function filesystemRoutes(fastify: FastifyInstance) {
       return {
         success: true,
         data: {
-          currentPath: targetPath,
-          parentPath: isRoot ? null : parentPath,
+          currentPath: normalizePathForResponse(targetPath),
+          parentPath: isRoot ? null : normalizePathForResponse(parentPath),
           entries,
         },
+      };
+    } catch (error) {
+      return handleRouteError(error, reply);
+    }
+  });
+
+  // Scan directory recursively for Move packages
+  fastify.get<{
+    Querystring: { path?: string; maxDepth?: string };
+    Reply: ApiResponse<{ packages: Array<{ name: string; path: string; relativePath: string }> }>;
+  }>('/filesystem/scan-packages', async (request, reply) => {
+    try {
+      const { path: requestedPath, maxDepth: maxDepthStr } = request.query;
+      const maxDepth = Math.min(parseInt(maxDepthStr || '5', 10), 10); // Max 10 levels deep
+
+      let targetPath = requestedPath?.trim() || os.homedir();
+      targetPath = path.normalize(path.resolve(targetPath));
+
+      if (!isPathAllowed(targetPath)) {
+        reply.status(403);
+        return {
+          success: false,
+          error: 'Access denied: Path is outside allowed directories',
+        };
+      }
+
+      const packages: Array<{ name: string; path: string; relativePath: string }> = [];
+
+      // Recursive function to scan directories
+      async function scanDir(dirPath: string, depth: number): Promise<void> {
+        if (depth > maxDepth) return;
+
+        try {
+          const files = await fs.readdir(dirPath, { withFileTypes: true });
+
+          for (const file of files) {
+            if (!file.isDirectory()) continue;
+            if (file.name.startsWith('.')) continue; // Skip hidden
+            if (file.name === 'node_modules' || file.name === 'target' || file.name === 'build') continue; // Skip common non-package dirs
+
+            const fullPath = path.join(dirPath, file.name);
+
+            // Check if this is a Move package (case insensitive for Windows)
+            if (await isMovePackage(fullPath)) {
+              packages.push({
+                name: file.name,
+                path: normalizePathForResponse(fullPath),
+                relativePath: normalizePathForResponse(path.relative(targetPath, fullPath)),
+              });
+              // Don't recurse into Move packages (they won't have nested packages)
+              continue;
+            }
+
+            // Recurse into subdirectory
+            await scanDir(fullPath, depth + 1);
+          }
+        } catch {
+          // Permission denied or other error, skip this directory
+        }
+      }
+
+      await scanDir(targetPath, 0);
+
+      // Sort by relative path
+      packages.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+
+      return {
+        success: true,
+        data: { packages },
       };
     } catch (error) {
       return handleRouteError(error, reply);
@@ -182,23 +267,36 @@ export async function filesystemRoutes(fastify: FastifyInstance) {
     Reply: ApiResponse<{ directories: Array<{ name: string; path: string }> }>;
   }>('/filesystem/suggested', async (request, reply) => {
     try {
+      const homeDir = os.homedir();
       const suggestions: Array<{ name: string; path: string }> = [
-        { name: 'Home', path: os.homedir() },
+        { name: 'Home', path: normalizePathForResponse(homeDir) },
       ];
 
       // Add common directories if they exist
       const commonDirs = [
-        { name: 'Documents', path: path.join(os.homedir(), 'Documents') },
-        { name: 'Desktop', path: path.join(os.homedir(), 'Desktop') },
-        { name: 'Projects', path: path.join(os.homedir(), 'Projects') },
-        { name: 'Development', path: path.join(os.homedir(), 'Development') },
-        { name: 'Code', path: path.join(os.homedir(), 'Code') },
+        { name: 'Documents', path: path.join(homeDir, 'Documents') },
+        { name: 'Desktop', path: path.join(homeDir, 'Desktop') },
+        { name: 'Projects', path: path.join(homeDir, 'Projects') },
+        { name: 'Development', path: path.join(homeDir, 'Development') },
+        { name: 'Code', path: path.join(homeDir, 'Code') },
+        { name: 'dev', path: path.join(homeDir, 'dev') },
       ];
+
+      // On Windows, add drive roots
+      if (process.platform === 'win32') {
+        commonDirs.push(
+          { name: 'C: Drive', path: 'C:/' },
+          { name: 'D: Drive', path: 'D:/' }
+        );
+      }
 
       for (const dir of commonDirs) {
         try {
           await fs.access(dir.path);
-          suggestions.push(dir);
+          suggestions.push({
+            name: dir.name,
+            path: normalizePathForResponse(dir.path),
+          });
         } catch {
           // Directory doesn't exist, skip
         }

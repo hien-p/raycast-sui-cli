@@ -5,6 +5,7 @@ import { App } from './App';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { initializeAnalytics } from './lib/analytics';
 import { initClarity } from './lib/clarity';
+import { initStatsig } from './lib/statsig';
 import './styles/globals.css';
 
 // Handle chunk loading errors (happens after new deployments when user has cached old chunks)
@@ -32,6 +33,7 @@ window.addEventListener('load', () => {
 // Initialize Analytics
 initializeAnalytics();
 initClarity();
+initStatsig(); // Session replay + auto-capture
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -274,6 +274,98 @@ export interface FaucetSource {
   perRequestAmount?: string;
 }
 
+// ====== Coin Management Types ======
+
+export interface CoinInfo {
+  coinObjectId: string;
+  coinType: string;
+  balance: string;
+  version: string;
+  digest: string;
+}
+
+export interface CoinGroup {
+  coinType: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  totalBalance: string;
+  formattedBalance: string;
+  coins: CoinInfo[];
+  coinCount: number;
+  iconUrl?: string;
+  // Package/contract info
+  packageId: string;
+  moduleName: string;
+  isVerified?: boolean;
+  description?: string;
+}
+
+export interface CoinGroupedResponse {
+  groups: CoinGroup[];
+  totalCoinTypes: number;
+  totalCoins: number;
+}
+
+export interface CoinMetadata {
+  coinType: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  description?: string;
+  iconUrl?: string;
+}
+
+export interface GenericSplitRequest {
+  coinId: string;
+  coinType: string;
+  amounts: string[];
+  gasBudget?: string;
+}
+
+export interface GenericMergeRequest {
+  primaryCoinId: string;
+  coinIdsToMerge: string[];
+  coinType: string;
+  gasBudget?: string;
+}
+
+export interface GenericTransferCoinRequest {
+  coinId: string;
+  coinType: string;
+  to: string;
+  amount: string;
+  gasBudget?: string;
+}
+
+export interface CoinOperationResult {
+  success: boolean;
+  digest?: string;
+  gasUsed?: string;
+  error?: string;
+  newCoinIds?: string[];
+}
+
+// Helper to extract coin type from full Move type
+// "0x2::coin::Coin<0x2::sui::SUI>" -> "0x2::sui::SUI"
+export function extractCoinType(fullType: string): string | null {
+  const match = fullType.match(/Coin<(.+)>/);
+  return match ? match[1] : null;
+}
+
+// Helper to check if a type is a Coin type
+export function isCoinType(type: string): boolean {
+  return type.includes('0x2::coin::Coin<');
+}
+
+// Helper to get short symbol from coin type
+// "0x2::sui::SUI" -> "SUI"
+// "0x5d4b...::coin::USDC" -> "USDC"
+export function getShortSymbol(coinType: string): string {
+  const parts = coinType.split('::');
+  return parts[parts.length - 1] || coinType;
+}
+
 export const FAUCET_SOURCES: FaucetSource[] = [
   {
     id: 'sui-official',
