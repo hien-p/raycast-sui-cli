@@ -89,7 +89,8 @@ function getPortsToTry(): number[] {
   return ports;
 }
 
-let API_BASE = isDev ? '/api' : 'http://localhost:3001/api';
+// API base URL: in dev use proxy (/api), in prod use env var or fallback to localhost
+let API_BASE = isDev ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3001/api');
 let currentServerPort: number | null = null;
 
 // Connection state

@@ -239,6 +239,7 @@ export const DEFAULT_COMMANDS: Command[] = [
 ];
 
 // Constants
+// Default API URL for local development - clients should override via env vars
 export const API_BASE_URL = 'http://localhost:3001/api';
 
 export const NETWORKS = {

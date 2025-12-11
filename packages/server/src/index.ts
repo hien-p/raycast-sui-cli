@@ -131,11 +131,14 @@ async function main() {
         return;
       }
 
-      // Allowed origins
+      // Allowed origins from environment (comma-separated) or defaults
+      const envOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [];
       const allowedOrigins = [
-        // Production domains
+        // Production domains (defaults)
         'https://www.harriweb3.dev',
         'https://harriweb3.dev',
+        // Additional origins from environment
+        ...envOrigins,
       ];
 
       // Regex patterns for dynamic origins

@@ -31,13 +31,14 @@ import {
   Star,
   ArrowRight,
 } from 'lucide-react';
+import { COMMUNITY_PACKAGE_ID, COMMUNITY_REGISTRY_ID, NETWORK } from '@/config/contracts';
 
-// Contract addresses for verification
+// Contract addresses for verification (imported from config)
 const CONTRACT_INFO = {
-  packageId: '0xffb8f17c91212d170cb0fee4128b8b44277bfd19af040590cfae08c1abd2bbd2',
-  registryId: '0x7bf988f34c98d5b69d60264083c581d90fa97c51e902846bed491c0f6bf9b80b',
-  network: 'testnet',
-  explorerBase: 'https://suiscan.xyz/testnet',
+  packageId: COMMUNITY_PACKAGE_ID,
+  registryId: COMMUNITY_REGISTRY_ID,
+  network: NETWORK,
+  explorerBase: `https://suiscan.xyz/${NETWORK}`,
 };
 
 // Beta features list with status
