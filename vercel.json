@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:client",
+  "buildCommand": "npm run build -w @sui-cli-web/shared && npm run build:client",
   "outputDirectory": "packages/client/dist",
   "installCommand": "npm install",
   "framework": null,
