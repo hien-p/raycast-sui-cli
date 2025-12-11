@@ -42,3 +42,7 @@ PLAN.md
 
 # Replay directories
 **/.replay/
+
+# Move/Sui build artifacts
+**/build/
+Move.lock
