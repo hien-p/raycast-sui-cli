@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/useAppStore';
 import { DEFAULT_COMMANDS } from '@/types';
 import { AnimatedList } from '@/components/ui/animated-list';
+import { useFeatureFlags, FeatureGates } from '@/hooks/useFeatureFlags';
 import toast from 'react-hot-toast';
 
 const VIEW_TO_ROUTE: Record<string, string> = {
@@ -26,6 +27,7 @@ const VIEW_TO_ROUTE: Record<string, string> = {
 export function CommandPalette() {
   const navigate = useNavigate();
   const [isJoining, setIsJoining] = useState(false);
+  const { isEnabled } = useFeatureFlags();
   const {
     searchQuery,
     selectedIndex,
@@ -49,9 +51,26 @@ export function CommandPalette() {
   // Show join option if not member and community is configured
   const showJoinOption = !isCommunityMember && communityStats.isConfigured;
 
-  // Get filtered commands
+  // Get filtered commands (including feature flag filtering)
   const filteredCommands = useMemo(() => {
     let commands = DEFAULT_COMMANDS;
+
+    // Filter by feature flags
+    commands = commands.filter((cmd) => {
+      // If no feature flag required, always show
+      if (!cmd.featureFlag) return true;
+
+      // Check if the feature flag is enabled
+      const flagEnabled = isEnabled(cmd.featureFlag as keyof typeof FeatureGates);
+
+      // If hideWhenFlagEnabled is true, show when flag is disabled
+      if (cmd.hideWhenFlagEnabled) {
+        return !flagEnabled;
+      }
+
+      // Otherwise, show when flag is enabled
+      return flagEnabled;
+    });
 
     // Only show membership profile if user is a member
     if (!isCommunityMember) {
@@ -65,7 +84,7 @@ export function CommandPalette() {
       cmd.subtitle?.toLowerCase().includes(query) ||
       cmd.keywords?.some((k) => k.toLowerCase().includes(query))
     );
-  }, [searchQuery, isCommunityMember]);
+  }, [searchQuery, isCommunityMember, isEnabled]);
 
   // +2 for status items, +1 for join community if showing
   const totalItems = filteredCommands.length + 2 + (showJoinOption ? 1 : 0);

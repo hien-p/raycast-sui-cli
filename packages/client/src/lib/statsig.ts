@@ -158,6 +158,44 @@ export function getStatsigClient(): StatsigClient | null {
   return statsigClient;
 }
 
+/**
+ * Feature Gates (Feature Flags)
+ * These map to gates created in Statsig dashboard
+ */
+export const FeatureGates = {
+  // Onboarding
+  ONBOARDING_FLOW_OPTIMIZATION: 'onboarding_flow_optimization',
+
+  // Beta features
+  ENABLE_BETA_FEATURES: 'enable_beta_features',
+
+  // New UI features
+  ENABLE_NEW_UI_FEATURES: 'enable_new_ui_features',
+
+  // Analytics
+  ENABLE_ANALYTICS_TRACKING: 'enable_analytics_tracking',
+} as const;
+
+export type FeatureGateName = typeof FeatureGates[keyof typeof FeatureGates];
+
+/**
+ * Check multiple gates at once
+ */
+export function checkGates(gateNames: FeatureGateName[]): Record<FeatureGateName, boolean> {
+  const results: Record<string, boolean> = {};
+  for (const gate of gateNames) {
+    results[gate] = checkGate(gate);
+  }
+  return results as Record<FeatureGateName, boolean>;
+}
+
+/**
+ * Get all feature flags status
+ */
+export function getAllFeatureFlags(): Record<FeatureGateName, boolean> {
+  return checkGates(Object.values(FeatureGates) as FeatureGateName[]);
+}
+
 // Pre-defined events for consistent tracking
 export const StatsigEvents = {
   // Connection
