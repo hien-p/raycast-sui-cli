@@ -3,9 +3,9 @@
  * Update this whenever you release a new version
  */
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.3.3';
 export const APP_VERSION_STATUS = 'Beta';
-export const RELEASE_DATE = '2025-12-03';
+export const RELEASE_DATE = '2025-12-11';
 
 /**
  * Upcoming features roadmap

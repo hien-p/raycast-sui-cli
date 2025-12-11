@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { COMMUNITY_PACKAGE_ID, COMMUNITY_REGISTRY_ID, NETWORK } from '@/config/contracts';
+import { APP_VERSION } from '@/config/version';
 
 // Contract addresses for verification (imported from config)
 const CONTRACT_INFO = {
@@ -108,7 +109,7 @@ export function HomePage() {
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-1.5 bg-rose-500/10 border border-rose-500/40 rounded-full text-xs">
                   <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-                  <span className="text-rose-400 font-medium">v1.2</span>
+                  <span className="text-rose-400 font-medium">v{APP_VERSION}</span>
                 </div>
                 {/* Stats - visible on tablet+ */}
                 <div className="hidden md:flex items-center gap-3 text-xs text-white/60 border-l border-white/10 pl-3">
@@ -570,7 +571,7 @@ export function HomePage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 text-xs sm:text-sm text-white/40">
               <div className="flex items-center gap-2 text-center">
-                <span className="text-rose-400 font-medium">v1.2.0</span>
+                <span className="text-rose-400 font-medium">v{APP_VERSION}</span>
                 <span className="hidden sm:inline">•</span>
                 <span>MIT License</span>
               </div>
