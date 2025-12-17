@@ -135,6 +135,7 @@ async function main() {
       const envOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [];
       const allowedOrigins = [
         // Production domains (defaults)
+        'https://cli.firstmovers.io',
         'https://www.harriweb3.dev',
         'https://harriweb3.dev',
         // Additional origins from environment
@@ -400,7 +401,7 @@ async function main() {
 ║   Server running at: http://localhost:${PORT}                  ║
 ║                                                               ║
 ║   Now open the web UI:                                        ║
-║   → https://www.harriweb3.dev                                 ║
+║   → https://cli.firstmovers.io                                ║
 ║                                                               ║
 ║   The UI will connect to this local server automatically.     ║
 ║   Keep this terminal open while using the app.                ║
