@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -175,6 +176,33 @@ interface DecodeTransactionResult {
 }
 
 export function SecurityTools() {
+  // URL params for tab switching
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const validTabs = ['source', 'bytecode', 'decode'];
+  const [activeTab, setActiveTab] = useState(() =>
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'source'
+  );
+
+  // Sync tab state when URL changes (e.g., from FileTree navigation)
+  useEffect(() => {
+    const newTab = tabParam && validTabs.includes(tabParam) ? tabParam : 'source';
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [tabParam]);
+
+  // Sync URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'source') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', tab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
+
   // Source Verification State
   const [packagePath, setPackagePath] = useState('');
   const [verifyDeps, setVerifyDeps] = useState(false);
@@ -312,7 +340,7 @@ export function SecurityTools() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
           >
-            <Tabs defaultValue="source" className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-black/30 border border-green-500/30 h-9">
                 <TabsTrigger value="source" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
                   <FileSearch className="w-3.5 h-3.5 flex-shrink-0" />
@@ -463,7 +491,7 @@ export function SecurityTools() {
                                       {warning.title}
                                     </span>
                                     {warning.location && (
-                                      <span className="text-[10px] text-amber-500/50 font-mono whitespace-nowrap">
+                                      <span className="text-xs text-amber-500/50 font-mono whitespace-nowrap">
                                         {warning.location}
                                       </span>
                                     )}
@@ -476,11 +504,11 @@ export function SecurityTools() {
                                     {warning.suggestion}
                                   </p>
                                   <details className="mt-1.5">
-                                    <summary className="text-[10px] text-amber-500/40 cursor-pointer hover:text-amber-500/60 flex items-center gap-1">
+                                    <summary className="text-xs text-amber-500/40 cursor-pointer hover:text-amber-500/60 flex items-center gap-1">
                                       <ChevronDown className="w-2.5 h-2.5" />
                                       Show compiler output
                                     </summary>
-                                    <pre className="mt-1.5 p-1.5 bg-black/30 rounded text-[9px] text-amber-400/50 font-mono overflow-x-auto whitespace-pre-wrap max-h-24 overflow-y-auto">
+                                    <pre className="mt-1.5 p-1.5 bg-black/30 rounded text-xs text-amber-400/50 font-mono overflow-x-auto whitespace-pre-wrap max-h-24 overflow-y-auto">
                                       {warning.rawOutput}
                                     </pre>
                                   </details>
@@ -499,7 +527,7 @@ export function SecurityTools() {
                                   <CheckCircle2 className="w-4 h-4 text-green-400" />
                                   <span className="text-green-400">Verification Successful</span>
                                   {parsed.hasWarnings && (
-                                    <span className="text-[10px] text-amber-400 ml-1">(with lint warnings)</span>
+                                    <span className="text-xs text-amber-400 ml-1">(with lint warnings)</span>
                                   )}
                                 </>
                               ) : (
@@ -518,7 +546,7 @@ export function SecurityTools() {
                                   <AlertCircle className="w-3 h-3" />
                                   Common reasons for verification failure:
                                 </p>
-                                <ul className="text-red-400/70 pl-5 space-y-0.5 list-disc text-[10px]">
+                                <ul className="text-red-400/70 pl-5 space-y-0.5 list-disc text-xs">
                                   <li>Package not yet published on current network</li>
                                   <li>Local source differs from deployed bytecode</li>
                                   <li>Wrong network (check active environment)</li>
@@ -663,7 +691,7 @@ export function SecurityTools() {
                             <div className="space-y-1">
                               <div className="flex items-center justify-between text-xs font-mono">
                                 <span className="text-green-400">Meter Usage</span>
-                                <Badge className={`${bytecodeResult.withinLimits ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'} text-[10px] font-mono`}>
+                                <Badge className={`${bytecodeResult.withinLimits ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'} text-xs font-mono`}>
                                   {bytecodeResult.meterUsage.current} / {bytecodeResult.meterUsage.limit}
                                 </Badge>
                               </div>
@@ -676,7 +704,7 @@ export function SecurityTools() {
                                   }}
                                 />
                               </div>
-                              <div className="flex items-center gap-1 text-[10px] text-green-500/60 font-mono">
+                              <div className="flex items-center gap-1 text-xs text-green-500/60 font-mono">
                                 <Activity className="w-2.5 h-2.5" />
                                 {Math.round((bytecodeResult.meterUsage.current / bytecodeResult.meterUsage.limit) * 100)}% used
                               </div>
@@ -775,7 +803,7 @@ export function SecurityTools() {
                             <CheckCircle2 className="w-4 h-4 text-green-400" />
                             Decoded Transaction
                             {txResult.signatureValid !== undefined && (
-                              <Badge className={`ml-auto ${txResult.signatureValid ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'} text-[10px] font-mono`}>
+                              <Badge className={`ml-auto ${txResult.signatureValid ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'} text-xs font-mono`}>
                                 {txResult.signatureValid ? 'Valid Signature' : 'Invalid Signature'}
                               </Badge>
                             )}
@@ -811,7 +839,7 @@ export function SecurityTools() {
           >
             <div className="flex items-center gap-2 px-3 py-2 border border-green-500/30 bg-green-500/10 backdrop-blur-md rounded-lg">
               <AlertCircle className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
-              <span className="text-[10px] text-green-300/80 font-mono">
+              <span className="text-xs text-green-300/80 font-mono">
                 <strong className="text-green-400">Security Tip:</strong> Always verify source code before deployment. Check bytecode limits to prevent runtime failures.
               </span>
             </div>

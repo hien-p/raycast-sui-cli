@@ -276,7 +276,7 @@ export function CoinMerge() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4"
             >
-              <div className="text-xs font-mono text-yellow-500/70 mb-2">PRIMARY_COIN (receives merged balance)</div>
+              <div className="text-xs font-mono text-yellow-400 mb-2">PRIMARY_COIN (receives merged balance)</div>
               <select
                 value={primaryCoinId}
                 onChange={(e) => {
@@ -308,7 +308,7 @@ export function CoinMerge() {
                       <div className="text-lg font-bold text-foreground">
                         {formatBalance(primaryCoin.balance, decimals)} {symbol}
                       </div>
-                      <div className="text-[10px] font-mono text-yellow-500/50 truncate">
+                      <div className="text-xs font-mono text-yellow-400/80 truncate">
                         {primaryCoin.coinObjectId}
                       </div>
                     </div>
@@ -325,20 +325,20 @@ export function CoinMerge() {
               className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="text-xs font-mono text-yellow-500/70 flex items-center gap-2">
+                <div className="text-xs font-mono text-yellow-400 flex items-center gap-2">
                   <Layers className="w-4 h-4" />
                   SELECT_COINS_TO_MERGE
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={selectAllCoins}
-                    className="px-2 py-1 text-[10px] bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors font-mono"
+                    className="px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors font-mono"
                   >
                     Select All
                   </button>
                   <button
                     onClick={clearSelection}
-                    className="px-2 py-1 text-[10px] bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors font-mono"
+                    className="px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors font-mono"
                   >
                     Clear
                   </button>
@@ -375,7 +375,7 @@ export function CoinMerge() {
                           <div className="text-sm font-mono text-foreground">
                             {formatBalance(coin.balance, decimals)} {symbol}
                           </div>
-                          <div className="text-[10px] font-mono text-yellow-500/50 truncate">
+                          <div className="text-xs font-mono text-yellow-400/80 truncate">
                             {coin.coinObjectId}
                           </div>
                         </div>
@@ -389,13 +389,13 @@ export function CoinMerge() {
               {/* Summary */}
               <div className="pt-3 border-t border-yellow-500/20 space-y-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-yellow-500/70">Selected</span>
+                  <span className="text-yellow-400">Selected</span>
                   <span className="text-yellow-400">
                     {selectedCoinIds.size} coin{selectedCoinIds.size !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-yellow-500/70">Selected Balance</span>
+                  <span className="text-yellow-400">Selected Balance</span>
                   <span className="text-yellow-400">
                     {formatBalance(selectedBalance.toString(), decimals)} {symbol}
                   </span>
@@ -407,7 +407,7 @@ export function CoinMerge() {
                   </span>
                 </div>
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-yellow-500/70">Coins Reduced</span>
+                  <span className="text-yellow-400">Coins Reduced</span>
                   <span className="text-yellow-400">
                     {coins.length} → {coins.length - selectedCoinIds.size}
                   </span>
@@ -471,15 +471,15 @@ export function CoinMerge() {
                 {dryRunResult.success ? (
                   <div className="space-y-2 text-xs font-mono">
                     <div className="flex justify-between">
-                      <span className="text-yellow-500/70">Status</span>
+                      <span className="text-yellow-400">Status</span>
                       <span className="text-green-400">Success</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-yellow-500/70">Gas Estimate</span>
+                      <span className="text-yellow-400">Gas Estimate</span>
                       <span className="text-yellow-400">{dryRunResult.gasUsed || '~0.01'} SUI</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-yellow-500/70">Coins Merged</span>
+                      <span className="text-yellow-400">Coins Merged</span>
                       <span className="text-yellow-400">{selectedCoinIds.size} → 1</span>
                     </div>
                   </div>
@@ -532,29 +532,29 @@ export function CoinMerge() {
                       <>
                         {/* Summary */}
                         <div className="bg-black/30 border border-yellow-500/20 rounded-lg p-3">
-                          <div className="text-[10px] font-mono text-yellow-500/70 mb-2">MERGE_RESULT</div>
+                          <div className="text-xs font-mono text-yellow-400 mb-2">MERGE_RESULT</div>
                           <div className="grid grid-cols-3 gap-2 items-center text-center">
                             <div>
                               <div className="text-lg font-bold text-yellow-400 font-mono">
                                 {selectedCoinIds.size + 1}
                               </div>
-                              <div className="text-[10px] text-yellow-500/50 font-mono">COINS</div>
+                              <div className="text-xs text-yellow-400/80 font-mono">COINS</div>
                             </div>
                             <div className="flex flex-col items-center">
                               <span className="text-lg">→</span>
                             </div>
                             <div>
                               <div className="text-lg font-bold text-green-400 font-mono">1</div>
-                              <div className="text-[10px] text-yellow-500/50 font-mono">COIN</div>
+                              <div className="text-xs text-yellow-400/80 font-mono">COIN</div>
                             </div>
                           </div>
                         </div>
 
                         {/* Digest */}
                         <div className="space-y-1">
-                          <div className="text-[10px] font-mono text-yellow-500/70">TX_DIGEST</div>
+                          <div className="text-xs font-mono text-yellow-400">TX_DIGEST</div>
                           <div className="flex items-center gap-2">
-                            <code className="flex-1 px-2 py-1.5 bg-black/50 border border-yellow-500/20 rounded text-[10px] font-mono text-yellow-300 truncate">
+                            <code className="flex-1 px-2 py-1.5 bg-black/50 border border-yellow-500/20 rounded text-xs font-mono text-yellow-300 truncate">
                               {mergeResult.digest}
                             </code>
                             <button

@@ -213,254 +213,218 @@ export function FaucetForm() {
   }
 
   return (
-    <div className="px-4 py-4 space-y-4">
-      {/* Active address display */}
-      <div className="p-3 bg-muted/30 rounded-lg">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-muted-foreground flex items-center gap-2">
-            Request tokens for
+    <div className="px-3 py-3 space-y-3 font-mono">
+      {/* Terminal-style header */}
+      <div className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-[#4da2ff]">$</span>
+            <span className="text-white/60">sui client faucet</span>
             {isExternalAddress && (
-              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded">
-                Multi-Sig Address
+              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded border border-purple-500/30">
+                EXTERNAL
               </span>
             )}
-          </span>
+          </div>
           <div className="flex items-center gap-2">
             {isExternalAddress && (
               <button
                 onClick={clearCustomAddress}
-                className="text-xs text-muted-foreground hover:text-foreground"
-                title="Switch to active address"
+                className="text-white/40 hover:text-white/70 text-[10px]"
               >
-                ✕
+                [clear]
               </button>
             )}
             <button
               onClick={copyAddress}
-              className="text-xs text-primary hover:underline"
+              className="text-white/40 hover:text-white/70 text-[10px]"
             >
-              Copy
+              [copy]
             </button>
           </div>
         </div>
-        <div className="text-sm font-mono text-foreground truncate">
-          {isExternalAddress ? (
-            <span>
-              {targetAddress?.slice(0, 10)}...{targetAddress?.slice(-6)}
-            </span>
-          ) : activeAddress?.alias ? (
-            <span>
-              <span className="text-primary">{activeAddress.alias}</span>
-              <span className="text-muted-foreground ml-2">
-                ({activeAddress.address.slice(0, 8)}...{activeAddress.address.slice(-6)})
-              </span>
-            </span>
-          ) : (
-            activeAddress?.address
-          )}
+        <div className="mt-2 text-white/70 truncate">
+          {isExternalAddress ? targetAddress : activeAddress?.alias || activeAddress?.address}
         </div>
         {!isExternalAddress && activeAddress && (
-          <div className="text-xs text-muted-foreground mt-1">
-            Current balance: <span className="text-foreground font-medium">{activeAddress.balance || '0'} SUI</span>
-          </div>
-        )}
-        {isExternalAddress && (
-          <div className="text-xs text-muted-foreground mt-1">
-            💡 This is an external address (e.g., multi-sig). Balance will update after faucet request.
+          <div className="text-[10px] text-white/40 mt-1">
+            balance: <span className="text-[#4da2ff]">{activeAddress.balance || '0'} SUI</span>
           </div>
         )}
       </div>
 
-      {/* Network detection hint */}
+      {/* Network mismatch warning - Terminal style */}
       {detectedNetwork && detectedNetwork !== selectedNetwork && (
-        <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg flex items-center gap-2">
-          <span className="text-warning text-lg">⚠️</span>
-          <div className="flex-1">
-            <div className="text-sm text-warning">
-              Environment mismatch
+        <div className="px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-yellow-400">!</span>
+              <span className="text-yellow-400/80">env mismatch: {activeEnv?.alias} → {detectedNetwork}</span>
             </div>
-            <div className="text-xs text-warning/80">
-              Active: {activeEnv?.alias}. Consider {detectedNetwork} faucet.
-            </div>
+            <button
+              onClick={() => setSelectedNetwork(detectedNetwork)}
+              className="text-[10px] text-yellow-400 hover:text-yellow-300"
+            >
+              [switch]
+            </button>
           </div>
-          <button
-            onClick={() => setSelectedNetwork(detectedNetwork)}
-            className="text-xs px-2 py-1 bg-warning/20 text-warning rounded hover:bg-warning/30 transition-colors"
-          >
-            Switch
-          </button>
         </div>
       )}
 
-      {/* Network selection */}
+      {/* Terminal-style network selection */}
       <div>
-        <div className="text-sm font-medium text-foreground mb-2">Select Network</div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="flex items-center gap-2 px-1 mb-2">
+          <span className="text-white/20 text-xs">──[</span>
+          <span className="text-xs text-white/40 uppercase tracking-wider">network</span>
+          <span className="text-white/20 text-xs">]</span>
+          <span className="flex-1 border-t border-white/10 border-dashed" />
+        </div>
+        <div className="flex gap-2">
           {networks.map((network) => (
             <button
               key={network.id}
               onClick={() => setSelectedNetwork(network.id)}
               className={clsx(
-                'p-3 rounded-lg border transition-all text-center',
+                'flex-1 px-3 py-2 text-xs transition-all border',
                 selectedNetwork === network.id
-                  ? 'bg-primary/10 border-primary/50 ring-1 ring-primary/30'
-                  : 'bg-muted/20 border-border hover:bg-muted/40'
+                  ? 'bg-[#4da2ff]/20 text-[#4da2ff] border-[#4da2ff]/30'
+                  : 'bg-white/5 text-white/50 border-white/10 hover:text-white/70 hover:border-white/20'
               )}
             >
-              <div className="text-2xl mb-1">{network.icon}</div>
-              <div className="text-sm font-medium text-foreground">{network.name}</div>
-              <div className="text-[10px] text-muted-foreground">{network.description}</div>
+              <div className="text-lg mb-1">{network.icon}</div>
+              <div>{network.name.toLowerCase()}</div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Request button - Official Faucet */}
+      {/* Terminal-style request button */}
       {selectedNetwork !== 'localnet' && (
-        <div className="p-3 bg-muted/20 rounded-lg border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-xl">🚰</span>
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-foreground">Sui Official Faucet</div>
-              <div className="text-xs text-muted-foreground">1 SUI per request • 10 requests/day</div>
-            </div>
+        <div className="px-3 py-3 bg-black/30 border border-white/10 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-white/40 mb-3">
+            <span>🚰</span>
+            <span>sui official faucet</span>
+            <span className="text-white/20">|</span>
+            <span>1 SUI/req</span>
           </div>
           <button
             onClick={handleRequest}
             disabled={isRequesting || isLoading}
             className={clsx(
-              'w-full py-2.5 rounded-lg text-sm font-medium transition-colors',
-              'flex items-center justify-center gap-2',
+              'w-full py-2 text-xs transition-colors border',
               isRequesting || isLoading
-                ? 'bg-primary/50 cursor-not-allowed text-primary-foreground/70'
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed'
+                : 'bg-[#4da2ff]/20 text-[#4da2ff] border-[#4da2ff]/30 hover:bg-[#4da2ff]/30'
             )}
           >
             {isRequesting ? (
-              <>
+              <span className="flex items-center justify-center gap-2">
                 <Spinner size="sm" />
-                Requesting...
-              </>
+                requesting...
+              </span>
             ) : (
-              'Request Tokens'
+              '$ request --faucet'
             )}
           </button>
         </div>
       )}
 
-      {/* Localnet info */}
+      {/* Localnet - Terminal style */}
       {selectedNetwork === 'localnet' && (
-        <div className="p-3 bg-muted/20 rounded-lg border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-              <span className="text-xl">💻</span>
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-foreground">Local Faucet</div>
-              <div className="text-xs text-muted-foreground">Requires local Sui node running</div>
-            </div>
+        <div className="px-3 py-3 bg-black/30 border border-white/10 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-white/40 mb-3">
+            <span>💻</span>
+            <span>local faucet</span>
+            <span className="text-white/20">|</span>
+            <span>requires local node</span>
           </div>
           <button
             onClick={handleRequest}
             disabled={isRequesting || isLoading}
             className={clsx(
-              'w-full py-2.5 rounded-lg text-sm font-medium transition-colors',
-              'flex items-center justify-center gap-2',
+              'w-full py-2 text-xs transition-colors border',
               isRequesting || isLoading
-                ? 'bg-primary/50 cursor-not-allowed'
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed'
+                : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15'
             )}
           >
             {isRequesting ? (
-              <>
+              <span className="flex items-center justify-center gap-2">
                 <Spinner size="sm" />
-                Requesting...
-              </>
+                requesting...
+              </span>
             ) : (
-              'Request from Local Faucet'
+              '$ request --local'
             )}
           </button>
         </div>
       )}
 
-      {/* Last result */}
+      {/* Terminal-style result */}
       {lastResult && (
         <div
           className={clsx(
-            'p-3 rounded-lg border',
+            'px-3 py-2 border rounded-lg text-xs',
             lastResult.success
-              ? 'bg-success/10 border-success/30'
-              : 'bg-error/10 border-error/30'
+              ? 'bg-green-500/10 border-green-500/30'
+              : 'bg-red-500/10 border-red-500/30'
           )}
         >
-          <div className={clsx('text-sm', lastResult.success ? 'text-success' : 'text-error')}>
-            {lastResult.success ? '✓' : '✗'} {lastResult.message}
+          <div className={clsx('flex items-center gap-2', lastResult.success ? 'text-green-400' : 'text-red-400')}>
+            <span>{lastResult.success ? '✓' : '✗'}</span>
+            <span>{lastResult.message}</span>
           </div>
           {lastResult.txDigest && (
-            <div className="text-xs text-muted-foreground mt-1 font-mono">
-              TX: {lastResult.txDigest}
+            <div className="text-white/30 mt-1 truncate">
+              tx: {lastResult.txDigest}
             </div>
           )}
         </div>
       )}
 
-      {/* Alternative faucet sources */}
+      {/* Alternative faucets - Terminal style */}
       {availableSources.length > 0 && selectedNetwork !== 'localnet' && (
         <div>
-          <div className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-            <span>Alternative Faucets</span>
-            <span className="text-xs text-muted-foreground font-normal">(External)</span>
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <span className="text-white/20 text-xs">──[</span>
+            <span className="text-xs text-white/40 uppercase tracking-wider">alternatives</span>
+            <span className="text-white/20 text-xs">]</span>
+            <span className="flex-1 border-t border-white/10 border-dashed" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {availableSources.map((source) => (
-                <div
-                  key={source.id}
-                  className="p-3 bg-muted/20 rounded-lg border border-border hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-sm">
-                      {source.type === 'web' ? '🌐' : source.type === 'discord' ? '💬' : '🔗'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">{source.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {source.description}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-primary font-medium">
-                        {source.perRequestAmount}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {source.dailyLimit}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => source.url && openExternalFaucet(source.url)}
-                      className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                  </div>
+              <div
+                key={source.id}
+                className="flex items-center gap-2 px-3 py-2 hover:bg-white/[0.02] transition-colors cursor-pointer group border-l-2 border-l-transparent hover:border-l-white/20"
+                onClick={() => source.url && openExternalFaucet(source.url)}
+              >
+                <span className="text-sm flex-shrink-0">
+                  {source.type === 'web' ? '🌐' : source.type === 'discord' ? '💬' : '🔗'}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs text-white/70 group-hover:text-white transition-colors">
+                    {source.name}
+                  </span>
                 </div>
-              ))}
+                <span className="text-[10px] text-[#4da2ff]">{source.perRequestAmount}</span>
+                <span className="text-[10px] text-white/30">{source.dailyLimit}</span>
+                <span className="text-[10px] text-white/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  [open]
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Tips */}
-      <div className="p-3 bg-muted/20 rounded-lg text-xs text-muted-foreground">
-        <div className="font-medium text-foreground mb-1">💡 Tips</div>
-        <ul className="list-disc list-inside space-y-0.5">
-          <li>Official faucet has rate limits (~10/day) - try alternatives if blocked</li>
-          <li>Rate limited? Wait a few minutes or use web/Discord faucets</li>
-          <li>Discord faucet (#devnet-faucet or #testnet-faucet) for larger amounts</li>
-          <li>Mainnet has no faucets - purchase SUI on exchanges</li>
-        </ul>
+      {/* Terminal-style tips */}
+      <div className="px-3 py-2 border-t border-white/10 text-[10px] text-white/30">
+        <div className="mb-1"># tips:</div>
+        <div className="space-y-0.5 pl-2">
+          <div>- rate limit: ~10 req/day (official)</div>
+          <div>- discord: #devnet-faucet or #testnet-faucet</div>
+          <div>- mainnet: no faucets available</div>
+        </div>
       </div>
     </div>
   );

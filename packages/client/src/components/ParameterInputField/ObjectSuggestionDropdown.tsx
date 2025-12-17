@@ -96,7 +96,7 @@ export const ObjectSuggestionDropdown: React.FC<ObjectSuggestionDropdownProps> =
 
                 {/* Type badge for objects */}
                 {suggestion.metadata?.type && (
-                  <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-mono bg-gray-800 text-gray-400 rounded">
+                  <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-mono bg-gray-800 text-gray-400 rounded">
                     {suggestion.metadata.type.split('::').pop()?.replace(/<.*>/, '') || 'Object'}
                   </span>
                 )}

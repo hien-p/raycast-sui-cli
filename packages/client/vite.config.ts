@@ -22,25 +22,35 @@ export default defineConfig({
     // Enable code splitting for better caching
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
+          // Sui SDK - large library, separate chunk
+          if (id.includes('@mysten/sui') || id.includes('@mysten/bcs')) {
+            return 'vendor-sui';
+          }
           // Core React libraries
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router-dom/')) {
+            return 'vendor-react';
+          }
           // UI libraries
-          'vendor-ui': ['framer-motion', 'lucide-react', 'react-hot-toast'],
-          // Radix UI components (only loaded when needed)
-          'vendor-radix': [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-collapsible',
-            '@radix-ui/react-label',
-            '@radix-ui/react-progress',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-tabs',
-          ],
-          // WebGL background (lazy loaded)
-          'background': ['ogl'],
+          if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('react-hot-toast')) {
+            return 'vendor-ui';
+          }
+          // Radix UI components
+          if (id.includes('@radix-ui/react-')) {
+            return 'vendor-radix';
+          }
+          // WebGL background
+          if (id.includes('ogl')) {
+            return 'background';
+          }
           // State management
-          'vendor-state': ['zustand'],
+          if (id.includes('zustand')) {
+            return 'vendor-state';
+          }
+          // Lenis smooth scroll
+          if (id.includes('lenis')) {
+            return 'lenis';
+          }
         },
       },
     },

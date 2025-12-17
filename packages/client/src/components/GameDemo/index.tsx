@@ -267,8 +267,8 @@ export function GameDemo() {
         {/* Left: Container */}
         <div className="p-3 bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg space-y-3">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] font-mono font-bold">1</span>
-            <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">CONTAINER</span>
+            <span className="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs font-mono font-bold">1</span>
+            <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">CONTAINER</span>
           </div>
 
           {containerId ? (
@@ -280,7 +280,7 @@ export function GameDemo() {
                     <div className="text-xs font-mono text-cyan-400">Ready</div>
                     <button
                       onClick={() => copyToClipboard(containerId)}
-                      className="text-[10px] text-cyan-500/50 font-mono hover:text-cyan-400 flex items-center gap-1"
+                      className="text-xs text-cyan-500/50 font-mono hover:text-cyan-400 flex items-center gap-1"
                     >
                       {copiedId === containerId ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
                       {containerId.slice(0, 10)}...
@@ -297,7 +297,7 @@ export function GameDemo() {
                 </a>
               </div>
               <div className="mt-2 pt-2 border-t border-cyan-500/20">
-                <div className="text-[10px] text-cyan-500/50 font-mono">
+                <div className="text-xs text-cyan-500/50 font-mono">
                   FIELDS: <span className="text-cyan-400">{dynamicFields.length}</span>
                 </div>
               </div>
@@ -327,10 +327,10 @@ export function GameDemo() {
         <div className="p-3 bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] font-mono font-bold">2</span>
-              <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">YOUR_ITEMS</span>
+              <span className="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs font-mono font-bold">2</span>
+              <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">YOUR_ITEMS</span>
               {items.length > 0 && (
-                <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-[10px] font-mono">
+                <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-xs font-mono">
                   {items.length}
                 </span>
               )}
@@ -367,7 +367,7 @@ export function GameDemo() {
                   <button
                     onClick={() => handleAdd(item.objectId)}
                     disabled={!containerId || addingId === item.objectId}
-                    className="px-2 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded text-[10px] font-mono hover:bg-cyan-500/30 disabled:opacity-30 flex items-center gap-1"
+                    className="px-2 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded text-xs font-mono hover:bg-cyan-500/30 disabled:opacity-30 flex items-center gap-1"
                     title="Attach to Container"
                   >
                     {addingId === item.objectId ? <Spinner /> : (
@@ -377,7 +377,7 @@ export function GameDemo() {
                 </div>
               ))}
               {items.length > 50 && (
-                <div className="text-center text-[10px] text-cyan-500/40 font-mono py-1">
+                <div className="text-center text-xs text-cyan-500/40 font-mono py-1">
                   Showing 50 of {items.length}
                 </div>
               )}
@@ -390,10 +390,10 @@ export function GameDemo() {
       <div className="p-3 bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg space-y-3 mx-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] font-mono font-bold">3</span>
-            <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">DYNAMIC_FIELDS</span>
+            <span className="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs font-mono font-bold">3</span>
+            <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">DYNAMIC_FIELDS</span>
             {dynamicFields.length > 0 && (
-              <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-[10px] font-mono">
+              <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-xs font-mono">
                 {dynamicFields.length}
               </span>
             )}
@@ -410,7 +410,7 @@ export function GameDemo() {
             {containerId && (
               <button
                 onClick={() => navigate(`/app/dynamic-fields?objectId=${containerId}`)}
-                className="px-2 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded text-[10px] font-mono hover:bg-cyan-500/30"
+                className="px-2 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded text-xs font-mono hover:bg-cyan-500/30"
               >
                 Explorer →
               </button>
@@ -448,7 +448,7 @@ export function GameDemo() {
                     <span>🔗</span>
                     <div>
                       <div className="text-xs font-mono text-cyan-400">{typeName}</div>
-                      <div className="text-[9px] text-cyan-500/40 font-mono">
+                      <div className="text-xs text-cyan-500/40 font-mono">
                         key: {keyId.slice(0, 16)}...
                       </div>
                     </div>
@@ -457,7 +457,7 @@ export function GameDemo() {
                     <button
                       onClick={() => handleRemove(keyId)}
                       disabled={removingId === keyId}
-                      className="px-2 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded text-[10px] font-mono hover:bg-red-500/30 disabled:opacity-50 flex items-center gap-1"
+                      className="px-2 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded text-xs font-mono hover:bg-red-500/30 disabled:opacity-50 flex items-center gap-1"
                       title="Detach"
                     >
                       {removingId === keyId ? <Spinner /> : (
@@ -474,8 +474,8 @@ export function GameDemo() {
 
       {/* Code Snippet */}
       <div className="p-3 bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg mx-2">
-        <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">MOVE_CODE</span>
-        <div className="font-mono text-[10px] space-y-1 mt-2">
+        <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">MOVE_CODE</span>
+        <div className="font-mono text-xs space-y-1 mt-2">
           <div className="text-cyan-400">
             <span className="text-cyan-500/40">// Attach: </span>
             dynamic_field::add(&mut obj.id, key, value);

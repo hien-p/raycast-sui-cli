@@ -7,6 +7,7 @@ import { useScrollReveal, useActiveSection, scrollToSection } from '@/hooks/useS
 import { ScrollIndicator } from '@/components/ui/scroll-indicator';
 import { TypingText } from '@/components/ui/typing-text';
 import { GlitchText } from '@/components/ui/glitch-text';
+import { HandWrittenTitle } from '@/components/ui/hand-writing-text';
 import { ProgressDots } from '@/components/ui/progress-dots';
 import { checkConnection } from '@/api/client';
 import {
@@ -260,6 +261,13 @@ function HeroSection({ onScrollClick }: { onScrollClick: () => void }) {
 
         {/* Scroll Indicator */}
         <ScrollIndicator onClick={onScrollClick} />
+
+        {/* Hand Written Title - Build from First Mover */}
+        <HandWrittenTitle
+          title="Build from First Mover"
+          subtitle="@harry_phan06"
+          subtitleLink="https://x.com/harry_phan06"
+        />
       </div>
     </section>
   );

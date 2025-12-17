@@ -169,28 +169,29 @@ export function CoinList() {
   }
 
   return (
-    <div className="px-2 py-2">
-      {/* Header */}
-      <div className="mb-3 px-3 py-2 bg-muted/30 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs text-muted-foreground">Coins owned by</div>
-            <div
-              className="text-sm font-mono text-foreground truncate cursor-pointer hover:text-primary"
+    <div className="px-2 py-2 font-mono">
+      {/* Terminal-style header */}
+      <div className="mb-3 px-3 py-2 bg-black/40 border border-white/10 rounded-lg">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-[#4da2ff]">$</span>
+            <span className="text-white/60">sui client coins</span>
+            <span className="text-white/30">|</span>
+            <span
+              className="text-white/50 hover:text-white/70 cursor-pointer transition-colors"
               onClick={() => copyToClipboard(activeAddress.address, 'Address')}
             >
-              {activeAddress.alias || `${activeAddress.address.slice(0, 16)}...`}
-            </div>
+              {activeAddress.alias || `${activeAddress.address.slice(0, 12)}...`}
+            </span>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Total Types</div>
-            <div className="text-sm font-medium text-foreground">{coinData.totalCoinTypes}</div>
-          </div>
+          <span className="text-white/40">
+            {coinData.totalCoinTypes} type{coinData.totalCoinTypes !== 1 ? 's' : ''}
+          </span>
         </div>
       </div>
 
-      {/* Coin Groups */}
-      <div className="space-y-2">
+      {/* Coin Groups - Terminal style */}
+      <div className="space-y-1">
         {filteredGroups.map((group) => (
           <CoinGroupCard
             key={group.coinType}
@@ -205,10 +206,10 @@ export function CoinList() {
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="mt-3 px-3 py-2 bg-muted/20 rounded-lg flex items-center justify-between text-xs text-muted-foreground">
-        <span>{coinData.totalCoins} total coin objects</span>
-        <span>Click group to expand</span>
+      {/* Terminal-style footer */}
+      <div className="mt-3 px-3 py-2 border-t border-white/10 flex items-center justify-between text-[10px] text-white/30">
+        <span>{coinData.totalCoins} coin objects</span>
+        <span># click to expand</span>
       </div>
     </div>
   );
@@ -234,8 +235,6 @@ function CoinGroupCard({
   onMerge,
   onCopy,
 }: CoinGroupCardProps) {
-  const colorClass = getCoinColor(group.coinType);
-
   // Truncate package ID for display
   const truncatedPackageId = group.packageId
     ? group.packageId.length > 16
@@ -244,96 +243,91 @@ function CoinGroupCard({
     : '';
 
   return (
-    <div className="border border-border/50 rounded-lg overflow-hidden">
-      {/* Group Header */}
+    <div className="border border-white/10 rounded overflow-hidden">
+      {/* Group Header - Terminal style */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors"
+        className={`w-full flex items-center justify-between px-3 py-2 transition-all duration-150 ${
+          isExpanded
+            ? 'bg-white/5 border-l-2 border-l-[#4da2ff]'
+            : 'bg-black/30 border-l-2 border-l-transparent hover:bg-white/[0.02] hover:border-l-white/20'
+        }`}
       >
-        <div className="flex items-center gap-3">
-          {/* Icon - use iconUrl if available */}
+        <div className="flex items-center gap-2">
+          {/* Expand indicator */}
+          <span className={`text-xs transition-opacity ${isExpanded ? 'text-[#4da2ff]' : 'text-white/30'}`}>
+            {isExpanded ? '▼' : '▶'}
+          </span>
+
+          {/* Icon */}
           {group.iconUrl ? (
             <img
               src={group.iconUrl}
               alt={group.symbol}
-              className="w-8 h-8 rounded-full"
+              className="w-5 h-5 rounded-full"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
           ) : (
-            <span className="text-2xl w-8 h-8 flex items-center justify-center">
-              {group.coinType.includes('sui::SUI') ? 'S' : group.symbol[0]}
+            <span className="text-sm w-5 text-center">
+              {group.coinType.includes('sui::SUI') ? '💧' : '🪙'}
             </span>
           )}
+
           <div className="text-left">
             <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${colorClass}`}>
+              <span className={`text-sm ${isExpanded ? 'text-white' : 'text-white/70'}`}>
                 {group.symbol}
               </span>
-              {/* Verified badge */}
               {group.isVerified && (
-                <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[10px] font-medium">
-                  ✓ Verified
-                </span>
+                <span className="text-[10px] text-green-400">✓</span>
               )}
-              <span className="text-xs text-muted-foreground">
-                ({group.coinCount} coin{group.coinCount > 1 ? 's' : ''})
+              <span className="text-[10px] text-white/30">
+                ({group.coinCount})
               </span>
             </div>
-            <div className="text-lg font-medium text-foreground">
-              {group.formattedBalance} {group.symbol}
+            <div className={`text-xs ${isExpanded ? 'text-[#4da2ff]' : 'text-white/50'}`}>
+              {group.formattedBalance} <span className="text-white/30">{group.symbol}</span>
             </div>
-            {/* Package info */}
-            {group.packageId && (
-              <div
-                className="text-[10px] font-mono text-muted-foreground/70 flex items-center gap-1 cursor-pointer hover:text-muted-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCopy(group.packageId, 'Package ID');
-                }}
-                title={`Package: ${group.packageId}`}
-              >
-                <span>📦</span>
-                <span>{truncatedPackageId}</span>
-                {group.moduleName && <span className="text-muted-foreground/50">::{group.moduleName}</span>}
-              </div>
-            )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Merge button (only if > 1 coin) */}
+          {/* Merge button */}
           {group.coinCount > 1 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onMerge();
               }}
-              className="px-3 py-1.5 text-xs bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500/30 transition-colors"
+              className="px-2 py-0.5 text-[10px] text-orange-400/70 hover:text-orange-400 hover:bg-orange-500/20 rounded transition-colors"
             >
-              Merge All
+              [merge]
             </button>
           )}
 
-          <svg
-            className={`w-5 h-5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          {/* Package info */}
+          {group.packageId && (
+            <span
+              className="text-[10px] text-white/20 hover:text-white/40 cursor-pointer hidden sm:block"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCopy(group.packageId, 'Package ID');
+              }}
+            >
+              {truncatedPackageId}
+            </span>
+          )}
         </div>
       </button>
 
-      {/* Expanded Coin List */}
+      {/* Expanded Coin List - Terminal style */}
       {isExpanded && (
-        <div className="divide-y divide-border/30">
-          {/* Description (if available) */}
+        <div className="bg-black/20">
           {group.description && (
-            <div className="px-4 py-2 bg-muted/10 text-xs text-muted-foreground italic">
-              {group.description}
+            <div className="px-4 py-1.5 text-[10px] text-white/30 border-b border-white/5">
+              // {group.description}
             </div>
           )}
           {group.coins.map((coin) => (
@@ -367,41 +361,39 @@ function CoinItem({ coin, symbol, decimals, onTransfer, onSplit, onCopy }: CoinI
   const formattedBalance = formatBalance(coin.balance, decimals);
 
   return (
-    <div className="px-4 py-3 hover:bg-muted/20 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <div
-            className="text-sm font-mono text-foreground truncate cursor-pointer hover:text-primary"
-            onClick={() => onCopy(coin.coinObjectId, 'Coin ID')}
-            title="Click to copy"
-          >
-            {coin.coinObjectId.slice(0, 16)}...{coin.coinObjectId.slice(-8)}
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-sm font-medium text-foreground">
-              {formattedBalance} {symbol}
-            </span>
-            <span className="text-xs text-muted-foreground">v{coin.version}</span>
-          </div>
-        </div>
+    <div className="flex items-center gap-2 px-4 py-2 hover:bg-white/[0.02] transition-colors group border-l-2 border-l-transparent hover:border-l-white/10">
+      {/* Indent marker */}
+      <span className="text-white/10 text-xs">├─</span>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onTransfer}
-            className="px-2.5 py-1.5 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
-            title="Transfer"
-          >
-            Send
-          </button>
-          <button
-            onClick={onSplit}
-            className="px-2.5 py-1.5 text-xs bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
-            title="Split"
-          >
-            Split
-          </button>
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-[10px] text-white/40 truncate cursor-pointer hover:text-white/60"
+          onClick={() => onCopy(coin.coinObjectId, 'Coin ID')}
+        >
+          {coin.coinObjectId}
         </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-white/70">
+            {formattedBalance} <span className="text-white/30">{symbol}</span>
+          </span>
+          <span className="text-[10px] text-white/20">v{coin.version}</span>
+        </div>
+      </div>
+
+      {/* Actions - show on hover */}
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={onTransfer}
+          className="px-1.5 py-0.5 text-[10px] text-white/40 hover:text-white/70 hover:bg-white/10 rounded transition-colors"
+        >
+          [send]
+        </button>
+        <button
+          onClick={onSplit}
+          className="px-1.5 py-0.5 text-[10px] text-white/40 hover:text-white/70 hover:bg-white/10 rounded transition-colors"
+        >
+          [split]
+        </button>
       </div>
     </div>
   );

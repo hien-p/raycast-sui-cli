@@ -75,10 +75,10 @@ export const VectorU8Converter: React.FC<VectorU8ConverterProps> = ({
         <div className="flex">
           <button
             onClick={() => setMode('string')}
-            className={`px-1.5 py-1 text-[10px] rounded-l border-r-0 transition-colors ${
+            className={`px-1.5 py-1 text-xs rounded-l border-r-0 transition-colors ${
               mode === 'string'
                 ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                : 'bg-black/50 text-green-500/50 border border-green-500/30 hover:bg-green-500/10'
+                : 'bg-black/50 text-green-400/80 border border-green-500/30 hover:bg-green-500/10'
             }`}
             title="String input"
           >
@@ -86,10 +86,10 @@ export const VectorU8Converter: React.FC<VectorU8ConverterProps> = ({
           </button>
           <button
             onClick={() => setMode('hex')}
-            className={`px-1.5 py-1 text-[10px] rounded-r transition-colors ${
+            className={`px-1.5 py-1 text-xs rounded-r transition-colors ${
               mode === 'hex'
                 ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                : 'bg-black/50 text-green-500/50 border border-green-500/30 hover:bg-green-500/10'
+                : 'bg-black/50 text-green-400/80 border border-green-500/30 hover:bg-green-500/10'
             }`}
             title="Hex input"
           >
@@ -111,8 +111,8 @@ export const VectorU8Converter: React.FC<VectorU8ConverterProps> = ({
       {value && (
         <div className="flex items-center gap-1">
           <div className="flex-1 flex items-center gap-1 px-1.5 py-1 bg-black/30 border border-green-500/20 rounded min-w-0">
-            <ArrowRight className="w-2.5 h-2.5 text-green-500/50 flex-shrink-0" />
-            <code className={`text-[10px] font-mono truncate ${isValidPreview ? 'text-green-400' : 'text-red-400'}`}>
+            <ArrowRight className="w-2.5 h-2.5 text-green-400/80 flex-shrink-0" />
+            <code className={`text-xs font-mono truncate ${isValidPreview ? 'text-green-400' : 'text-red-400'}`}>
               {preview || '...'}
             </code>
           </div>
@@ -122,7 +122,7 @@ export const VectorU8Converter: React.FC<VectorU8ConverterProps> = ({
             disabled={!isValidPreview}
             className={`p-1 rounded transition-colors ${
               isValidPreview
-                ? 'bg-black/50 hover:bg-green-500/20 text-green-500/70'
+                ? 'bg-black/50 hover:bg-green-500/20 text-green-400'
                 : 'bg-black/30 text-green-500/20 cursor-not-allowed'
             }`}
             title="Copy"
@@ -133,7 +133,7 @@ export const VectorU8Converter: React.FC<VectorU8ConverterProps> = ({
           <button
             onClick={handleConvert}
             disabled={!isValidPreview}
-            className={`px-2 py-1 text-[10px] rounded font-medium transition-colors ${
+            className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
               isValidPreview
                 ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                 : 'bg-black/30 text-green-500/20 cursor-not-allowed'
@@ -145,7 +145,7 @@ export const VectorU8Converter: React.FC<VectorU8ConverterProps> = ({
       )}
 
       {/* Help */}
-      <div className="text-[10px] text-green-500/40">
+      <div className="text-xs text-green-500/40">
         {mode === 'string' ? 'UTF-8 encoded' : 'Hex → bytes'}
       </div>
     </div>

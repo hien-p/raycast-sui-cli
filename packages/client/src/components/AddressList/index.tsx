@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { useAppStore } from '@/stores/useAppStore';
 import { Spinner } from '../shared/Spinner';
@@ -75,10 +75,10 @@ const AddressCard = memo(({
   return (
     <div
       className={clsx(
-        'rounded-lg transition-all border-l-2 relative',
+        'transition-all duration-150 relative group',
         addr.isActive
-          ? 'bg-accent/10 border-accent'
-          : 'hover:bg-background-hover border-transparent'
+          ? 'bg-white/5 border-l-2 border-l-[#4da2ff]'
+          : 'border-l-2 border-l-transparent hover:bg-white/[0.02] hover:border-l-white/20'
       )}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -86,46 +86,53 @@ const AddressCard = memo(({
       }}
     >
       <div
-        className="flex items-center gap-3 px-3 py-3 cursor-pointer"
+        className="flex items-center gap-2 px-3 py-2 cursor-pointer"
         onClick={() => !addr.isActive && !isEditing && onSwitch(addr.address)}
       >
-        {/* Avatar with tier icon or default */}
-        <div className={clsx(
-          'w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0',
-          addr.isCommunityMember && tierStyle
-            ? `${tierStyle.bg} ${tierStyle.glow || ''}`
-            : 'bg-background-tertiary'
+        {/* Terminal selection indicator */}
+        <span className={clsx(
+          'text-xs font-bold w-3 flex-shrink-0 transition-opacity',
+          addr.isActive ? 'text-[#4da2ff] opacity-100' : 'opacity-0'
+        )}>
+          &gt;
+        </span>
+
+        {/* Avatar with tier icon */}
+        <span className={clsx(
+          'text-base flex-shrink-0 w-5 text-center',
+          addr.isActive && 'scale-110'
         )}>
           {addr.isCommunityMember && addr.tierIcon ? addr.tierIcon : '👤'}
-        </div>
+        </span>
 
         {/* Address info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="text-sm font-medium text-text-primary truncate">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={clsx(
+              'text-sm truncate transition-colors',
+              addr.isActive ? 'text-white' : 'text-white/70'
+            )}>
               {addr.alias || `${addr.address.slice(0, 8)}...${addr.address.slice(-6)}`}
             </span>
             {addr.isActive && (
-              <span className="px-1.5 py-0.5 bg-accent/20 text-accent text-xs rounded font-medium">
-                Active
+              <span className="px-1.5 py-0.5 bg-[#4da2ff]/20 text-[#4da2ff] text-[10px] rounded border border-[#4da2ff]/30">
+                ACTIVE
               </span>
             )}
-            {/* Community member badge with tier */}
             {addr.isCommunityMember && tierStyle && (
               <span className={clsx(
-                'px-1.5 py-0.5 text-xs rounded font-medium flex items-center gap-1',
+                'px-1.5 py-0.5 text-[10px] rounded flex items-center gap-1',
                 tierStyle.bg,
-                tierStyle.text,
-                tierStyle.glow
+                tierStyle.text
               )}>
-                {addr.tierIcon} {addr.tierName}
+                {addr.tierName}
               </span>
             )}
           </div>
 
           {/* Label with inline edit */}
           {isEditing && editingField === 'label' ? (
-            <div className="flex items-center gap-1 mb-1" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
               <input
                 ref={editInputRef}
                 type="text"
@@ -136,8 +143,8 @@ const AddressCard = memo(({
                   if (e.key === 'Escape') cancelEdit();
                 }}
                 onBlur={saveEdit}
-                className="flex-1 px-1.5 py-0.5 bg-background-primary border border-accent rounded text-xs text-text-primary"
-                placeholder="Label..."
+                className="flex-1 px-2 py-0.5 bg-black/30 border border-[#4da2ff]/50 rounded text-xs text-white"
+                placeholder="label..."
               />
             </div>
           ) : addrMetadata?.label ? (
@@ -146,15 +153,15 @@ const AddressCard = memo(({
                 e.stopPropagation();
                 startEdit(addr.address, 'label', addrMetadata.label);
               }}
-              className="flex items-center gap-1 text-xs text-text-tertiary hover:text-accent cursor-pointer mb-1"
+              className="text-[10px] text-white/40 hover:text-white/60 cursor-pointer mt-0.5"
             >
-              <span className="px-1.5 py-0.5 bg-accent/10 rounded">{addrMetadata.label}</span>
+              #{addrMetadata.label}
             </div>
           ) : null}
 
-          {/* Notes with inline edit */}
+          {/* Notes */}
           {isEditing && editingField === 'notes' ? (
-            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
               <input
                 ref={editInputRef}
                 type="text"
@@ -165,8 +172,8 @@ const AddressCard = memo(({
                   if (e.key === 'Escape') cancelEdit();
                 }}
                 onBlur={saveEdit}
-                className="flex-1 px-1.5 py-0.5 bg-background-primary border border-accent rounded text-xs text-text-primary"
-                placeholder="Notes..."
+                className="flex-1 px-2 py-0.5 bg-black/30 border border-[#4da2ff]/50 rounded text-xs text-white"
+                placeholder="notes..."
               />
             </div>
           ) : addrMetadata?.notes ? (
@@ -175,98 +182,81 @@ const AddressCard = memo(({
                 e.stopPropagation();
                 startEdit(addr.address, 'notes', addrMetadata.notes);
               }}
-              className="text-xs text-text-tertiary hover:text-accent cursor-pointer"
+              className="text-[10px] text-white/30 hover:text-white/50 cursor-pointer truncate"
             >
-              <span className="truncate">{addrMetadata.notes}</span>
+              // {addrMetadata.notes}
             </div>
           ) : null}
 
-          <div className="text-xs text-text-secondary font-mono truncate mt-1">
+          <div className={clsx(
+            'text-xs truncate mt-0.5',
+            addr.isActive ? 'text-white/50' : 'text-white/30'
+          )}>
             {addr.address}
           </div>
         </div>
 
         {/* Balance */}
         <div className="text-right flex-shrink-0">
-          <div className="text-sm font-medium text-text-primary">
-            {formatBalance(addr.balance)} SUI
+          <div className={clsx(
+            'text-sm',
+            addr.isActive ? 'text-[#4da2ff]' : 'text-white/60'
+          )}>
+            {formatBalance(addr.balance)} <span className="text-white/40">SUI</span>
           </div>
-          {addr.isCommunityMember && (
-            <div className="text-xs text-text-tertiary">
-              Member
-            </div>
-          )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {/* View Objects button */}
-          <Tooltip content="View objects owned by this address" side="bottom">
+        {/* Actions - show on hover */}
+        <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Tooltip content="objects" side="bottom">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onViewObjects(addr.address);
               }}
-              className="p-2 hover:bg-accent/10 rounded transition-colors group"
+              className="p-1.5 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white/70 text-[10px]"
             >
-              <svg className="w-4 h-4 text-text-tertiary group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+              [obj]
             </button>
           </Tooltip>
 
-          {/* Explorer button */}
-          <Tooltip content={`View on explorer (${currentNetwork})`} side="bottom">
+          <Tooltip content="explorer" side="bottom">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenExplorer(addr.address);
               }}
-              className="p-2 hover:bg-accent/10 rounded transition-colors group"
+              className="p-1.5 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white/70 text-[10px]"
             >
-              <svg className="w-4 h-4 text-text-tertiary group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
+              [exp]
             </button>
           </Tooltip>
 
-          {/* Copy button */}
-          <Tooltip content="Copy address" side="bottom">
+          <Tooltip content="copy" side="bottom">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onCopy(addr.address);
               }}
-              className="p-2 hover:bg-background-active rounded transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white/70 text-[10px]"
             >
-              <svg className="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
+              [cp]
             </button>
           </Tooltip>
 
-          {/* Delete button (disabled for active address) */}
-          <Tooltip content={addr.isActive ? 'Cannot delete active address' : 'Delete address'} side="bottom">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!addr.isActive) {
+          {!addr.isActive && (
+            <Tooltip content="delete" side="bottom">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
                   onDelete(addr.address, addr.alias);
-                }
-              }}
-              disabled={addr.isActive}
-              className={clsx(
-                'p-2 rounded transition-colors',
-                addr.isActive
-                  ? 'opacity-30 cursor-not-allowed'
-                  : 'hover:bg-red-500/10 text-red-400'
-              )}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </Tooltip>
+                }}
+                className="p-1.5 hover:bg-red-500/20 rounded transition-colors text-red-400/60 hover:text-red-400 text-[10px]"
+              >
+                [rm]
+              </button>
+            </Tooltip>
+          )}
         </div>
       </div>
     </div>
@@ -293,6 +283,7 @@ const AddressCard = memo(({
 
 export function AddressList() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     addresses,
     environments,
@@ -308,7 +299,9 @@ export function AddressList() {
   const activeEnv = environments.find((e) => e.isActive);
   const currentNetwork: NetworkType = detectNetwork(activeEnv?.alias, activeEnv?.rpc);
 
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  // URL params for action
+  const actionParam = searchParams.get('action');
+  const [showCreateForm, setShowCreateForm] = useState(() => actionParam === 'new');
   const [newAlias, setNewAlias] = useState('');
   const [keyScheme, setKeyScheme] = useState<'ed25519' | 'secp256k1' | 'secp256r1'>('ed25519');
 
@@ -319,7 +312,16 @@ export function AddressList() {
   const editInputRef = useRef<HTMLInputElement>(null);
 
   // Export/Import state
-  const [showExportImport, setShowExportImport] = useState(false);
+  const [showExportImport, setShowExportImport] = useState(() => actionParam === 'import');
+
+  // Sync state when URL changes (e.g., from FileTree navigation)
+  useEffect(() => {
+    if (actionParam === 'new' && !showCreateForm) {
+      setShowCreateForm(true);
+    } else if (actionParam === 'import' && !showExportImport) {
+      setShowExportImport(true);
+    }
+  }, [actionParam]);
 
   // Address metadata state
   const [metadata, setMetadata] = useState<Map<string, AddressMetadata>>(new Map());
@@ -575,65 +577,57 @@ export function AddressList() {
   }
 
   return (
-    <div className="px-2 py-2">
-      {/* Stats header with Export/Import */}
+    <div className="px-2 py-2 font-mono">
+      {/* Terminal-style header */}
       {addresses.length > 0 && (
         <div className="mb-3 space-y-2">
-          <div className="px-3 py-2 bg-background-tertiary/50 rounded-lg flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-text-secondary">
-                {sortedAddresses.length !== addresses.length
-                  ? `${sortedAddresses.length} of ${addresses.length}`
-                  : `${addresses.length}`} wallet{addresses.length !== 1 ? 's' : ''}
-              </span>
-              {isSearching && (
-                <svg className="w-3 h-3 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {memberCount > 0 && (
-                <span
-                  className="flex items-center gap-1 text-blue-400 cursor-help"
-                  title={`${memberCount} wallet${memberCount !== 1 ? 's' : ''} joined Sui CLI Web community`}
-                >
-                  <span className="text-sm">🌊</span>
-                  <span className="text-xs">{memberCount} community member{memberCount !== 1 ? 's' : ''}</span>
+          {/* ASCII header */}
+          <div className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-3">
+                <span className="text-[#4da2ff]">$</span>
+                <span className="text-white/60">sui client addresses</span>
+                <span className="text-white/30">|</span>
+                <span className="text-white/50">
+                  {sortedAddresses.length !== addresses.length
+                    ? `${sortedAddresses.length}/${addresses.length}`
+                    : `${addresses.length}`} found
                 </span>
-              )}
-              <button
-                onClick={() => setShowExportImport(!showExportImport)}
-                className="flex items-center gap-1 text-accent hover:text-accent-hover transition-colors"
-                title="Export/Import metadata"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-              </button>
+                {isSearching && (
+                  <span className="text-yellow-400 animate-pulse">...</span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {memberCount > 0 && (
+                  <span className="flex items-center gap-1.5 text-[#4da2ff]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4da2ff] animate-pulse" />
+                    <span>{memberCount} member{memberCount !== 1 ? 's' : ''}</span>
+                  </span>
+                )}
+                <button
+                  onClick={() => setShowExportImport(!showExportImport)}
+                  className="px-2 py-0.5 text-white/40 hover:text-white/70 hover:bg-white/5 rounded transition-colors"
+                  title="Export/Import metadata"
+                >
+                  [backup]
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Export/Import panel */}
+          {/* Export/Import panel - Terminal style */}
           {showExportImport && (
-            <div className="px-3 py-2 bg-background-tertiary/30 rounded-lg space-y-2">
-              <div className="text-xs font-medium text-text-primary mb-1">Backup & Restore</div>
+            <div className="px-3 py-2 bg-black/30 border border-white/10 rounded-lg space-y-2">
+              <div className="text-xs text-white/40 uppercase tracking-wider">backup &amp; restore</div>
               <div className="flex gap-2">
                 <button
                   onClick={handleExport}
-                  className="flex-1 px-3 py-1.5 bg-accent/10 hover:bg-accent/20 text-accent rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                  className="flex-1 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded text-xs transition-colors border border-white/10"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  Export JSON
+                  $ export --json
                 </button>
-                <label className="flex-1 px-3 py-1.5 bg-accent/10 hover:bg-accent/20 text-accent rounded text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Import JSON
+                <label className="flex-1 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded text-xs transition-colors border border-white/10 cursor-pointer text-center">
+                  $ import --json
                   <input
                     type="file"
                     accept=".json"
@@ -642,60 +636,60 @@ export function AddressList() {
                   />
                 </label>
               </div>
-              <p className="text-[10px] text-text-tertiary">
-                Backup labels, notes, and custom metadata for all addresses
+              <p className="text-[10px] text-white/30">
+                # backup labels, notes, and metadata
               </p>
             </div>
           )}
         </div>
       )}
 
-      {/* Create new address button/form */}
+      {/* Create new address - Terminal style */}
       {showCreateForm ? (
-        <div className="mb-4 p-4 bg-card/50 border border-border/30 rounded-lg">
-          <div className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-            <span className="text-lg">✨</span>
-            Create New Wallet
+        <div className="mb-4 p-3 bg-black/40 border border-white/10 rounded-lg">
+          <div className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="text-[#4da2ff]">&gt;</span>
+            sui keytool generate
           </div>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Wallet Name (optional)
+              <label className="block text-[10px] text-white/40 uppercase tracking-wider mb-1">
+                --alias
               </label>
               <input
                 type="text"
                 value={newAlias}
                 onChange={(e) => setNewAlias(e.target.value)}
-                placeholder="e.g., my-trading-wallet"
-                className="w-full px-3 py-2.5 bg-secondary/50 border border-border/50 rounded-lg text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent/50 focus:bg-secondary transition-colors"
+                placeholder="my-wallet"
+                className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[#4da2ff]/50 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Key Scheme
+              <label className="block text-[10px] text-white/40 uppercase tracking-wider mb-1">
+                --scheme
               </label>
               <select
                 value={keyScheme}
                 onChange={(e) => setKeyScheme(e.target.value as 'ed25519' | 'secp256k1' | 'secp256r1')}
-                className="w-full px-3 py-2.5 bg-secondary/50 border border-border/50 rounded-lg text-sm text-foreground focus:outline-none focus:border-accent/50 focus:bg-secondary transition-colors cursor-pointer"
+                className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-[#4da2ff]/50 transition-colors cursor-pointer"
               >
-                <option value="ed25519">Ed25519 (Recommended)</option>
-                <option value="secp256k1">Secp256k1</option>
-                <option value="secp256r1">Secp256r1</option>
+                <option value="ed25519">ed25519 (recommended)</option>
+                <option value="secp256k1">secp256k1</option>
+                <option value="secp256r1">secp256r1</option>
               </select>
             </div>
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleCreate}
-                className="flex-1 px-4 py-2.5 bg-accent/90 hover:bg-accent text-accent-foreground rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:shadow-accent/20"
+                className="flex-1 px-3 py-2 bg-[#4da2ff]/20 hover:bg-[#4da2ff]/30 text-[#4da2ff] rounded text-xs transition-colors border border-[#4da2ff]/30"
               >
-                Create Wallet
+                [execute]
               </button>
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="px-4 py-2.5 bg-secondary/50 hover:bg-secondary text-muted-foreground rounded-lg text-sm font-medium transition-colors border border-border/30"
+                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white/50 rounded text-xs transition-colors border border-white/10"
               >
-                Cancel
+                [cancel]
               </button>
             </div>
           </div>
@@ -703,12 +697,10 @@ export function AddressList() {
       ) : (
         <button
           onClick={() => setShowCreateForm(true)}
-          className="w-full mb-3 px-4 py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-accent hover:bg-accent/10 hover:border-accent/30 rounded-lg transition-all border border-border/30 bg-card/30"
+          className="w-full mb-3 px-3 py-2 flex items-center justify-center gap-2 text-xs text-white/50 hover:text-white/70 hover:bg-white/5 rounded transition-all border border-dashed border-white/20 hover:border-white/30"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Create New Wallet
+          <span className="text-[#4da2ff]">+</span>
+          new address
         </button>
       )}
 
@@ -756,7 +748,7 @@ export function AddressList() {
       {/* Legend */}
       {memberCount > 0 && (
         <div className="mt-4 px-3 py-2 border-t border-border/50">
-          <div className="text-xs text-text-tertiary mb-2">Tier Legend:</div>
+          <div className="text-xs text-muted-foreground mb-2">Tier Legend:</div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 text-blue-400 rounded">
               💧 Droplet

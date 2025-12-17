@@ -1,5 +1,5 @@
 # Sui CLI Web - Robots.txt
-# https://www.harriweb3.dev
+# https://cli.firstmovers.io
 
 User-agent: *
 Allow: /
@@ -7,7 +7,7 @@ Allow: /setup
 Disallow: /app/
 
 # Sitemap
-Sitemap: https://www.harriweb3.dev/sitemap.xml
+Sitemap: https://cli.firstmovers.io/sitemap.xml
 
 # Crawl-delay for polite crawling
 Crawl-delay: 1

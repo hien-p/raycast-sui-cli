@@ -6,16 +6,16 @@
 
   <!-- Homepage - Primary landing page -->
   <url>
-    <loc>https://www.harriweb3.dev/</loc>
-    <lastmod>2025-12-05</lastmod>
+    <loc>https://cli.firstmovers.io/</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Setup/Installation Guide -->
   <url>
-    <loc>https://www.harriweb3.dev/setup</loc>
-    <lastmod>2025-12-05</lastmod>
+    <loc>https://cli.firstmovers.io/setup</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

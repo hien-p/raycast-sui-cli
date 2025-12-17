@@ -179,7 +179,7 @@ export function DynamicFieldExplorer() {
       {/* Search Input */}
       <div className="mb-4 px-2">
         <div className="p-3 bg-black/40 backdrop-blur-md rounded-lg border border-cyan-500/30">
-          <label className="block text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider mb-2">
+          <label className="block text-xs text-cyan-500/70 font-mono uppercase tracking-wider mb-2">
             PARENT_OBJECT_ID
           </label>
           <div className="flex gap-2">
@@ -221,7 +221,7 @@ export function DynamicFieldExplorer() {
           <div className="mb-4 px-2">
             <div className="p-3 bg-black/40 backdrop-blur-md rounded-lg border border-cyan-500/30">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">
+                <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">
                   PARENT_OBJECT
                 </span>
                 <div className="flex items-center gap-1">
@@ -282,8 +282,8 @@ export function DynamicFieldExplorer() {
                         <span className={`text-xs font-mono ${typeStyle.colorClass}`}>
                           {shortType}
                         </span>
-                        <span className="text-[10px] text-white/30">•</span>
-                        <span className="text-[10px] text-white/50 font-mono">
+                        <span className="text-xs text-white/30">•</span>
+                        <span className="text-xs text-white/50 font-mono">
                           Field {index + 1}
                         </span>
                       </div>
@@ -303,17 +303,17 @@ export function DynamicFieldExplorer() {
                       <div className="pt-3">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-lg">🔑</span>
-                          <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">
+                          <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">
                             KEY
                           </span>
                         </div>
                         <div className="p-2 bg-black/30 rounded-lg border border-white/10 space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white/50 font-mono">Type</span>
+                            <span className="text-xs text-white/50 font-mono">Type</span>
                             <span className="text-xs font-mono text-cyan-400">{keyInfo.displayType}</span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10px] text-white/50 font-mono">Value</span>
+                            <span className="text-xs text-white/50 font-mono">Value</span>
                             <div
                               className="text-xs font-mono text-white/80 truncate cursor-pointer hover:text-cyan-400 flex items-center gap-1 max-w-[200px]"
                               onClick={(e) => {
@@ -337,13 +337,13 @@ export function DynamicFieldExplorer() {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-lg">{typeStyle.icon}</span>
-                          <span className="text-[10px] text-cyan-500/70 font-mono uppercase tracking-wider">
+                          <span className="text-xs text-cyan-500/70 font-mono uppercase tracking-wider">
                             VALUE (stored object)
                           </span>
                         </div>
                         <div className="p-2 bg-black/30 rounded-lg border border-white/10 space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10px] text-white/50 font-mono">Object ID</span>
+                            <span className="text-xs text-white/50 font-mono">Object ID</span>
                             <div
                               className="text-xs font-mono text-white/80 truncate cursor-pointer hover:text-cyan-400 flex items-center gap-1 max-w-[200px]"
                               onClick={(e) => {
@@ -356,16 +356,16 @@ export function DynamicFieldExplorer() {
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white/50 font-mono">Type</span>
+                            <span className="text-xs text-white/50 font-mono">Type</span>
                             <span className={`text-xs font-mono ${typeStyle.colorClass}`}>{shortType}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white/50 font-mono">Version</span>
+                            <span className="text-xs text-white/50 font-mono">Version</span>
                             <span className="text-xs font-mono text-white/70">{field.version}</span>
                           </div>
                           {getPackageId(field.objectType) && (
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-white/50 font-mono">Package</span>
+                              <span className="text-xs text-white/50 font-mono">Package</span>
                               <span className="text-xs font-mono text-white/50">{getPackageId(field.objectType)}</span>
                             </div>
                           )}
@@ -491,7 +491,7 @@ export function DynamicFieldExplorer() {
             </div>
 
             <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10 text-left">
-              <div className="text-[10px] text-white/50 font-mono uppercase tracking-wider mb-2">
+              <div className="text-xs text-white/50 font-mono uppercase tracking-wider mb-2">
                 What you'll see:
               </div>
               <div className="text-xs text-white/60 space-y-1.5">

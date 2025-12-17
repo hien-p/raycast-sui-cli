@@ -22,25 +22,55 @@ export function CommandItem({
       onClick={onClick}
       data-selected={isSelected}
       className={clsx(
-        'relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer',
-        'transition-all duration-200 group',
+        'relative flex items-center gap-2 px-3 py-2 cursor-pointer',
+        'transition-all duration-150 group font-mono',
         isSelected
-          ? 'bg-gradient-to-r from-accent/20 via-accent/15 to-accent/20 border border-accent/40 shadow-lg shadow-accent/10'
-          : 'hover:bg-gradient-to-r hover:from-secondary/60 hover:via-secondary/40 hover:to-secondary/60 border border-transparent hover:border-accent/20 hover:shadow-md'
+          ? 'bg-white/5 border-l-2 border-l-[#4da2ff]'
+          : 'border-l-2 border-l-transparent hover:bg-white/[0.02] hover:border-l-white/20'
       )}
     >
+      {/* Terminal selection indicator */}
+      <span className={clsx(
+        'text-xs font-bold transition-opacity w-3 flex-shrink-0',
+        isSelected ? 'text-[#4da2ff] opacity-100' : 'opacity-0'
+      )}>
+        &gt;
+      </span>
+
       {icon && (
-        <span className="text-lg flex-shrink-0 w-6 text-center">{icon}</span>
+        <span className={clsx(
+          'text-base flex-shrink-0 w-5 text-center transition-transform',
+          isSelected && 'scale-110'
+        )}>
+          {icon}
+        </span>
       )}
+
       <div className="flex-1 min-w-0">
-        <div className="text-foreground text-sm font-medium truncate">
+        <div className={clsx(
+          'text-sm truncate transition-colors',
+          isSelected ? 'text-white' : 'text-white/70 group-hover:text-white/90'
+        )}>
           {title}
         </div>
         {subtitle && (
-          <div className="text-muted-foreground text-xs truncate">{subtitle}</div>
+          <div className={clsx(
+            'text-xs truncate',
+            isSelected ? 'text-white/50' : 'text-white/30'
+          )}>
+            {subtitle}
+          </div>
         )}
       </div>
+
       {accessory && <div className="flex-shrink-0">{accessory}</div>}
+
+      {/* Keyboard shortcut hint on selection */}
+      {isSelected && !accessory && (
+        <kbd className="flex-shrink-0 px-1.5 py-0.5 text-[10px] bg-white/5 text-white/40 rounded border border-white/10">
+          enter
+        </kbd>
+      )}
     </div>
   );
 }

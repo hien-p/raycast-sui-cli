@@ -597,7 +597,7 @@ function PackageSummaryView({
                   <div className="text-xs font-medium text-muted-foreground mb-1 mt-2">Functions</div>
                   {Object.entries(module.functions).map(([name, func]) => (
                     <div key={name} className="text-xs font-mono py-1 flex items-center gap-2">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                      <span className={`px-1.5 py-0.5 rounded text-xs ${
                         func.visibility === 'Public'
                           ? 'bg-success/20 text-success'
                           : 'bg-muted text-muted-foreground'

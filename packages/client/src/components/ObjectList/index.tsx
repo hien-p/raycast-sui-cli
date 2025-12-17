@@ -100,7 +100,6 @@ export function ObjectList() {
   const { objectId: urlObjectId } = useParams<{ objectId: string }>();
   const [selectedObject, setSelectedObject] = useState<Record<string, unknown> | null>(null);
   const [activeCategory, setActiveCategory] = useState<ObjectCategory>('all');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [directLookupObject, setDirectLookupObject] = useState<Record<string, unknown> | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [fetchedUrlObjectId, setFetchedUrlObjectId] = useState<string | null>(null);
@@ -375,54 +374,30 @@ export function ObjectList() {
   }
 
   return (
-    <div className="px-2 py-2">
-      {/* Header with address */}
-      <div className="mb-3 px-3 py-2 bg-muted/30 rounded-lg flex items-center justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
-            Objects owned by
+    <div className="px-2 py-2 font-mono">
+      {/* Terminal-style header */}
+      <div className="mb-3 px-3 py-2 bg-black/40 border border-white/10 rounded-lg">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-[#4da2ff]">$</span>
+            <span className="text-white/60">sui client objects</span>
             {isExternalAddress && (
-              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded">
-                External Address
+              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded border border-purple-500/30">
+                EXTERNAL
               </span>
             )}
           </div>
           <div
-            className="text-sm font-mono text-foreground truncate cursor-pointer hover:text-accent transition-colors"
+            className="text-white/50 hover:text-white/70 cursor-pointer transition-colors"
             onClick={() => { navigator.clipboard.writeText(targetAddress); toast.success('Address copied'); }}
             title="Click to copy"
           >
             {displayLabel}
           </div>
         </div>
-        {/* View toggle */}
-        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded transition-colors ${
-              viewMode === 'list' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
-            title="List view"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded transition-colors ${
-              viewMode === 'grid' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
-            title="Grid view"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </button>
-        </div>
       </div>
 
-      {/* Category Filter Pills */}
+      {/* Terminal-style category filter */}
       <div className="flex gap-2 px-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
         {CATEGORIES.map((cat) => {
           const count = categoryCounts[cat.id];
@@ -432,21 +407,15 @@ export function ObjectList() {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-2 py-1 text-xs whitespace-nowrap transition-all border ${
                 activeCategory === cat.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-[#4da2ff]/20 text-[#4da2ff] border-[#4da2ff]/30'
+                  : 'bg-white/5 text-white/50 border-white/10 hover:text-white/70 hover:border-white/20'
               }`}
             >
               <span>{cat.icon}</span>
               <span>{cat.label}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                activeCategory === cat.id
-                  ? 'bg-white/20'
-                  : 'bg-black/20'
-              }`}>
-                {count}
-              </span>
+              <span className="text-white/30">({count})</span>
             </button>
           );
         })}
@@ -477,11 +446,11 @@ export function ObjectList() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-green-400">Found Object</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getTypeColor((directLookupObject as any).data?.type || (directLookupObject as any).type || '')}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getTypeColor((directLookupObject as any).data?.type || (directLookupObject as any).type || '')}`}>
                     {getTypeDisplay((directLookupObject as any).data?.type || (directLookupObject as any).type || '')}
                   </span>
                 </div>
-                <div className="text-[10px] text-muted-foreground font-mono truncate mt-1">
+                <div className="text-xs text-muted-foreground font-mono truncate mt-1">
                   {searchQuery}
                 </div>
               </div>
@@ -517,11 +486,11 @@ export function ObjectList() {
               </p>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold">1</span>
                   <span>Get test SUI from faucet</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold">2</span>
                   <span>Transfer assets to this address</span>
                 </div>
               </div>
@@ -544,93 +513,11 @@ export function ObjectList() {
           )}
         </div>
       ) : filteredObjects.length === 0 && isFullObjectId(searchQuery) ? (
-        /* Only direct lookup result shown - no grid/list needed */
+        /* Only direct lookup result shown */
         null
-      ) : viewMode === 'grid' ? (
-        /* Grid View */
-        <div className="grid grid-cols-2 gap-2 px-1">
-          {filteredObjects.map((obj, index) => {
-            const objectId = obj.data?.objectId || obj.objectId || `obj-${index}`;
-            const type = obj.data?.type || obj.type || '';
-            const version = obj.data?.version || obj.version || '';
-
-            // Check if this is a coin object
-            const isCoin = type.toLowerCase().includes('coin');
-            const coinType = isCoin ? extractCoinType(type) : null;
-            const coinBalance = isCoin ? getCoinBalance(obj) : null;
-            const coinSymbol = coinType ? getCoinSymbol(coinType) : '';
-            const isVerified = coinType ? VERIFIED_COINS.has(coinType) : false;
-            const packageId = getPackageId(coinType || type);
-
-            return (
-              <div
-                key={objectId}
-                className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/50 hover:border-border transition-all cursor-pointer group"
-                onClick={() => setSelectedObject(obj)}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{getTypeIcon(type)}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getTypeColor(type)}`}>
-                    {isCoin && coinSymbol ? coinSymbol : getTypeDisplay(type)}
-                  </span>
-                  {isCoin && isVerified && (
-                    <span className="px-1 py-0.5 bg-green-500/20 text-green-400 rounded text-[8px]">✓</span>
-                  )}
-                </div>
-                {/* Coin balance */}
-                {isCoin && coinBalance && (
-                  <div className="text-sm font-medium text-foreground mb-1">
-                    {formatCoinBalance(coinBalance)} {coinSymbol}
-                  </div>
-                )}
-                <div className="text-[10px] text-muted-foreground font-mono truncate mb-1">
-                  {objectId.slice(0, 10)}...{objectId.slice(-6)}
-                </div>
-                <div className="flex items-center justify-between">
-                  {isCoin && packageId ? (
-                    <span
-                      className="text-[9px] font-mono text-muted-foreground/60 truncate"
-                      title={packageId}
-                    >
-                      📦 {packageId.slice(0, 6)}...
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">
-                      {getModuleName(type)}
-                    </span>
-                  )}
-                  <span className="text-[10px] text-muted-foreground">v{version}</span>
-                </div>
-                {/* Action buttons for coins */}
-                {isCoin && coinType && (
-                  <div className="flex gap-1 mt-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/app/coins/transfer?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
-                      }}
-                      className="flex-1 px-2 py-1 text-[9px] bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
-                    >
-                      Send
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/app/coins/split?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
-                      }}
-                      className="flex-1 px-2 py-1 text-[9px] bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
-                    >
-                      Split
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
       ) : (
-        /* List View */
-        <div className="space-y-1">
+        /* Terminal-style List View */
+        <div className="space-y-0">
           {filteredObjects.map((obj, index) => {
             const objectId = obj.data?.objectId || obj.objectId || `obj-${index}`;
             const type = obj.data?.type || obj.type || '';
@@ -647,61 +534,43 @@ export function ObjectList() {
             return (
               <div
                 key={objectId}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer group border border-transparent hover:border-border/50"
+                className="flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-150 group border-l-2 border-l-transparent hover:bg-white/[0.02] hover:border-l-white/20"
                 onClick={() => setSelectedObject(obj)}
               >
-                <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                {/* Type icon */}
+                <span className="text-base flex-shrink-0 w-5 text-center group-hover:scale-110 transition-transform">
                   {getTypeIcon(type)}
-                </div>
+                </span>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {isCoin && coinSymbol ? (
-                      <>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getTypeColor(type)}`}>
-                          {coinSymbol}
-                        </span>
-                        {isVerified && (
-                          <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[9px] font-medium">
-                            ✓
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getTypeColor(type)}`}>
-                        {getTypeDisplay(type)}
-                      </span>
+                    {/* Type badge */}
+                    <span className="text-sm text-white/70 group-hover:text-white transition-colors">
+                      {isCoin && coinSymbol ? coinSymbol : getTypeDisplay(type)}
+                    </span>
+                    {isCoin && isVerified && (
+                      <span className="text-[10px] text-green-400">✓</span>
                     )}
-                    {/* Package ID for coins */}
-                    {isCoin && packageId && (
-                      <span
-                        className="text-[9px] font-mono text-muted-foreground/60 cursor-pointer hover:text-muted-foreground"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(packageId, 'Package ID');
-                        }}
-                        title={`Package: ${packageId}`}
-                      >
-                        📦 {packageId.length > 12 ? `${packageId.slice(0, 6)}...${packageId.slice(-4)}` : packageId}
-                      </span>
-                    )}
+                    {/* Module name */}
                     {!isCoin && getModuleName(type) && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {getModuleName(type)}
+                      <span className="text-[10px] text-white/30">
+                        ::{getModuleName(type)}
                       </span>
                     )}
                   </div>
                   {/* Coin balance display */}
                   {isCoin && coinBalance ? (
-                    <div className="text-sm font-medium text-foreground mt-0.5">
-                      {formatCoinBalance(coinBalance)} {coinSymbol}
+                    <div className="text-xs text-[#4da2ff] mt-0.5">
+                      {formatCoinBalance(coinBalance)} <span className="text-white/40">{coinSymbol}</span>
                     </div>
                   ) : null}
-                  <div className="text-[10px] text-muted-foreground font-mono truncate mt-0.5">
-                    {objectId.slice(0, 16)}...{objectId.slice(-8)}
+                  <div className="text-[10px] text-white/30 truncate mt-0.5">
+                    {objectId}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* Transfer/Split buttons for coins */}
+
+                {/* Actions - show on hover */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {isCoin && coinType && (
                     <>
                       <button
@@ -709,29 +578,25 @@ export function ObjectList() {
                           e.stopPropagation();
                           navigate(`/app/coins/transfer?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
                         }}
-                        className="px-2 py-1 text-[10px] bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
-                        title="Transfer"
+                        className="px-1.5 py-0.5 text-[10px] text-white/40 hover:text-white/70 hover:bg-white/10 rounded transition-colors"
                       >
-                        Send
+                        [send]
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/app/coins/split?coinId=${objectId}&type=${encodeURIComponent(coinType)}`);
                         }}
-                        className="px-2 py-1 text-[10px] bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
-                        title="Split"
+                        className="px-1.5 py-0.5 text-[10px] text-white/40 hover:text-white/70 hover:bg-white/10 rounded transition-colors"
                       >
-                        Split
+                        [split]
                       </button>
                     </>
                   )}
-                  <div className="text-right min-w-[40px]">
-                    <div className="text-[9px] text-muted-foreground">v{version}</div>
-                  </div>
-                  <svg className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                </div>
+
+                <div className="text-[10px] text-white/30 flex-shrink-0">
+                  v{version}
                 </div>
               </div>
             );
@@ -739,16 +604,13 @@ export function ObjectList() {
         </div>
       )}
 
-      {/* Footer stats */}
-      <div className="mt-3 px-3 py-2 bg-muted/20 rounded-lg flex items-center justify-between text-xs text-muted-foreground">
+      {/* Terminal-style footer */}
+      <div className="mt-3 px-3 py-2 border-t border-white/10 flex items-center justify-between text-[10px] text-white/30">
         <span>
-          {filteredObjects.length} of {objects.length} object{objects.length !== 1 ? 's' : ''}
+          {filteredObjects.length}/{objects.length} objects
         </span>
-        <span className="flex items-center gap-1">
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Click to view details
+        <span>
+          # click to inspect
         </span>
       </div>
     </div>

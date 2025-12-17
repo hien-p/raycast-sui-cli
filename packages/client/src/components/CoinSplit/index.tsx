@@ -312,7 +312,7 @@ export function CoinSplit() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4"
             >
-              <div className="text-xs font-mono text-yellow-500/70 mb-2">SOURCE_COIN</div>
+              <div className="text-xs font-mono text-yellow-400 mb-2">SOURCE_COIN</div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-lg">
                   {symbol[0]}
@@ -330,7 +330,7 @@ export function CoinSplit() {
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-yellow-500/20">
-                <div className="text-[10px] font-mono text-yellow-500/50 truncate">
+                <div className="text-xs font-mono text-yellow-400/80 truncate">
                   {coin.coinObjectId}
                 </div>
               </div>
@@ -344,13 +344,13 @@ export function CoinSplit() {
               className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="text-xs font-mono text-yellow-500/70 flex items-center gap-2">
+                <div className="text-xs font-mono text-yellow-400 flex items-center gap-2">
                   <Divide className="w-4 h-4" />
                   SPLIT_AMOUNTS
                 </div>
                 <button
                   onClick={addSplitAmount}
-                  className="px-2 py-1 text-[10px] bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors flex items-center gap-1 font-mono"
+                  className="px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors flex items-center gap-1 font-mono"
                 >
                   <Plus className="w-3 h-3" />
                   Add
@@ -368,7 +368,7 @@ export function CoinSplit() {
                   <button
                     key={key}
                     onClick={() => applyPreset(key as any)}
-                    className="px-2 py-1 text-[10px] bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors font-mono"
+                    className="px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors font-mono"
                   >
                     {label}
                   </button>
@@ -393,7 +393,7 @@ export function CoinSplit() {
                         placeholder="0.00"
                         className="w-full px-3 py-2 pr-16 bg-black/50 border border-yellow-500/30 rounded text-yellow-400 placeholder:text-yellow-500/40 focus:outline-none focus:border-yellow-500 font-mono text-sm"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-yellow-500/50">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-yellow-400/80">
                         {symbol}
                       </span>
                     </div>
@@ -411,13 +411,13 @@ export function CoinSplit() {
               {/* Summary */}
               <div className="pt-3 border-t border-yellow-500/20 space-y-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-yellow-500/70">Split Total</span>
+                  <span className="text-yellow-400">Split Total</span>
                   <span className="text-yellow-400">
                     {formatBalance(totalSplitAmount.toString(), decimals)} {symbol}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-yellow-500/70">Remaining</span>
+                  <span className="text-yellow-400">Remaining</span>
                   <span className={remainingBalance < 0 ? 'text-red-400' : 'text-green-400'}>
                     {formatBalance(remainingBalance.toString(), decimals)} {symbol}
                   </span>
@@ -487,15 +487,15 @@ export function CoinSplit() {
                 {dryRunResult.success ? (
                   <div className="space-y-2 text-xs font-mono">
                     <div className="flex justify-between">
-                      <span className="text-yellow-500/70">Status</span>
+                      <span className="text-yellow-400">Status</span>
                       <span className="text-green-400">Success</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-yellow-500/70">Gas Estimate</span>
+                      <span className="text-yellow-400">Gas Estimate</span>
                       <span className="text-yellow-400">{dryRunResult.gasUsed || '~0.01'} SUI</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-yellow-500/70">New Coins</span>
+                      <span className="text-yellow-400">New Coins</span>
                       <span className="text-yellow-400">{splitAmounts.length} coins</span>
                     </div>
                   </div>
@@ -548,9 +548,9 @@ export function CoinSplit() {
                       <>
                         {/* Digest */}
                         <div className="space-y-1">
-                          <div className="text-[10px] font-mono text-yellow-500/70">TX_DIGEST</div>
+                          <div className="text-xs font-mono text-yellow-400">TX_DIGEST</div>
                           <div className="flex items-center gap-2">
-                            <code className="flex-1 px-2 py-1.5 bg-black/50 border border-yellow-500/20 rounded text-[10px] font-mono text-yellow-300 truncate">
+                            <code className="flex-1 px-2 py-1.5 bg-black/50 border border-yellow-500/20 rounded text-xs font-mono text-yellow-300 truncate">
                               {splitResult.digest}
                             </code>
                             <button
@@ -568,7 +568,7 @@ export function CoinSplit() {
                         {/* New Coin IDs */}
                         {splitResult.newCoinIds && splitResult.newCoinIds.length > 0 && (
                           <div className="space-y-1">
-                            <div className="text-[10px] font-mono text-yellow-500/70">
+                            <div className="text-xs font-mono text-yellow-400">
                               NEW_COINS ({splitResult.newCoinIds.length})
                             </div>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -577,10 +577,10 @@ export function CoinSplit() {
                                   key={id}
                                   className="flex items-center gap-2 px-2 py-1 bg-black/30 rounded"
                                 >
-                                  <span className="text-[10px] font-mono text-yellow-400">
+                                  <span className="text-xs font-mono text-yellow-400">
                                     {idx + 1}.
                                   </span>
-                                  <code className="flex-1 text-[10px] font-mono text-yellow-300 truncate">
+                                  <code className="flex-1 text-xs font-mono text-yellow-300 truncate">
                                     {id}
                                   </code>
                                   <button

@@ -86,7 +86,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
           title="Presets"
           type="button"
         >
-          <Calculator className="w-3 h-3 text-green-500/70" />
+          <Calculator className="w-3 h-3 text-green-400" />
         </button>
 
         {/* Presets dropdown */}
@@ -109,9 +109,9 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       </div>
 
       {/* Inline info */}
-      <div className="flex items-center justify-between text-[10px]">
+      <div className="flex items-center justify-between text-xs">
         {value && !error && (
-          <span className="text-green-500/50 font-mono">= {formatWithCommas(value)}</span>
+          <span className="text-green-400/80 font-mono">= {formatWithCommas(value)}</span>
         )}
         {error && (
           <span className="flex items-center gap-1 text-red-400">

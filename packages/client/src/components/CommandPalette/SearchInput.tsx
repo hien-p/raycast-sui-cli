@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { clsx } from 'clsx';
 
 interface SearchInputProps {
@@ -9,40 +9,72 @@ interface SearchInputProps {
 }
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ value, onChange, placeholder = 'Search commands...', className }, ref) => {
+  ({ value, onChange, placeholder = 'Type a command or search...', className }, ref) => {
+    const [isFocused, setIsFocused] = useState(true);
+
     return (
-      <div className={clsx('flex items-center gap-3 px-4 py-3', className)}>
-        <svg
-          className="w-5 h-5 text-text-tertiary flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      <div className={clsx(
+        'flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-black/20',
+        className
+      )}>
+        {/* Terminal prompt prefix */}
+        <span className="text-[#4da2ff] font-mono text-sm font-bold select-none flex-shrink-0" aria-hidden="true">
+          sui&gt;
+        </span>
+
+        <div className="flex-1 relative flex items-center">
+          <input
+            ref={ref}
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder={placeholder}
+            className="flex-1 bg-transparent border-none outline-none text-white font-mono text-sm placeholder:text-white/30 caret-transparent"
+            autoFocus
+            spellCheck={false}
+            autoComplete="off"
+            role="combobox"
+            aria-label="Search commands"
+            aria-autocomplete="list"
+            aria-expanded="true"
+            aria-controls="command-list"
           />
-        </svg>
-        <input
-          ref={ref}
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="flex-1 bg-transparent border-none outline-none text-text-primary text-base placeholder:text-text-tertiary"
-          autoFocus
-        />
+
+          {/* Blinking cursor */}
+          <span
+            className={clsx(
+              'absolute font-mono text-[#4da2ff] pointer-events-none transition-opacity',
+              isFocused ? 'animate-pulse' : 'opacity-0'
+            )}
+            style={{
+              left: `${value.length * 0.55}em`,
+              animationDuration: '1s'
+            }}
+          >
+            _
+          </span>
+        </div>
+
+        {/* Clear button styled as terminal command */}
         {value && (
           <button
             onClick={() => onChange('')}
-            className="p-1 hover:bg-background-hover rounded"
+            className="px-2 py-0.5 text-xs font-mono text-white/40 hover:text-white/70 hover:bg-white/5 rounded transition-colors"
+            title="Clear (Esc)"
+            aria-label="Clear search"
           >
-            <svg className="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            [clear]
           </button>
+        )}
+
+        {/* Keyboard hint */}
+        {!value && (
+          <div className="flex items-center gap-1.5 text-white/20 text-xs font-mono">
+            <kbd className="px-1.5 py-0.5 bg-white/5 rounded text-white/40 text-[10px]">↑↓</kbd>
+            <span>navigate</span>
+          </div>
         )}
       </div>
     );

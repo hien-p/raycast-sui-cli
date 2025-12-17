@@ -27,9 +27,10 @@ function getGAId(): string {
 
   // Map domains to their GA IDs (fallback if env var not set)
   const gaIds: Record<string, string> = {
-    'harriweb3.dev': 'G-Z37RHCYYX6',
+    'cli.firstmovers.io': 'G-Z37RHCYYX6', // Primary domain
+    'harriweb3.dev': 'G-Z37RHCYYX6', // Legacy domain (redirects to primary)
     'raycast-sui-cli.vercel.app': 'G-CQXKRXBW5J',
-    'localhost': 'G-Z37RHCYYX6', // Use harriweb3 GA for local development
+    'localhost': 'G-Z37RHCYYX6', // Use primary GA for local development
   };
 
   // Find matching GA ID
@@ -39,7 +40,7 @@ function getGAId(): string {
     }
   }
 
-  // Fallback to harriweb3 GA ID
+  // Fallback to primary GA ID
   return 'G-Z37RHCYYX6';
 }
 

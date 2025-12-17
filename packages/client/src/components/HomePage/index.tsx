@@ -9,6 +9,7 @@ import { FeaturesGrid } from './FeaturesGrid';
 import { suiService } from '@/services/SuiService';
 import TierCardsGrid from '@/components/ui/tier-card';
 import ProfileCard from '@/components/ui/profile-card';
+import { HandWrittenTitle } from '@/components/ui/hand-writing-text';
 import { Droplet } from 'lucide-react';
 import {
   Terminal,
@@ -164,7 +165,7 @@ export function HomePage() {
                   title="Coming soon"
                 >
                   <span>Blog</span>
-                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-amber-500/80 text-[9px] text-black font-bold rounded uppercase">
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-amber-500/80 text-xs text-black font-bold rounded uppercase">
                     soon
                   </span>
                 </button>
@@ -251,15 +252,13 @@ export function HomePage() {
           ref={heroRef}
           className="relative z-10 h-[110vh] sm:h-[130vh] w-full"
         >
-          {/* Scroll indicator at top */}
-          <div className="absolute left-1/2 top-[18%] sm:top-[15%] md:top-[12%] -translate-x-1/2 text-center z-20">
-            <div className="flex flex-col items-center gap-2 sm:gap-3">
-              <span className="text-xs sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-white/70 font-light">
-                scroll down
-              </span>
-              <span className="text-[10px] sm:text-xs text-white/40">to explore</span>
-              <div className="w-px h-6 sm:h-8 md:h-12 bg-gradient-to-b from-white/50 to-transparent" />
-            </div>
+          {/* Hand Written Title - Fixed at top of hero */}
+          <div className="absolute left-1/2 top-[12%] sm:top-[10%] md:top-[8%] -translate-x-1/2 z-30 w-full px-4">
+            <HandWrittenTitle
+              title="Build for First Movers in Sui"
+              subtitle="@harry_phan06"
+              subtitleLink="https://x.com/harry_phan06"
+            />
           </div>
 
           {/* 3D Text Container */}
@@ -284,7 +283,10 @@ export function HomePage() {
                   <span className="block bg-gradient-to-r from-rose-400 via-rose-500 to-pink-500 bg-clip-text text-transparent">
                     Your terminal.
                   </span>
-                  <span className="block text-white/95 mt-2 sm:mt-1 md:mt-2">
+                </h1>
+
+                <h1 className="text-[2.75rem] leading-[0.95] sm:text-5xl md:text-6xl lg:text-8xl font-black sm:leading-[0.9] tracking-tighter">
+                  <span className="block text-white/95">
                     Your keys.
                   </span>
                   <span className="block bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 bg-clip-text text-transparent mt-2 sm:mt-1 md:mt-2">

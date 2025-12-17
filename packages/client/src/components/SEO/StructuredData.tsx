@@ -12,8 +12,8 @@ const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'Sui CLI Web',
-  url: 'https://www.harriweb3.dev',
-  logo: 'https://www.harriweb3.dev/sui-logo.svg',
+  url: 'https://cli.firstmovers.io',
+  logo: 'https://cli.firstmovers.io/sui-logo.svg',
   sameAs: [
     'https://github.com/hien-p/raycast-sui-cli',
     'https://www.npmjs.com/package/sui-cli-web-server',
@@ -47,10 +47,10 @@ const softwareApplicationSchema = {
     'Gas Coin Management',
     'Multi-Environment Support',
   ],
-  screenshot: 'https://www.harriweb3.dev/og-image.svg',
+  screenshot: 'https://cli.firstmovers.io/og-image.svg',
   softwareVersion: '1.1.0',
   downloadUrl: 'https://www.npmjs.com/package/sui-cli-web-server',
-  installUrl: 'https://www.harriweb3.dev/setup',
+  installUrl: 'https://cli.firstmovers.io/setup',
 };
 
 // WebSite schema - For sitelinks search box
@@ -58,10 +58,10 @@ const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Sui CLI Web',
-  url: 'https://www.harriweb3.dev',
+  url: 'https://cli.firstmovers.io',
   potentialAction: {
     '@type': 'SearchAction',
-    target: 'https://www.harriweb3.dev/app?q={search_term_string}',
+    target: 'https://cli.firstmovers.io/app?q={search_term_string}',
     'query-input': 'required name=search_term_string',
   },
 };
@@ -75,13 +75,13 @@ const setupBreadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://www.harriweb3.dev',
+      item: 'https://cli.firstmovers.io',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Setup',
-      item: 'https://www.harriweb3.dev/setup',
+      item: 'https://cli.firstmovers.io/setup',
     },
   ],
 };
@@ -122,7 +122,7 @@ const howToSchema = {
     {
       '@type': 'HowToStep',
       name: 'Access the Web Interface',
-      text: 'Open https://www.harriweb3.dev in your browser',
+      text: 'Open https://cli.firstmovers.io in your browser',
     },
   ],
 };

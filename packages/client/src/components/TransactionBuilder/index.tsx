@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,6 +63,32 @@ interface PtbExecuteResult {
 type ActiveOperation = 'inspect' | 'replay' | 'execute' | 'ptb' | 'idle';
 
 export function TransactionBuilder() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const validTabs = ['inspect', 'replay', 'execute', 'ptb'];
+  const [activeTab, setActiveTab] = useState(() =>
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'inspect'
+  );
+
+  // Sync tab state when URL changes (e.g., from FileTree navigation)
+  useEffect(() => {
+    const newTab = tabParam && validTabs.includes(tabParam) ? tabParam : 'inspect';
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [tabParam]);
+
+  // Handle tab change - update both state and URL
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'inspect') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', value);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
+
   const [inspectDigest, setInspectDigest] = useState('');
   const [replayDigest, setReplayDigest] = useState('');
 
@@ -370,7 +397,7 @@ export function TransactionBuilder() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Tabs defaultValue="inspect" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Custom Tab List */}
           <TabsList className="flex gap-1 p-1 bg-black/40 backdrop-blur-md border border-blue-500/30 rounded-lg mb-4 h-auto">
             <TabsTrigger

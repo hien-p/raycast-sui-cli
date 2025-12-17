@@ -100,7 +100,7 @@ export function CommandList() {
       ) : (
         groupedCommands.map((group) => (
           <div key={group.category} className="mb-2">
-            <div className="px-3 py-1 text-xs font-medium text-text-tertiary uppercase tracking-wider">
+            <div className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {group.category}
             </div>
             {group.commands.map((cmd) => {

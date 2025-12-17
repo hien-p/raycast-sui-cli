@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Kbd } from '../shared/Kbd';
 import { Spinner } from '../shared/Spinner';
 import { SearchInput } from '../CommandPalette/SearchInput';
 import { FloatingParticles } from '../ui/floating-particles';
+import { Explorer } from '../Explorer';
 import { useAppStore } from '@/stores/useAppStore';
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -20,6 +21,7 @@ const ROUTE_TITLES: Record<string, string> = {
 export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showExplorer, setShowExplorer] = useState(true);
   const {
     searchQuery,
     setSearchQuery,
@@ -35,8 +37,6 @@ export function MainLayout() {
     checkServerConnection,
     themeMode,
     setThemeMode,
-    gridEnabled,
-    setGridEnabled,
   } = useAppStore();
 
   const isHome = location.pathname === '/app';
@@ -89,18 +89,19 @@ export function MainLayout() {
 
   const isDark = themeMode === 'dark';
 
-  // Determine max width based on current route
-  // Wide layout fills more screen space, normal layout has max width
-  const isWideLayout = ['/app/transfer', '/app/move', '/app/inspector'].includes(location.pathname);
-  // Use percentage-based max-width for better zoom support
-  // Increased default terminal size: sm:max-w-lg -> sm:max-w-xl, md:max-w-2xl -> md:max-w-3xl
-  const maxWidthClass = isWideLayout
-    ? 'max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[1800px]'
-    : 'max-w-[95vw] sm:max-w-xl md:max-w-3xl lg:max-w-4xl';
-
   return (
-    <div className="min-h-screen flex items-start justify-center pt-[3vh] sm:pt-[5vh] md:pt-[8vh] lg:pt-[10vh] px-2 sm:px-4">
-      <div className={`w-full ${maxWidthClass} relative group curved-terminal-wrapper`}>
+    <main className="min-h-screen flex items-start justify-center pt-4 sm:pt-6 md:pt-8 px-2 sm:px-4" role="main">
+      <div className="flex gap-4 w-full max-w-[800px] lg:max-w-none lg:w-auto">
+
+      {/* Explorer Panel - Left Side */}
+      {showExplorer && (
+        <nav className="hidden lg:block w-64 xl:w-72 flex-shrink-0" aria-label="File explorer">
+          <Explorer className="sticky top-[10vh]" />
+        </nav>
+      )}
+
+      {/* Main Terminal Panel - Responsive width */}
+      <div className="w-full sm:w-[550px] md:w-[650px] lg:w-[700px] xl:w-[800px] relative group curved-terminal-wrapper">
         {/* Animated gradient orbs - only in glass mode */}
         {!isDark && (
           <div className="absolute -inset-20 opacity-30">
@@ -118,7 +119,7 @@ export function MainLayout() {
           </>
         )}
 
-        <div className={`${isWideLayout ? 'curved-panel-wide' : 'curved-panel'} relative rounded-xl shadow-2xl overflow-hidden animate-scale-in ${
+        <div className={`curved-panel relative rounded-xl shadow-2xl overflow-hidden animate-scale-in ${
           isDark
             ? 'bg-[#121218]/95 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.05)]'
             : 'bg-[#0c1a2d]/90 backdrop-blur-2xl border border-[#4da2ff]/20 shadow-[0_0_40px_rgba(77,162,255,0.15)]'
@@ -128,16 +129,8 @@ export function MainLayout() {
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-[#0ea5e9]/10 via-[#0284c7]/5 to-[#0369a1]/8 pointer-events-none z-[1]" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(14,165,233,0.15),transparent_60%)] pointer-events-none z-[1]" />
-              {gridEnabled && (
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.2)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-[2]" />
-              )}
               <FloatingParticles />
             </>
-          )}
-
-          {/* Dark mode grid pattern */}
-          {isDark && gridEnabled && (
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(77,162,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(77,162,255,0.06)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-[2]" />
           )}
 
           {/* Header with enhanced gradient and glow */}
@@ -148,13 +141,15 @@ export function MainLayout() {
             {!isHome && (
               <button
                 onClick={handleBack}
-                className="p-1 hover:bg-secondary rounded transition-colors"
+                className="p-2 sm:p-1 hover:bg-secondary rounded transition-colors touch-manipulation"
+                aria-label="Go back"
               >
                 <svg
-                  className="w-4 h-4 text-muted-foreground"
+                  className="w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -168,39 +163,36 @@ export function MainLayout() {
             <span className="text-sm font-medium text-foreground">{title}</span>
             <div className="flex-1" />
 
-            {/* Grid Toggle */}
+            {/* Theme Toggle */}
             <button
-              onClick={() => setGridEnabled(!gridEnabled)}
-              className="p-1.5 hover:bg-secondary rounded-lg transition-all group"
-              title={gridEnabled ? 'Hide grid pattern' : 'Show grid pattern'}
+              onClick={() => setThemeMode(isDark ? 'glass' : 'dark')}
+              className="p-2 sm:p-1.5 hover:bg-secondary rounded-lg transition-all group touch-manipulation"
+              title={isDark ? 'Switch to Glass mode' : 'Switch to Dark mode'}
+              aria-label={isDark ? 'Switch to Glass mode' : 'Switch to Dark mode'}
+              aria-pressed={!isDark}
             >
-              {gridEnabled ? (
-                <svg className="w-4 h-4 text-muted-foreground group-hover:text-[#4da2ff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 9h16M4 15h16M9 4v16M15 4v16" />
+              {isDark ? (
+                <svg className="w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground group-hover:text-[#4da2ff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               ) : (
-                <svg className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                <svg className="w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
             </button>
 
-            {/* Theme Toggle */}
+            {/* Explorer Toggle */}
             <button
-              onClick={() => setThemeMode(isDark ? 'glass' : 'dark')}
-              className="p-1.5 hover:bg-secondary rounded-lg transition-all group"
-              title={isDark ? 'Switch to Glass mode' : 'Switch to Dark mode'}
+              onClick={() => setShowExplorer(!showExplorer)}
+              className="p-2 sm:p-1.5 hover:bg-secondary rounded-lg transition-all group hidden lg:block touch-manipulation"
+              title={showExplorer ? 'Hide Explorer' : 'Show Explorer'}
+              aria-label={showExplorer ? 'Hide file explorer' : 'Show file explorer'}
+              aria-pressed={showExplorer}
             >
-              {isDark ? (
-                <svg className="w-4 h-4 text-muted-foreground group-hover:text-[#4da2ff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
+              <svg className={`w-5 h-5 sm:w-4 sm:h-4 transition-colors ${showExplorer ? 'text-[#4da2ff]' : 'text-muted-foreground group-hover:text-foreground'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
             </button>
 
             {isLoading && <Spinner size="sm" />}
@@ -234,7 +226,7 @@ export function MainLayout() {
         )}
 
         {/* Content */}
-        <div className="max-h-[85vh] sm:max-h-[82vh] md:max-h-[78vh] lg:max-h-[75vh] overflow-y-auto">
+        <div className="max-h-[70vh] sm:max-h-[75vh] md:max-h-[78vh] lg:max-h-[75vh] overflow-y-auto" role="region" aria-label="Main content">
           {isServerConnected === false ? (
             // User wants to run backend manually, so we show the app even if not connected
             // The app will show errors if API calls fail, which is expected
@@ -310,6 +302,7 @@ export function MainLayout() {
         </div>
         </div>
       </div>
-    </div>
+      </div>
+    </main>
   );
 }

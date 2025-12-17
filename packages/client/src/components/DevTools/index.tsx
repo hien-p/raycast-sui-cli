@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -197,6 +198,33 @@ function parseCliOutput(output: string): ParsedOutput {
 }
 
 export function DevTools() {
+  // URL params for tab switching
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const validTabs = ['coverage', 'disassemble', 'summary'];
+  const [activeTab, setActiveTab] = useState(() =>
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'coverage'
+  );
+
+  // Sync tab state when URL changes (e.g., from FileTree navigation)
+  useEffect(() => {
+    const newTab = tabParam && validTabs.includes(tabParam) ? tabParam : 'coverage';
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [tabParam]);
+
+  // Sync URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'coverage') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', tab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
+
   // Coverage State
   const [packagePath, setPackagePath] = useState('');
   const [coverageMode, setCoverageMode] = useState('summary');
@@ -368,23 +396,21 @@ export function DevTools() {
 
   return (
     <>
-      <div className="relative z-10 p-3 sm:p-4">
+      <div className="relative z-10 p-3 sm:p-4 font-mono">
         <div className="relative max-w-[1600px] mx-auto space-y-3">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="relative z-10 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-green-400" style={{ filter: 'drop-shadow(0 0 4px rgba(34, 197, 94, 0.5))' }} />
-              <h1 className="text-lg font-bold text-green-400 font-mono">Developer Tools</h1>
+          {/* Terminal-style Header */}
+          <div className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-3">
+                <span className="text-[#4da2ff]">$</span>
+                <span className="text-white/60">sui move dev-tools</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              </div>
+              <span className="text-white/30 hidden sm:block">
+                coverage | disassemble | summary
+              </span>
             </div>
-            <p className="text-green-500/60 font-mono text-xs hidden sm:block">
-              Coverage • Disassemble • Summary
-            </p>
-          </motion.div>
+          </div>
 
           {/* Main Content */}
           <motion.div
@@ -392,19 +418,19 @@ export function DevTools() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
           >
-            <Tabs defaultValue="coverage" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-black/30 border border-green-500/30 h-9">
-                <TabsTrigger value="coverage" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-black/30 border border-white/10 h-9 p-0.5 gap-0.5">
+                <TabsTrigger value="coverage" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-[#4da2ff]/20 data-[state=active]:text-[#4da2ff] data-[state=active]:border-l-2 data-[state=active]:border-l-[#4da2ff] text-white/40 hover:text-white/60 font-mono h-8 transition-all">
                   <Activity className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Coverage</span>
+                  <span className="hidden sm:inline">coverage</span>
                 </TabsTrigger>
-                <TabsTrigger value="disassemble" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+                <TabsTrigger value="disassemble" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-[#4da2ff]/20 data-[state=active]:text-[#4da2ff] data-[state=active]:border-l-2 data-[state=active]:border-l-[#4da2ff] text-white/40 hover:text-white/60 font-mono h-8 transition-all">
                   <Code className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Disassemble</span>
+                  <span className="hidden sm:inline">disassemble</span>
                 </TabsTrigger>
-                <TabsTrigger value="summary" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-green-500/60 hover:text-green-400 font-mono h-8">
+                <TabsTrigger value="summary" className="flex items-center justify-center gap-1.5 text-xs data-[state=active]:bg-[#4da2ff]/20 data-[state=active]:text-[#4da2ff] data-[state=active]:border-l-2 data-[state=active]:border-l-[#4da2ff] text-white/40 hover:text-white/60 font-mono h-8 transition-all">
                   <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Summary</span>
+                  <span className="hidden sm:inline">summary</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -426,7 +452,7 @@ export function DevTools() {
                     <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
                       <Activity className="w-3.5 h-3.5 text-green-500" />
                       Test Coverage Analysis
-                      <span className="text-[10px] text-green-500/50 ml-auto font-normal">Run coverage on Move packages</span>
+                      <span className="text-xs text-green-400/80 ml-auto font-normal">Run coverage on Move packages</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-3 pb-3 space-y-2">
@@ -489,7 +515,7 @@ export function DevTools() {
                             <p className="font-medium text-green-400">📝 Source Code Mode</p>
                             <p>Shows line-by-line coverage - which lines were executed during tests (✓) and which were not (✗).</p>
                             <p className="text-green-500/60">Best for: Finding untested code paths</p>
-                            <p className="text-amber-400/80 text-[10px]">⚠️ Requires selecting a specific module</p>
+                            <p className="text-amber-400/80 text-xs">⚠️ Requires selecting a specific module</p>
                           </div>
                         )}
                         {coverageMode === 'bytecode' && (
@@ -497,7 +523,7 @@ export function DevTools() {
                             <p className="font-medium text-green-400">🔧 Bytecode Mode</p>
                             <p>Shows coverage at bytecode level - more detailed than source, useful for understanding low-level execution.</p>
                             <p className="text-green-500/60">Best for: Advanced debugging & optimization</p>
-                            <p className="text-amber-400/80 text-[10px]">⚠️ Requires selecting a specific module</p>
+                            <p className="text-amber-400/80 text-xs">⚠️ Requires selecting a specific module</p>
                           </div>
                         )}
                         {coverageMode === 'lcov' && (
@@ -517,14 +543,14 @@ export function DevTools() {
                           Module Name {moduleNameRequired ? (
                             <span className="text-red-400">*</span>
                           ) : (
-                            <span className="text-green-500/50">(optional for summary)</span>
+                            <span className="text-green-400/80">(optional for summary)</span>
                           )}
                         </span>
                         {loadingModules && (
-                          <Loader2 className="w-3 h-3 animate-spin text-green-500/50" />
+                          <Loader2 className="w-3 h-3 animate-spin text-green-400/80" />
                         )}
                         {!loadingModules && detectedModules.length > 0 && (
-                          <span className="text-[10px] text-green-500/50">
+                          <span className="text-xs text-green-400/80">
                             {detectedModules.length} module{detectedModules.length > 1 ? 's' : ''} found
                           </span>
                         )}
@@ -562,7 +588,7 @@ export function DevTools() {
                         />
                       )}
                       {moduleNameRequired && !coverageModuleName.trim() && (
-                        <p className="text-[10px] text-amber-400/80 flex items-center gap-1 font-mono">
+                        <p className="text-xs text-amber-400/80 flex items-center gap-1 font-mono">
                           <AlertCircle className="w-2.5 h-2.5" />
                           Required for {coverageMode} mode - specify which module to analyze
                         </p>
@@ -626,7 +652,7 @@ export function DevTools() {
                                           {warning.title}
                                         </span>
                                         {warning.location && (
-                                          <span className="text-[10px] text-amber-500/50 font-mono whitespace-nowrap">
+                                          <span className="text-xs text-amber-500/50 font-mono whitespace-nowrap">
                                             {warning.location}
                                           </span>
                                         )}
@@ -645,11 +671,11 @@ export function DevTools() {
 
                                       {/* Expandable technical details for advanced users */}
                                       <details className="mt-2">
-                                        <summary className="text-[10px] text-amber-500/40 cursor-pointer hover:text-amber-500/60 transition-colors flex items-center gap-1">
+                                        <summary className="text-xs text-amber-500/40 cursor-pointer hover:text-amber-500/60 transition-colors flex items-center gap-1">
                                           <ChevronDown className="w-3 h-3" />
                                           Show compiler output
                                         </summary>
-                                        <pre className="mt-2 p-2 bg-black/30 rounded text-[10px] text-amber-400/60 font-mono overflow-x-auto whitespace-pre-wrap max-h-32 overflow-y-auto">
+                                        <pre className="mt-2 p-2 bg-black/30 rounded text-xs text-amber-400/60 font-mono overflow-x-auto whitespace-pre-wrap max-h-32 overflow-y-auto">
                                           {warning.rawOutput}
                                         </pre>
                                       </details>
@@ -658,7 +684,7 @@ export function DevTools() {
                                 </div>
 
                                 {/* Helpful note */}
-                                <p className="text-[10px] text-white/40 text-center">
+                                <p className="text-xs text-white/40 text-center">
                                   These are optional improvements. Your code compiles and runs correctly.
                                 </p>
                               </div>
@@ -677,7 +703,7 @@ export function DevTools() {
                                     <>
                                       <CheckCircle2 className="w-3 h-3 text-green-400" />
                                       <span className="text-green-400">Coverage Results</span>
-                                      <span className="text-[10px] text-amber-400 ml-1">(compiled with warnings)</span>
+                                      <span className="text-xs text-amber-400 ml-1">(compiled with warnings)</span>
                                     </>
                                   ) : (
                                     <>
@@ -739,7 +765,7 @@ export function DevTools() {
                     <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
                       <Code className="w-3.5 h-3.5 text-green-500" />
                       Disassemble Module
-                      <span className="text-[10px] text-green-500/50 ml-auto font-normal">View bytecode from .mv files</span>
+                      <span className="text-xs text-green-400/80 ml-auto font-normal">View bytecode from .mv files</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-3 pb-3 space-y-2">
@@ -770,7 +796,7 @@ export function DevTools() {
                           <FolderOpen className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-[10px] text-green-500/50 flex items-center gap-1 font-mono">
+                      <p className="text-xs text-green-400/80 flex items-center gap-1 font-mono">
                         <AlertCircle className="w-2.5 h-2.5" />
                         Typically found in build/package/bytecode_modules/*.mv
                       </p>
@@ -868,7 +894,7 @@ export function DevTools() {
                     <li>Entry points and their parameters</li>
                     <li>Dependencies and module structure</li>
                   </ul>
-                  <p className="text-blue-300/50 pl-5 mt-1 text-[10px]">
+                  <p className="text-blue-300/50 pl-5 mt-1 text-xs">
                     Can generate from local source OR published package ID
                   </p>
                 </div>
@@ -878,14 +904,14 @@ export function DevTools() {
                     <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
                       <FileText className="w-3.5 h-3.5 text-green-500" />
                       Package Summary
-                      <span className="text-[10px] text-green-500/50 ml-auto font-normal">Generate package documentation</span>
+                      <span className="text-xs text-green-400/80 ml-auto font-normal">Generate package documentation</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-3 pb-3 space-y-2">
                     {/* Package Path */}
                     <div className="space-y-1">
                       <Label htmlFor="summary-package-path" className="text-xs font-medium text-green-400 font-mono">
-                        Package Path <span className="text-green-500/50">(local)</span>
+                        Package Path <span className="text-green-400/80">(local)</span>
                       </Label>
                       <div className="flex gap-1.5">
                         <input
@@ -914,14 +940,14 @@ export function DevTools() {
                     {/* Or Divider */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-px bg-green-500/20"></div>
-                      <span className="text-[10px] text-green-500/50 font-mono">OR</span>
+                      <span className="text-xs text-green-400/80 font-mono">OR</span>
                       <div className="flex-1 h-px bg-green-500/20"></div>
                     </div>
 
                     {/* Package ID */}
                     <div className="space-y-1">
                       <Label htmlFor="summary-package-id" className="text-xs font-medium text-green-400 font-mono">
-                        Package ID <span className="text-green-500/50">(on-chain)</span>
+                        Package ID <span className="text-green-400/80">(on-chain)</span>
                       </Label>
 
                       {/* Dropdown for published packages */}
@@ -940,7 +966,7 @@ export function DevTools() {
                               </option>
                             ))}
                           </select>
-                          <p className="text-[10px] text-green-500/50 mt-0.5">
+                          <p className="text-xs text-green-400/80 mt-0.5">
                             {publishedPackages.length} package{publishedPackages.length !== 1 ? 's' : ''} found via UpgradeCap
                           </p>
                         </div>

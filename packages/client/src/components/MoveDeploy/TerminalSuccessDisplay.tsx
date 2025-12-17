@@ -108,7 +108,7 @@ export function TerminalSuccessDisplay({
                 >
                   ✓ {title}
                 </div>
-                <div className="text-green-500/70 text-xs mt-0.5">{message}</div>
+                <div className="text-green-400 text-xs mt-0.5">{message}</div>
               </div>
             </div>
           </div>
@@ -123,7 +123,7 @@ export function TerminalSuccessDisplay({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="text-green-500/70"
+                  className="text-green-400"
                 >
                   $ {command}
                 </motion.div>
@@ -267,7 +267,7 @@ export function TerminalSuccessDisplay({
               transition={{ delay: 0.8 }}
               className="text-center pt-2"
             >
-              <div className="text-green-500/50 text-xs tracking-widest">
+              <div className="text-green-400/80 text-xs tracking-widest">
                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
               </div>
             </motion.div>

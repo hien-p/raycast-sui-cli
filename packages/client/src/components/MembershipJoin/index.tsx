@@ -177,15 +177,15 @@ export function MembershipJoin({ onClose, compact = false }: MembershipJoinProps
             {/* Benefits */}
             <div className="text-xs text-white/70 space-y-1">
               <div className="flex items-start gap-2">
-                <span className="text-[10px] mt-0.5">✓</span>
+                <span className="text-xs mt-0.5">✓</span>
                 <span>Earn tiers: Droplet → Wave → Tsunami → Ocean</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-[10px] mt-0.5">✓</span>
+                <span className="text-xs mt-0.5">✓</span>
                 <span>Track your on-chain activity & achievements</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-[10px] mt-0.5">✓</span>
+                <span className="text-xs mt-0.5">✓</span>
                 <span>Unique NFT card (coming soon)</span>
               </div>
             </div>

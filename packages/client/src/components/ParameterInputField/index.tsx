@@ -137,7 +137,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
           />
           <button
             onClick={() => setShowVectorConverter(true)}
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 px-1.5 py-0.5 text-xs bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
             type="button"
           >
             Convert
@@ -164,7 +164,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
               disabled={suggestions.length === 0}
               className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-0.5 rounded transition-colors ${
                 suggestions.length > 0
-                  ? 'hover:bg-green-500/20 text-green-500/70'
+                  ? 'hover:bg-green-500/20 text-green-400'
                   : 'text-green-500/30 cursor-not-allowed'
               }`}
               type="button"
@@ -183,7 +183,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
               title="Refresh"
               type="button"
             >
-              <RefreshCw className={`w-3 h-3 text-green-500/70 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 text-green-400 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           )}
 
@@ -213,7 +213,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
         {isAddressType && suggestions.length > 0 && (
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 p-0.5 rounded hover:bg-green-500/20 text-green-500/70 transition-colors"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 p-0.5 rounded hover:bg-green-500/20 text-green-400 transition-colors"
             type="button"
           >
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
@@ -260,7 +260,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
               type="button"
               title={helpText}
             >
-              <HelpCircle className="w-3 h-3 text-green-500/50" />
+              <HelpCircle className="w-3 h-3 text-green-400/80" />
             </button>
           )}
         </div>
@@ -268,7 +268,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
 
       {/* Help text - collapsible */}
       {showHelp && helpText && (
-        <div className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-[10px] text-green-400/70">
+        <div className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs text-green-400/70">
           {helpText}
         </div>
       )}
@@ -280,7 +280,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
       {isVectorU8 && showVectorConverter && (
         <button
           onClick={() => setShowVectorConverter(false)}
-          className="text-[10px] text-green-500/50 hover:text-green-500/70"
+          className="text-xs text-green-400/80 hover:text-green-400"
         >
           ← Direct input
         </button>
@@ -288,7 +288,7 @@ export const ParameterInputField: React.FC<ParameterInputFieldProps> = ({
 
       {/* Error - inline */}
       {error && (
-        <div className="flex items-center gap-1 text-[10px] text-red-400">
+        <div className="flex items-center gap-1 text-xs text-red-400">
           <AlertCircle className="w-2.5 h-2.5" />
           {error}
         </div>

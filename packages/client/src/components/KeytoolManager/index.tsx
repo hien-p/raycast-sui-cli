@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 import { Spinner } from '../shared/Spinner';
@@ -122,7 +123,32 @@ const SAMPLE_TX_TYPES: { type: SampleTxType; label: string; icon: string; descri
 ];
 
 export function KeytoolManager() {
-  const [activeTab, setActiveTab] = useState<Tab>('keys');
+  // URL params for tab switching
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as Tab | null;
+  const validTabs: Tab[] = ['keys', 'generate', 'sign', 'multisig', 'execute', 'decode'];
+  const [activeTab, setActiveTab] = useState<Tab>(() =>
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'keys'
+  );
+
+  // Sync tab state when URL changes (e.g., from FileTree navigation)
+  useEffect(() => {
+    const newTab = tabParam && validTabs.includes(tabParam) ? tabParam : 'keys';
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [tabParam]);
+
+  // Sync URL when tab changes
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    if (tab === 'keys') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', tab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
 
   // Keys state - shared across tabs
   const [keys, setKeys] = useState<KeyInfo[]>([]);
@@ -845,7 +871,7 @@ export function KeytoolManager() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={clsx(
               'px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap relative',
               activeTab === tab.id
@@ -856,7 +882,7 @@ export function KeytoolManager() {
             <span>{tab.icon}</span>
             <span>{tab.label}</span>
             {'badge' in tab && tab.badge && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                 {tab.badge}
               </span>
             )}
@@ -1536,10 +1562,10 @@ export function KeytoolManager() {
                       <p className="text-xs text-text-tertiary mb-2">
                         Build an unsigned transaction. The key is to add <code className="px-1 bg-black/30 rounded text-yellow-300">--serialize-unsigned-transaction</code>
                       </p>
-                      <div className="p-2 bg-black/30 rounded font-mono text-[10px] text-text-secondary overflow-x-auto">
+                      <div className="p-2 bg-black/30 rounded font-mono text-xs text-text-secondary overflow-x-auto">
                         sui client transfer-sui --to 0x... --sui-coin-object-id 0x... --amount 1000000000 --gas-budget 10000000 --serialize-unsigned-transaction
                       </div>
-                      <p className="text-[10px] text-text-tertiary mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-text-tertiary mt-1.5 flex items-center gap-1">
                         <span>💡</span> This outputs base64-encoded TX bytes that all signers will sign.
                       </p>
                     </div>
@@ -1572,10 +1598,10 @@ export function KeytoolManager() {
                         Combine all partial signatures and execute the transaction:
                       </p>
                       <div className="space-y-1.5">
-                        <div className="p-2 bg-black/30 rounded font-mono text-[10px] text-text-secondary overflow-x-auto">
+                        <div className="p-2 bg-black/30 rounded font-mono text-xs text-text-secondary overflow-x-auto">
                           sui keytool multi-sig-combine-partial-sig --pks PK1 PK2 --weights 1 1 --threshold {threshold} --sigs SIG1 SIG2
                         </div>
-                        <div className="p-2 bg-black/30 rounded font-mono text-[10px] text-text-secondary overflow-x-auto">
+                        <div className="p-2 bg-black/30 rounded font-mono text-xs text-text-secondary overflow-x-auto">
                           sui client execute-signed-tx --tx-bytes TX_BYTES --signatures COMBINED_SIG
                         </div>
                       </div>
@@ -1804,14 +1830,14 @@ export function KeytoolManager() {
                     )}
                   >
                     <span className={clsx(
-                      'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold',
+                      'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold',
                       executeStep === step ? 'bg-white/20' : 'bg-card/50'
                     )}>
                       {idx + 1}
                     </span>
                     <span className="capitalize">{step}</span>
                     {step === 'collect' && collectedSignatures.length > 0 && (
-                      <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[10px]">
+                      <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">
                         {collectedSignatures.length}
                       </span>
                     )}
@@ -1853,7 +1879,7 @@ export function KeytoolManager() {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-medium text-text-primary truncate">{tx.description}</span>
                             <span className={clsx(
-                              'px-1.5 py-0.5 text-[10px] rounded font-medium',
+                              'px-1.5 py-0.5 text-xs rounded font-medium',
                               tx.signatures.length >= tx.threshold
                                 ? 'bg-green-500/20 text-green-400'
                                 : 'bg-yellow-500/20 text-yellow-400'
@@ -1861,7 +1887,7 @@ export function KeytoolManager() {
                               {tx.signatures.length}/{tx.threshold} sigs
                             </span>
                           </div>
-                          <div className="text-[10px] text-text-tertiary">
+                          <div className="text-xs text-text-tertiary">
                             {tx.amount} MIST → {truncateAddress(tx.toAddress, 4)}
                           </div>
                         </div>
@@ -2032,7 +2058,7 @@ export function KeytoolManager() {
                       placeholder="10000000 (default)"
                       className="w-full px-3 py-2 bg-secondary/50 border border-border/50 rounded-lg text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent/50 transition-colors font-mono"
                     />
-                    <p className="mt-1 text-[10px] text-text-tertiary">Leave empty for default (0.01 SUI)</p>
+                    <p className="mt-1 text-xs text-text-tertiary">Leave empty for default (0.01 SUI)</p>
                   </div>
                 </details>
 
@@ -2104,7 +2130,7 @@ export function KeytoolManager() {
                         📋 Copy
                       </button>
                     </div>
-                    <div className="font-mono text-[10px] text-text-secondary break-all p-2 bg-black/20 rounded max-h-20 overflow-y-auto">
+                    <div className="font-mono text-xs text-text-secondary break-all p-2 bg-black/20 rounded max-h-20 overflow-y-auto">
                       {builtTxBytes}
                     </div>
                   </div>
@@ -2144,11 +2170,11 @@ export function KeytoolManager() {
                               <span className="text-xs font-medium text-text-primary">
                                 {sig.label || `Signer ${index + 1}`}
                               </span>
-                              <span className="text-[10px] text-text-tertiary">
+                              <span className="text-xs text-text-tertiary">
                                 PK: {truncateAddress(sig.publicKey, 6)}
                               </span>
                             </div>
-                            <div className="font-mono text-[10px] text-text-secondary truncate">
+                            <div className="font-mono text-xs text-text-secondary truncate">
                               {sig.signature}
                             </div>
                           </div>
@@ -2204,7 +2230,7 @@ export function KeytoolManager() {
                               </div>
                             </div>
                             <span className={clsx(
-                              'text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0',
+                              'text-xs font-medium px-1.5 py-0.5 rounded shrink-0',
                               hasSigned ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
                             )}>
                               {hasSigned ? 'Signed' : `Pending (w:${weight})`}
@@ -2266,13 +2292,13 @@ export function KeytoolManager() {
                               <span className="text-lg">{alreadySigned ? '✓' : '🔑'}</span>
                               <div className="text-left">
                                 <div className="font-medium">{key.alias || 'Unnamed Key'}</div>
-                                <div className="text-[10px] text-text-tertiary font-mono">
+                                <div className="text-xs text-text-tertiary font-mono">
                                   {truncateAddress(key.suiAddress, 8)} • {key.keyScheme}
                                 </div>
                               </div>
                             </div>
                             {alreadySigned ? (
-                              <span className="text-green-400 text-[10px]">Signed</span>
+                              <span className="text-green-400 text-xs">Signed</span>
                             ) : (
                               <span className="text-blue-400">Sign →</span>
                             )}
@@ -2436,16 +2462,16 @@ export function KeytoolManager() {
                                     <div className="font-medium text-text-primary flex items-center gap-1.5">
                                       <span className="text-blue-400">🔑</span>
                                       {keystoreKey.alias || 'Unnamed Key'}
-                                      <span className="text-[10px] text-text-tertiary">({keystoreKey.keyScheme})</span>
+                                      <span className="text-xs text-text-tertiary">({keystoreKey.keyScheme})</span>
                                     </div>
-                                    <div className="text-[10px] text-text-tertiary font-mono truncate">
+                                    <div className="text-xs text-text-tertiary font-mono truncate">
                                       {truncateAddress(keystoreKey.suiAddress, 10)}
                                     </div>
                                   </>
                                 ) : (
                                   <>
                                     <div className="font-medium text-text-primary">External Signer</div>
-                                    <div className="text-[10px] text-text-tertiary font-mono truncate">
+                                    <div className="text-xs text-text-tertiary font-mono truncate">
                                       {pubKey.slice(0, 20)}...{pubKey.slice(-8)}
                                     </div>
                                   </>
@@ -2453,11 +2479,11 @@ export function KeytoolManager() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0 ml-2">
-                              <span className="text-[10px] text-text-tertiary">
+                              <span className="text-xs text-text-tertiary">
                                 weight: {weight}
                               </span>
                               <span className={clsx(
-                                'text-[10px] font-medium px-1.5 py-0.5 rounded',
+                                'text-xs font-medium px-1.5 py-0.5 rounded',
                                 hasSigned
                                   ? 'bg-green-500/20 text-green-400'
                                   : 'bg-yellow-500/20 text-yellow-400'
@@ -2470,7 +2496,7 @@ export function KeytoolManager() {
                       })}
                     </div>
                     {collectedSignatures.length < combineThreshold && (
-                      <p className="mt-3 text-[10px] text-text-tertiary text-center">
+                      <p className="mt-3 text-xs text-text-tertiary text-center">
                         Need {combineThreshold - collectedSignatures.length} more signature(s) to meet threshold of {combineThreshold}
                       </p>
                     )}
@@ -2507,7 +2533,7 @@ export function KeytoolManager() {
                         📋 Copy
                       </button>
                     </div>
-                    <div className="font-mono text-[10px] text-text-secondary break-all p-2 bg-black/20 rounded max-h-20 overflow-y-auto">
+                    <div className="font-mono text-xs text-text-secondary break-all p-2 bg-black/20 rounded max-h-20 overflow-y-auto">
                       {combinedSignature}
                     </div>
                   </div>

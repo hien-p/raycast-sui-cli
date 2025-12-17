@@ -38,24 +38,24 @@ const features = [
 
 export function FeaturesGrid() {
   return (
-    <div className="relative z-20 py-8 sm:py-10 lg:py-24 max-w-6xl mx-auto px-2 sm:px-4">
+    <section className="relative z-20 py-8 sm:py-10 lg:py-24 max-w-6xl mx-auto px-2 sm:px-4" aria-labelledby="features-heading">
       <div className="mb-6 sm:mb-12 text-center">
-        <span className="text-rose-400 text-xs sm:text-sm tracking-wider uppercase">Features</span>
-        <h4 className="text-2xl sm:text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-bold text-white mt-1 sm:mt-2">
+        <span className="text-rose-400 text-xs sm:text-sm tracking-wider uppercase" aria-hidden="true">Features</span>
+        <h2 id="features-heading" className="text-2xl sm:text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-bold text-white mt-1 sm:mt-2">
           Everything you need
-        </h4>
+        </h2>
         <p className="text-xs sm:text-sm lg:text-base max-w-2xl my-2 sm:my-4 mx-auto text-white/50 text-center font-normal px-4">
           A complete toolkit for Sui blockchain. All operations run locally.
         </p>
       </div>
 
       <div className="relative">
-        <div className="grid grid-cols-1 lg:grid-cols-6 border rounded-lg sm:rounded-xl border-white/10 bg-black/30 backdrop-blur-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-6 border rounded-lg sm:rounded-xl border-white/10 bg-black/30 backdrop-blur-sm" role="list" aria-label="Feature cards">
           {features.map((feature) => (
-            <FeatureCard key={feature.title} className={feature.className}>
+            <FeatureCard key={feature.title} className={feature.className} title={feature.title}>
               <FeatureTitle>{feature.title}</FeatureTitle>
               <FeatureDescription>{feature.description}</FeatureDescription>
-              <div className="h-full w-full">{feature.skeleton}</div>
+              <div className="h-full w-full" aria-hidden="true">{feature.skeleton}</div>
             </FeatureCard>
           ))}
         </div>
@@ -80,29 +80,31 @@ export function FeaturesGrid() {
           </span>
         </div>
       </motion.div>
-    </div>
+    </section>
   );
 }
 
 const FeatureCard = ({
   children,
   className,
+  title,
 }: {
   children: React.ReactNode;
   className?: string;
+  title?: string;
 }) => {
   return (
-    <div className={cn(`p-3 sm:p-4 md:p-8 relative overflow-hidden`, className)}>
+    <article className={cn(`p-3 sm:p-4 md:p-8 relative overflow-hidden`, className)} role="listitem" aria-label={title}>
       {children}
-    </div>
+    </article>
   );
 };
 
 const FeatureTitle = ({ children }: { children: React.ReactNode }) => {
   return (
-    <p className="max-w-5xl mx-auto text-left tracking-tight text-white text-lg sm:text-xl md:text-2xl md:leading-snug font-semibold">
+    <h3 className="max-w-5xl mx-auto text-left tracking-tight text-white text-lg sm:text-xl md:text-2xl md:leading-snug font-semibold">
       {children}
-    </p>
+    </h3>
   );
 };
 
@@ -131,19 +133,19 @@ function SkeletonWallet() {
             <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-rose-500" />
             <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500" />
             <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500" />
-            <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs text-white/40 font-mono">sui-cli-web</span>
+            <span className="ml-1 sm:ml-2 text-xs sm:text-xs text-white/40 font-mono">sui-cli-web</span>
           </div>
           {/* Mock wallet list */}
           <div className="space-y-1.5 sm:space-y-2 font-mono text-xs sm:text-sm">
             <div className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded bg-rose-500/10 border border-rose-500/30">
               <Terminal className="w-3 h-3 sm:w-4 sm:h-4 text-rose-400" />
               <span className="text-rose-300 text-[11px] sm:text-sm">0x7a8f...3d2e</span>
-              <span className="ml-auto text-green-400 text-[10px] sm:text-xs">● active</span>
+              <span className="ml-auto text-green-400 text-xs sm:text-xs">● active</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded bg-white/5">
               <Terminal className="w-3 h-3 sm:w-4 sm:h-4 text-white/40" />
               <span className="text-white/60 text-[11px] sm:text-sm">0x9c4b...8f1a</span>
-              <span className="ml-auto text-white/30 text-[10px] sm:text-xs">12.5 SUI</span>
+              <span className="ml-auto text-white/30 text-xs sm:text-xs">12.5 SUI</span>
             </div>
             <div className="hidden sm:flex items-center gap-3 p-2 rounded bg-white/5">
               <Terminal className="w-4 h-4 text-white/40" />
@@ -194,11 +196,11 @@ function SkeletonTransfer() {
             <Send className="w-3 h-3 sm:w-4 sm:h-4 text-rose-400" />
             <div className="flex-1 min-w-0">
               <div className="text-white/80 text-xs sm:text-sm font-mono truncate">{tx.to}</div>
-              <div className="text-white/40 text-[10px] sm:text-xs">{tx.amount}</div>
+              <div className="text-white/40 text-xs sm:text-xs">{tx.amount}</div>
             </div>
             <span
               className={cn(
-                "text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shrink-0",
+                "text-xs sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shrink-0",
                 tx.status === "success"
                   ? "bg-green-500/20 text-green-400"
                   : "bg-yellow-500/20 text-yellow-400"
@@ -220,9 +222,9 @@ function SkeletonMove() {
       <div className="w-full mx-auto bg-black/50 border border-white/10 rounded-lg overflow-hidden">
         <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-white/5 border-b border-white/10">
           <Package className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-          <span className="text-[10px] sm:text-xs text-white/60 font-mono truncate">sources/module.move</span>
+          <span className="text-xs sm:text-xs text-white/60 font-mono truncate">sources/module.move</span>
         </div>
-        <div className="p-2 sm:p-4 font-mono text-[10px] sm:text-sm space-y-0.5 sm:space-y-1">
+        <div className="p-2 sm:p-4 font-mono text-xs sm:text-sm space-y-0.5 sm:space-y-1">
           <div>
             <span className="text-purple-400">module</span>
             <span className="text-white/80"> pkg</span>
@@ -252,7 +254,7 @@ function SkeletonMove() {
         {/* Build status */}
         <div className="px-2 sm:px-4 py-1.5 sm:py-2 bg-green-500/10 border-t border-green-500/30 flex items-center gap-1.5 sm:gap-2">
           <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-          <span className="text-green-400 text-[10px] sm:text-xs font-mono">Build OK • 0.8s</span>
+          <span className="text-green-400 text-xs sm:text-xs font-mono">Build OK • 0.8s</span>
         </div>
       </div>
     </div>
@@ -302,7 +304,7 @@ function SkeletonNetwork() {
                 delay: idx * 0.3,
               }}
             >
-              <span className="text-[10px] sm:text-xs text-white/80 font-mono">{net.name.slice(0, 3)}</span>
+              <span className="text-xs sm:text-xs text-white/80 font-mono">{net.name.slice(0, 3)}</span>
             </motion.div>
           );
         })}
@@ -311,7 +313,7 @@ function SkeletonNetwork() {
       {/* Faucet indicator */}
       <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded-full">
         <Droplets className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
-        <span className="text-cyan-400 text-[10px] sm:text-xs font-mono">8 faucets</span>
+        <span className="text-cyan-400 text-xs sm:text-xs font-mono">8 faucets</span>
       </div>
     </div>
   );

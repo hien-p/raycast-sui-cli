@@ -45,16 +45,39 @@ interface BatchRecipient {
 type TransferMode = 'external' | 'internal' | 'batch';
 
 export function TransferSui() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { addresses, fetchAddresses } = useAppStore();
   const activeAddress = addresses.find((a) => a.isActive);
   const internalAddresses = addresses.filter((a) => !a.isActive);
 
-  // URL params for pre-selecting coin
+  // URL params for pre-selecting coin and mode
   const coinIdParam = searchParams.get('coinId');
   const coinTypeParam = searchParams.get('type');
+  const modeParam = searchParams.get('mode') as TransferMode | null;
+  const validModes: TransferMode[] = ['external', 'internal', 'batch'];
 
-  const [transferMode, setTransferMode] = useState<TransferMode>('external');
+  const [transferMode, setTransferMode] = useState<TransferMode>(() =>
+    modeParam && validModes.includes(modeParam) ? modeParam : 'external'
+  );
+
+  // Sync mode state when URL changes (e.g., from FileTree navigation)
+  useEffect(() => {
+    const newMode = modeParam && validModes.includes(modeParam) ? modeParam : 'external';
+    if (newMode !== transferMode) {
+      setTransferMode(newMode);
+    }
+  }, [modeParam]);
+
+  // Sync URL when mode changes
+  const handleModeChange = (mode: TransferMode) => {
+    setTransferMode(mode);
+    if (mode === 'external') {
+      searchParams.delete('mode');
+    } else {
+      searchParams.set('mode', mode);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
   const [toAddress, setToAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>(coinIdParam || '');
@@ -267,7 +290,7 @@ export function TransferSui() {
             <Send className="w-5 h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px rgba(77, 162, 255, 0.5))' }} />
             <h1 className="text-lg font-bold text-blue-400 font-mono">$ sui transfer</h1>
           </div>
-          <span className="text-blue-500/60 font-mono text-xs hidden sm:block">
+          <span className="text-blue-400/80 font-mono text-xs hidden sm:block">
             External • Internal • Batch
           </span>
         </motion.div>
@@ -281,16 +304,16 @@ export function TransferSui() {
           ].map(({ mode, icon: Icon, label, desc }) => (
             <button
               key={mode}
-              onClick={() => setTransferMode(mode)}
+              onClick={() => handleModeChange(mode)}
               className={`px-3 py-2.5 rounded-lg border font-mono text-xs transition-all ${
                 transferMode === mode
                   ? 'border-blue-500 bg-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/20'
-                  : 'border-blue-500/30 bg-black/30 text-blue-500/60 hover:border-blue-500/50 hover:text-blue-400'
+                  : 'border-blue-500/30 bg-black/30 text-blue-400/80 hover:border-blue-500/50 hover:text-blue-400'
               }`}
             >
               <Icon className="w-4 h-4 mx-auto mb-1" />
               <div className="font-semibold">{label}</div>
-              <div className="text-[10px] opacity-70">{desc}</div>
+              <div className="text-xs opacity-70">{desc}</div>
             </button>
           ))}
         </div>
@@ -306,7 +329,7 @@ export function TransferSui() {
               </div>
               <div className="space-y-1 max-h-32 overflow-y-auto">
                 {savedAddresses.length === 0 ? (
-                  <p className="text-xs text-blue-500/50 font-mono text-center py-2">No saved addresses</p>
+                  <p className="text-xs text-blue-400/70 font-mono text-center py-2">No saved addresses</p>
                 ) : (
                   savedAddresses.map((addr) => (
                     <div
@@ -322,7 +345,7 @@ export function TransferSui() {
                       <Wallet className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold text-blue-400 font-mono">{addr.alias}</div>
-                        <div className="text-[10px] text-blue-500/50 font-mono truncate">
+                        <div className="text-xs text-blue-400/70 font-mono truncate">
                           {addr.address.slice(0, 8)}...{addr.address.slice(-6)}
                         </div>
                       </div>
@@ -379,8 +402,8 @@ export function TransferSui() {
                         }
                       }}
                     >
-                      <Clock className="w-3 h-3 text-blue-500/50 flex-shrink-0" />
-                      <div className="text-[10px] text-blue-500/70 font-mono truncate">
+                      <Clock className="w-3 h-3 text-blue-400/70 flex-shrink-0" />
+                      <div className="text-xs text-blue-400 font-mono truncate">
                         {addr.address.slice(0, 8)}...{addr.address.slice(-6)}
                       </div>
                     </div>
@@ -412,7 +435,7 @@ export function TransferSui() {
                     {transferMode === 'internal' && 'Internal Transfer'}
                     {transferMode === 'batch' && 'Batch Transfer'}
                   </h3>
-                  <p className="text-[10px] text-blue-500/60 font-mono">
+                  <p className="text-xs text-blue-400/80 font-mono">
                     {transferMode === 'external' && 'Send to any Sui address'}
                     {transferMode === 'internal' && 'Between your wallets'}
                     {transferMode === 'batch' && 'Multiple recipients'}
@@ -422,12 +445,12 @@ export function TransferSui() {
 
               {/* From */}
               <div className="space-y-1">
-                <label className="text-xs font-mono text-blue-500/70">FROM</label>
+                <label className="text-xs font-mono text-blue-400">FROM</label>
                 <div className="flex items-center gap-2 p-2.5 rounded bg-black/30 border border-blue-500/20">
                   <Wallet className="w-4 h-4 text-blue-400" />
                   <div className="flex-1">
                     <div className="text-xs font-medium text-blue-400 font-mono">{activeAddress?.alias || 'Unknown'}</div>
-                    <div className="text-[10px] text-blue-500/50 font-mono">
+                    <div className="text-xs text-blue-400/70 font-mono">
                       {activeAddress?.address.slice(0, 10)}...{activeAddress?.address.slice(-6)}
                     </div>
                   </div>
@@ -440,7 +463,7 @@ export function TransferSui() {
               {/* To - External */}
               {transferMode === 'external' && (
                 <div className="space-y-1">
-                  <label className="text-xs font-mono text-blue-500/70">TO ADDRESS <span className="text-red-400">*</span></label>
+                  <label className="text-xs font-mono text-blue-400">TO ADDRESS <span className="text-red-400">*</span></label>
                   <input
                     type="text"
                     value={toAddress}
@@ -454,14 +477,14 @@ export function TransferSui() {
               {/* To - Internal */}
               {transferMode === 'internal' && (
                 <div className="space-y-1">
-                  <label className="text-xs font-mono text-blue-500/70">TO WALLET <span className="text-red-400">*</span></label>
+                  <label className="text-xs font-mono text-blue-400">TO WALLET <span className="text-red-400">*</span></label>
                   {internalAddresses.length === 0 ? (
                     <div className="p-3 rounded bg-yellow-500/10 border border-yellow-500/30">
                       <div className="flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-medium text-yellow-400 font-mono">No other wallets</p>
-                          <p className="text-[10px] text-yellow-500/70 font-mono">Create more addresses first</p>
+                          <p className="text-xs text-yellow-500/70 font-mono">Create more addresses first</p>
                         </div>
                       </div>
                     </div>
@@ -486,10 +509,10 @@ export function TransferSui() {
               {transferMode === 'batch' && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono text-blue-500/70">RECIPIENTS</label>
+                    <label className="text-xs font-mono text-blue-400">RECIPIENTS</label>
                     <button
                       onClick={addBatchRecipient}
-                      className="px-2 py-1 text-[10px] bg-blue-500/10 text-blue-400 rounded hover:bg-blue-500/20 transition-colors flex items-center gap-1 font-mono"
+                      className="px-2 py-1 text-xs bg-blue-500/10 text-blue-400 rounded hover:bg-blue-500/20 transition-colors flex items-center gap-1 font-mono"
                     >
                       <Plus className="w-3 h-3" />
                       Add
@@ -507,14 +530,14 @@ export function TransferSui() {
                             value={recipient.address}
                             onChange={(e) => updateBatchRecipient(recipient.id, 'address', e.target.value)}
                             placeholder="0x... address"
-                            className="w-full px-2 py-1 bg-black/50 border border-blue-500/30 rounded text-blue-400 placeholder:text-blue-500/40 font-mono text-[10px]"
+                            className="w-full px-2 py-1 bg-black/50 border border-blue-500/30 rounded text-blue-400 placeholder:text-blue-500/40 font-mono text-xs"
                           />
                           <input
                             type="text"
                             value={recipient.amount}
                             onChange={(e) => updateBatchRecipient(recipient.id, 'amount', e.target.value)}
                             placeholder="Amount (SUI)"
-                            className="w-full px-2 py-1 bg-black/50 border border-blue-500/30 rounded text-blue-400 placeholder:text-blue-500/40 font-mono text-[10px]"
+                            className="w-full px-2 py-1 bg-black/50 border border-blue-500/30 rounded text-blue-400 placeholder:text-blue-500/40 font-mono text-xs"
                           />
                         </div>
                         <button
@@ -533,7 +556,7 @@ export function TransferSui() {
               {/* Amount */}
               {transferMode !== 'batch' && (
                 <div className="space-y-1">
-                  <label className="text-xs font-mono text-blue-500/70">AMOUNT <span className="text-red-400">*</span></label>
+                  <label className="text-xs font-mono text-blue-400">AMOUNT <span className="text-red-400">*</span></label>
                   <div className="relative">
                     <input
                       type="text"
@@ -542,14 +565,14 @@ export function TransferSui() {
                       placeholder="0.00"
                       className="w-full px-3 py-2 pr-12 bg-black/50 border border-blue-500/30 rounded text-blue-400 placeholder:text-blue-500/40 focus:outline-none focus:border-blue-500 font-mono text-sm"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-blue-500/50">SUI</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-blue-400/70">SUI</span>
                   </div>
                   <div className="flex gap-1.5">
                     {[0.1, 0.5, 1, 5].map((val) => (
                       <button
                         key={val}
                         onClick={() => setAmount(val.toString())}
-                        className="px-2 py-1 text-[10px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded font-mono transition-colors"
+                        className="px-2 py-1 text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded font-mono transition-colors"
                       >
                         {val}
                       </button>
@@ -561,7 +584,7 @@ export function TransferSui() {
               {/* Coin Selection */}
               {transferMode !== 'batch' && (
                 <div className="space-y-1">
-                  <label className="text-xs font-mono text-blue-500/70">SELECT COIN</label>
+                  <label className="text-xs font-mono text-blue-400">SELECT COIN</label>
                   {isLoadingCoins ? (
                     <div className="flex items-center justify-center py-3">
                       <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -625,16 +648,16 @@ export function TransferSui() {
                 </h3>
                 <div className="space-y-2 text-xs font-mono">
                   <div className="flex justify-between">
-                    <span className="text-blue-500/70">Amount</span>
+                    <span className="text-blue-400">Amount</span>
                     <span className="text-blue-400">{getTotalAmount().toFixed(6)} SUI</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-500/70">Gas</span>
+                    <span className="text-blue-400">Gas</span>
                     <span className="text-blue-400">{estimatedGas} SUI</span>
                   </div>
                   {transferMode === 'batch' && (
                     <div className="flex justify-between">
-                      <span className="text-blue-500/70">Recipients</span>
+                      <span className="text-blue-400">Recipients</span>
                       <span className="text-blue-400">{batchRecipients.length}</span>
                     </div>
                   )}
@@ -678,30 +701,30 @@ export function TransferSui() {
                         {/* Balance Change */}
                         {transferResult.balanceBefore && transferResult.balanceAfter && (
                           <div className="bg-black/30 border border-blue-500/20 rounded-lg p-3">
-                            <div className="text-[10px] font-mono text-blue-500/70 mb-2">BALANCE_CHANGE</div>
+                            <div className="text-xs font-mono text-blue-400 mb-2">BALANCE_CHANGE</div>
                             <div className="grid grid-cols-3 gap-2 items-center text-center">
                               <div>
                                 <div className="text-lg font-bold text-blue-400 font-mono">{transferResult.balanceBefore}</div>
-                                <div className="text-[10px] text-blue-500/50 font-mono">BEFORE</div>
+                                <div className="text-xs text-blue-400/70 font-mono">BEFORE</div>
                               </div>
                               <div className="flex flex-col items-center">
                                 <ArrowRight className="w-4 h-4 text-blue-400" />
                                 {transferResult.amountSent && (
-                                  <span className="text-[10px] font-mono text-blue-400 mt-1">-{transferResult.amountSent}</span>
+                                  <span className="text-xs font-mono text-blue-400 mt-1">-{transferResult.amountSent}</span>
                                 )}
                               </div>
                               <div>
                                 <div className="text-lg font-bold text-green-400 font-mono">{transferResult.balanceAfter}</div>
-                                <div className="text-[10px] text-blue-500/50 font-mono">AFTER</div>
+                                <div className="text-xs text-blue-400/70 font-mono">AFTER</div>
                               </div>
                             </div>
                           </div>
                         )}
                         {/* Digest */}
                         <div className="space-y-1">
-                          <div className="text-[10px] font-mono text-blue-500/70">TX_DIGEST</div>
+                          <div className="text-xs font-mono text-blue-400">TX_DIGEST</div>
                           <div className="flex items-center gap-2">
-                            <code className="flex-1 px-2 py-1.5 bg-black/50 border border-blue-500/20 rounded text-[10px] font-mono text-blue-300 truncate">
+                            <code className="flex-1 px-2 py-1.5 bg-black/50 border border-blue-500/20 rounded text-xs font-mono text-blue-300 truncate">
                               {transferResult.digest}
                             </code>
                             <button
