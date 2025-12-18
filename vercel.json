@@ -19,18 +19,26 @@
   ],
   "routes": [
     {
-      "src": "/blog/(.*)",
-      "dest": "/packages/blog/dist/$1"
+      "src": "/blog$",
+      "dest": "/packages/blog/dist/index.html"
     },
     {
-      "src": "/blog",
+      "src": "/blog/$",
       "dest": "/packages/blog/dist/index.html"
+    },
+    {
+      "src": "/blog/_astro/(.*)",
+      "dest": "/packages/blog/dist/_astro/$1"
+    },
+    {
+      "src": "/blog/(.*)",
+      "dest": "/packages/blog/dist/$1"
     },
     {
       "handle": "filesystem"
     },
     {
-      "src": "/(.*)",
+      "src": "/((?!blog).*)",
       "dest": "/packages/client/dist/index.html"
     }
   ]
