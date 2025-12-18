@@ -1,0 +1,105 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  keywords?: string;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = 'Learn Sui blockchain development with tutorials, guides, and CLI tools. Build faster with Sui CLI Web.',
+  image = '/blog/og-image.png',
+  keywords = 'Sui blockchain, Sui CLI, Web3 development, blockchain tutorials, Move language, Sui development',
+  noindex = false
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const fullTitle = `${title} | Sui CLI Web Blog`;
+const GA_ID = 'G-Z37RHCYYX6';
+---
+
+<!doctype html>
+<html lang="en" class="dark" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+    <link rel="icon" type="image/svg+xml" href="/blog/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary Meta Tags - SEO Optimized -->
+    <title>{fullTitle}</title>
+    <meta name="title" content={fullTitle} />
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Additional SEO -->
+    <meta name="author" content="Sui CLI Web Team" />
+    <meta name="theme-color" content="#0A0A0A" />
+    <meta name="application-name" content="Sui CLI Web Blog" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sui CLI Web Blog" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, Astro.site)} />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(image, Astro.site)} />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Sui CLI Web Blog",
+      "description": description,
+      "url": Astro.site?.toString(),
+      "publisher": {
+        "@type": "Organization",
+        "name": "Sui CLI Web",
+        "logo": {
+          "@type": "ImageObject",
+          "url": new URL('/blog/favicon.svg', Astro.site).toString()
+        }
+      }
+    })} />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Google Analytics -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+    <script is:inline define:vars={{ GA_ID }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', GA_ID, {
+        page_path: window.location.pathname,
+        cookie_flags: 'SameSite=None;Secure'
+      });
+    </script>
+
+    <!-- Theme initialization -->
+    <script is:inline>
+      document.documentElement.setAttribute('data-theme', 'dark');
+    </script>
+  </head>
+  <body class="min-h-screen bg-background">
+    <slot />
+  </body>
+</html>

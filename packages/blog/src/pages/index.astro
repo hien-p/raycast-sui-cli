@@ -1,0 +1,230 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/astro/Header.astro';
+import PostCard from '../components/astro/PostCard.astro';
+import { TextReveal } from '../components/react/TextReveal';
+import AnimatedGradientBackground from '../components/ui/animated-gradient-background';
+import AnimatedCat from '../components/ui/animated-cat';
+import { getCollection } from 'astro:content';
+
+// Get all published posts, sorted by date
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+
+// Group posts by category for quick filters
+const categories = ['announcement', 'tutorial', 'wrapup', 'guide'] as const;
+const categoryLabels = {
+  announcement: '📢 Announcements',
+  tutorial: '📚 Tutorials',
+  wrapup: '📊 Wrap-ups',
+  guide: '🗺️ Guides',
+};
+
+const featuredPost = posts[0];
+const recentPosts = posts.slice(1);
+---
+
+<BaseLayout
+  title="Blog - Sui CLI Web"
+  description="Learn about Sui blockchain development, CLI tools, and stay updated with the latest features and announcements."
+>
+  <!-- Animated Gradient Background -->
+  <div class="fixed inset-0 -z-10">
+    <AnimatedGradientBackground
+      client:load
+      breathing={true}
+      startingGap={125}
+      breathingRange={5}
+      animationSpeed={0.02}
+      topOffset={0}
+    />
+  </div>
+
+  <Header currentPath="/blog" />
+
+  <main class="min-h-screen pt-4 pb-16 relative z-0">
+    <div class="max-w-4xl mx-auto px-4">
+      <!-- Animated Cat Mascot (Lottie) - closer to navbar -->
+      <div class="flex justify-center pt-6 pb-4">
+        <AnimatedCat client:load className="w-64 h-64 md:w-80 md:h-80" />
+      </div>
+
+      <!-- Hero Section -->
+      <section class="py-4 mb-8 border-b border-white/10">
+        <div class="flex items-center gap-2 text-sm font-mono text-white/60 mb-4 drop-shadow-lg">
+          <span class="text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">$</span>
+          <span class="text-shadow">cat ~/blog/README.md</span>
+        </div>
+
+        <TextReveal
+          client:load
+          text="Sui CLI Web Blog"
+          as="h1"
+          className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
+        />
+
+        <p class="text-white/80 text-lg max-w-2xl leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+          Tutorials, announcements, and insights about Sui blockchain development.
+          Learn to build faster with our CLI tools.
+        </p>
+
+        <!-- Quick Stats -->
+        <div class="flex items-center gap-6 mt-6 text-sm font-mono">
+          <div class="flex items-center gap-2 drop-shadow-lg">
+            <span class="text-white/50">total_posts:</span>
+            <span class="text-primary drop-shadow-[0_0_6px_rgba(77,162,255,0.5)]">{posts.length}</span>
+          </div>
+          <div class="flex items-center gap-2 drop-shadow-lg">
+            <span class="text-white/50">categories:</span>
+            <span class="text-primary drop-shadow-[0_0_6px_rgba(77,162,255,0.5)]">{categories.length}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Filters - Disabled -->
+      <section class="mb-8">
+        <div class="flex flex-wrap gap-2">
+          <span class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/40 backdrop-blur-md text-white border border-white/20 shadow-lg cursor-default">
+            all ({posts.length})
+          </span>
+          {categories.map((cat) => {
+            const count = posts.filter((p) => p.data.category === cat).length;
+            return (
+              <span class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/30 backdrop-blur-md text-white/50 border border-white/10 shadow-md cursor-default">
+                {cat} ({count})
+              </span>
+            );
+          })}
+        </div>
+      </section>
+
+      <!-- Featured Post (if exists) - DISABLED with Coming Soon -->
+      {featuredPost && (
+        <section class="mb-12">
+          <div class="flex items-center gap-2 text-sm font-mono text-white/60 mb-4 drop-shadow-lg">
+            <span class="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">★</span>
+            <span>latest</span>
+          </div>
+
+          <div class="block cursor-not-allowed">
+            <article class="relative p-6 rounded-xl border border-white/20 bg-black/40 backdrop-blur-xl shadow-xl overflow-hidden">
+              <!-- Coming Soon Overlay -->
+              <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/40 backdrop-blur-md">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                    </span>
+                    <span class="text-sm font-mono text-purple-200">Coming Soon</span>
+                  </div>
+                </div>
+              </div>
+
+              {featuredPost.data.heroImage && (
+                <div class="mb-4 rounded-lg overflow-hidden border border-white/10">
+                  <img
+                    src={featuredPost.data.heroImage}
+                    alt={featuredPost.data.title}
+                    class="w-full h-48 object-cover opacity-60"
+                    loading="eager"
+                  />
+                </div>
+              )}
+
+              <div class="flex items-center gap-3 mb-3 font-mono text-sm">
+                <span class={`tag ${
+                  featuredPost.data.category === 'announcement' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                  featuredPost.data.category === 'tutorial' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                  featuredPost.data.category === 'wrapup' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                  'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                }`}>
+                  [{featuredPost.data.category}]
+                </span>
+                <time datetime={featuredPost.data.publishDate.toISOString()} class="text-white/40">
+                  {featuredPost.data.publishDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </time>
+              </div>
+
+              <h2 class="text-2xl font-bold text-white mb-2 drop-shadow-lg">
+                {featuredPost.data.title}
+              </h2>
+
+              <p class="text-white/70 leading-relaxed">
+                {featuredPost.data.description}
+              </p>
+            </article>
+          </div>
+        </section>
+      )}
+
+      <!-- Recent Posts - DISABLED with Coming Soon -->
+      {recentPosts.length > 0 && (
+        <section>
+          <div class="flex items-center gap-2 text-sm font-mono text-white/60 mb-4 drop-shadow-lg">
+            <span class="text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">$</span>
+            <span>ls -la posts/</span>
+          </div>
+
+          <div class="space-y-3">
+            {recentPosts.map((post, index) => (
+              <div class="relative cursor-not-allowed">
+                <!-- Coming Soon Overlay for each post -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-[1px] z-10 rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <span class="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-xs font-mono text-purple-300">
+                    Coming Soon
+                  </span>
+                </div>
+                <article class="p-4 rounded-xl border border-white/10 bg-black/30 backdrop-blur-md">
+                  <div class="flex items-center gap-3 mb-2 font-mono text-xs">
+                    <span class={`px-2 py-0.5 rounded border ${
+                      post.data.category === 'announcement' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                      post.data.category === 'tutorial' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                      post.data.category === 'wrapup' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                      'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                    }`}>
+                      [{post.data.category}]
+                    </span>
+                    <time datetime={post.data.publishDate.toISOString()} class="text-white/40">
+                      {post.data.publishDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </time>
+                  </div>
+                  <h3 class="text-lg font-semibold text-white/80 mb-1">{post.data.title}</h3>
+                  <p class="text-white/50 text-sm line-clamp-2">{post.data.description}</p>
+                </article>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Empty State -->
+      {posts.length === 0 && (
+        <section class="text-center py-16">
+          <div class="text-4xl mb-4">📝</div>
+          <h2 class="text-xl font-semibold text-white mb-2">No posts yet</h2>
+          <p class="text-white/50">Check back soon for tutorials and announcements!</p>
+        </section>
+      )}
+
+      <!-- CTA Section -->
+      <section class="mt-16 p-6 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 shadow-xl text-center">
+        <h2 class="text-xl font-bold text-white mb-2 drop-shadow-lg">Ready to try Sui CLI Web?</h2>
+        <p class="text-white/70 mb-4">
+          The fastest way to interact with Sui blockchain. No setup required.
+        </p>
+        <a
+          href="https://cli.firstmovers.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-mono hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
+        >
+          Launch App
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M4.66669 11.3333L11.3334 4.66666M11.3334 4.66666H6.00002M11.3334 4.66666V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

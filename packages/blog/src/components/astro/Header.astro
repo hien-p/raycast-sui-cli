@@ -1,0 +1,64 @@
+---
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath = '' } = Astro.props;
+
+const navItems = [
+  { href: '/blog', label: 'Blog', icon: '📝' },
+  { href: '/blog/category/tutorial', label: 'Tutorials', icon: '📚' },
+  { href: '/blog/category/announcement', label: 'News', icon: '📢' },
+  { href: 'https://cli.firstmovers.io', label: 'App', icon: '🚀', external: true },
+];
+---
+
+<header class="sticky top-0 z-40 bg-black/40 backdrop-blur-2xl border-b border-white/10">
+  <nav class="max-w-4xl mx-auto px-4 py-3">
+    <div class="flex items-center justify-between">
+      <!-- Logo / Brand -->
+      <a href="/blog" class="flex items-center gap-2.5 group">
+        <div class="flex gap-1">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+        </div>
+        <span class="font-mono text-sm text-white/80 group-hover:text-white transition-colors">
+          ~/blog
+        </span>
+      </a>
+
+      <!-- Navigation -->
+      <ul class="flex items-center gap-1">
+        {navItems.map((item) => {
+          const isActive = currentPath === item.href ||
+            (item.href !== '/blog' && currentPath.startsWith(item.href));
+
+          return (
+            <li>
+              <a
+                href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                class:list={[
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-mono transition-all',
+                  isActive
+                    ? 'text-white bg-white/15'
+                    : 'text-white/60 hover:text-white hover:bg-white/10',
+                ]}
+              >
+                <span class="text-xs">{item.icon}</span>
+                <span class="hidden sm:inline">{item.label}</span>
+                {item.external && (
+                  <svg class="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                )}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,40 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+type Props = {
+  post: CollectionEntry<'posts'>;
+};
+
+const { post } = Astro.props;
+const { Content, headings } = await post.render();
+
+// Generate sections from h2 headings for navigation
+const sections = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({
+    id: h.slug,
+    title: h.text,
+  }));
+---
+
+<PostLayout
+  title={post.data.title}
+  description={post.data.description}
+  publishDate={post.data.publishDate}
+  category={post.data.category}
+  author={post.data.author}
+  heroImage={post.data.heroImage}
+  sections={sections}
+  tags={post.data.tags}
+>
+  <Content />
+</PostLayout>

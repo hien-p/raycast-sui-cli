@@ -1,9 +1,37 @@
 {
-  "buildCommand": "npm run build -w @sui-cli-web/shared && npm run build:client",
-  "outputDirectory": "packages/client/dist",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "framework": null,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "builds": [
+    {
+      "src": "packages/client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "packages/blog/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/blog/(.*)",
+      "dest": "/packages/blog/dist/$1"
+    },
+    {
+      "src": "/blog",
+      "dest": "/packages/blog/dist/index.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/packages/client/dist/index.html"
+    }
   ]
 }

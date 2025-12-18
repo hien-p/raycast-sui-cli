@@ -1,0 +1,374 @@
+---
+/**
+ * Cinematic Blog Intro - Pure Astro/Vanilla JS Version
+ *
+ * A full-screen loading intro with aurora background, floating particles,
+ * word-by-word title reveal, progress bar, and skip button.
+ *
+ * Uses vanilla JavaScript instead of React to avoid hydration issues.
+ */
+interface Props {
+  title?: string;
+  duration?: number;
+}
+
+const { title = "Loading...", duration = 4000 } = Astro.props;
+const words = title.split(' ');
+
+// Generate particles deterministically
+const particles = Array.from({ length: 25 }, (_, i) => ({
+  id: i,
+  left: `${(i * 37) % 100}%`,
+  top: `${(i * 53) % 100}%`,
+  size: 2 + (i % 3),
+  delay: (i * 0.3) % 5,
+  dur: 3 + (i % 4),
+}));
+---
+
+<div id="blog-intro-overlay" data-duration={duration}>
+  <!-- Aurora Background -->
+  <div class="aurora-bg"></div>
+
+  <!-- Floating Particles -->
+  {particles.map((p) => (
+    <div
+      class="particle"
+      style={`left: ${p.left}; top: ${p.top}; width: ${p.size}px; height: ${p.size}px; animation-delay: ${p.delay}s; animation-duration: ${p.dur}s;`}
+    />
+  ))}
+
+  <!-- Grid Pattern -->
+  <div class="grid-pattern"></div>
+
+  <!-- Vignette -->
+  <div class="vignette"></div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Decorative Line -->
+    <div class="decorative-line" id="deco-line"></div>
+
+    <!-- Subtitle -->
+    <p class="subtitle" id="subtitle">◈ Loading Article</p>
+
+    <!-- Title -->
+    <h1 class="title">
+      {words.map((word, i) => (
+        <span class="word" data-index={i} style={`transition-delay: ${i * 40}ms;`}>
+          {word}
+        </span>
+      ))}
+    </h1>
+
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progress-container">
+      <div class="progress-track">
+        <div class="progress-bar" id="progress-bar" style={`animation-duration: ${duration}ms;`}></div>
+      </div>
+      <p class="progress-text">PREPARING CONTENT</p>
+    </div>
+  </div>
+
+  <!-- Skip Button -->
+  <button class="skip-btn" id="skip-btn">Skip →</button>
+</div>
+
+<style>
+  #blog-intro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    z-index: 99999;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 800ms ease-out;
+  }
+
+  #blog-intro-overlay.fading {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #blog-intro-overlay.hidden {
+    display: none;
+  }
+
+  /* Aurora Background */
+  .aurora-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 40%, rgba(30, 64, 175, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(88, 28, 135, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 50% 100%, rgba(6, 78, 59, 0.1) 0%, transparent 40%);
+  }
+
+  /* Floating Particles */
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.25);
+    animation: particleFloat ease-in-out infinite;
+  }
+
+  @keyframes particleFloat {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.25;
+    }
+    50% {
+      transform: translateY(-15px) translateX(8px);
+      opacity: 0.5;
+    }
+  }
+
+  /* Grid Pattern */
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Vignette */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 100%);
+  }
+
+  /* Content */
+  .content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: clamp(2rem, 8vw, 6rem);
+    padding-right: 2rem;
+    max-width: 75%;
+    z-index: 10;
+  }
+
+  /* Decorative Line */
+  .decorative-line {
+    width: 0;
+    height: 1px;
+    background-color: rgba(255,255,255,0.3);
+    margin-bottom: 24px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .decorative-line.visible {
+    width: 60px;
+  }
+
+  /* Subtitle */
+  .subtitle {
+    color: rgba(255,255,255,0.4);
+    font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    margin-top: 0;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .subtitle.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Title */
+  .title {
+    color: white;
+    font-size: clamp(1.5rem, 4vw, 3rem);
+    font-family: Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .word {
+    display: inline-block;
+    margin-right: 0.25em;
+    opacity: 0;
+    transform: translateX(40px);
+    filter: blur(4px);
+    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .word.visible {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0px);
+  }
+
+  /* Progress Container */
+  .progress-container {
+    margin-top: 40px;
+    width: clamp(150px, 20vw, 250px);
+    opacity: 0;
+    transition: opacity 0.8s ease 0.3s;
+  }
+
+  .progress-container.visible {
+    opacity: 1;
+  }
+
+  .progress-track {
+    height: 2px;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3));
+    animation: progressFill cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes progressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+
+  .progress-text {
+    color: rgba(255,255,255,0.3);
+    font-size: 0.65rem;
+    font-family: ui-monospace, monospace;
+    margin-top: 8px;
+    margin-bottom: 0;
+    letter-spacing: 0.1em;
+  }
+
+  /* Skip Button */
+  .skip-btn {
+    position: absolute;
+    bottom: clamp(1.5rem, 4vh, 2.5rem);
+    right: clamp(1.5rem, 4vw, 2.5rem);
+    color: rgba(255,255,255,0.4);
+    font-size: 0.7rem;
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 100px;
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0;
+    transition: all 0.4s ease;
+  }
+
+  .skip-btn.visible {
+    opacity: 1;
+  }
+
+  .skip-btn:hover {
+    color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.25);
+  }
+</style>
+
+<script>
+  // Blog Intro Animation Script
+  function initBlogIntro() {
+    const overlay = document.getElementById('blog-intro-overlay');
+    if (!overlay) return;
+
+    // Check if already shown in this session
+    const sessionKey = 'blog-intro-shown';
+    if (sessionStorage.getItem(sessionKey)) {
+      overlay.classList.add('hidden');
+      return;
+    }
+
+    const duration = parseInt(overlay.dataset.duration || '4000', 10);
+    const words = overlay.querySelectorAll('.word');
+    const decoLine = document.getElementById('deco-line');
+    const subtitle = document.getElementById('subtitle');
+    const progressContainer = document.getElementById('progress-container');
+    const skipBtn = document.getElementById('skip-btn');
+
+    let step = 0;
+
+    // Animate elements
+    function animateStep() {
+      step++;
+
+      // Show decorative line, subtitle, progress container, skip button
+      if (step === 1) {
+        decoLine?.classList.add('visible');
+        subtitle?.classList.add('visible');
+        progressContainer?.classList.add('visible');
+        skipBtn?.classList.add('visible');
+      }
+
+      // Reveal words one by one
+      words.forEach((word, i) => {
+        if (step > i) {
+          word.classList.add('visible');
+        }
+      });
+    }
+
+    // Start animation sequence
+    const animationTimers: number[] = [];
+
+    // Initial delay then animate each word
+    words.forEach((_, i) => {
+      const timer = window.setTimeout(() => animateStep(), 300 + i * 100);
+      animationTimers.push(timer);
+    });
+
+    // Trigger first step immediately after small delay
+    const firstTimer = window.setTimeout(() => animateStep(), 200);
+    animationTimers.push(firstTimer);
+
+    // Dismiss function
+    function dismiss() {
+      overlay.classList.add('fading');
+      sessionStorage.setItem(sessionKey, 'true');
+
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+      }, 800);
+    }
+
+    // Auto-dismiss after duration
+    const autoDismissTimer = window.setTimeout(dismiss, duration);
+    animationTimers.push(autoDismissTimer);
+
+    // Skip button
+    skipBtn?.addEventListener('click', () => {
+      // Clear all timers
+      animationTimers.forEach(t => clearTimeout(t));
+      dismiss();
+    });
+  }
+
+  // Run on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBlogIntro);
+  } else {
+    initBlogIntro();
+  }
+
+  // Also handle Astro view transitions
+  document.addEventListener('astro:page-load', initBlogIntro);
+</script>

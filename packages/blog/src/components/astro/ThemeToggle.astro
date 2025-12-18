@@ -1,0 +1,607 @@
+---
+/**
+ * Advanced Theme Toggle - Skiper UI Inspired
+ *
+ * A beautiful theme toggle with View Transition API animations.
+ * Supports multiple animation variants: circle, rectangle, polygon, circle-blur
+ *
+ * Features:
+ * - Multiple animation variants
+ * - View Transition API with clip-path animations
+ * - LocalStorage persistence
+ * - Keyboard accessible (T key to toggle)
+ * - Reduced motion support
+ */
+
+interface Props {
+  /** Position of the toggle button */
+  position?: 'fixed' | 'relative';
+  /** Animation variant */
+  variant?: 'circle' | 'rectangle' | 'polygon' | 'circle-blur' | 'gif';
+  /** Animation start position */
+  start?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+  /** Enable blur effect during transition */
+  blur?: boolean;
+  /** GIF URL for 'gif' variant */
+  gifUrl?: string;
+}
+
+// Default GIF options - Use grayscale cat for View Transition mask effect
+// The GIF acts as a CSS mask that scales from 0 to reveal the new theme
+// Works best with grayscale/silhouette GIFs for clean mask edges
+const defaultGifs = {
+  // Grayscale walking cat - recommended for mask transitions (from Skiper UI)
+  grayscaleCat: 'https://media.giphy.com/media/5PncuvcXbBuIZcSiQo/giphy.gif?cid=ecf05e47j7vdjtytp3fu84rslaivdun4zvfhej6wlvl6qqsz&ep=v1_stickers_search&rid=giphy.gif&ct=s',
+  // Alternative: Cute cat animation
+  catAlt: 'https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif?cid=790b76112m5eeeydoe7et0cr3j3ekb1erunxozyshuhxx2vl&ep=v1_stickers_search&rid=giphy.gif&ct=s',
+  // Alternative: Third option
+  catThird: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3JwcXdzcHd5MW92NWprZXVpcTBtNXM5cG9obWh0N3I4NzFpaDE3byZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/WgsVx6C4N8tjy/giphy.gif',
+};
+
+const {
+  position = 'fixed',
+  variant = 'gif',
+  start = 'top-right',
+  blur = false,
+  gifUrl = defaultGifs.grayscaleCat
+} = Astro.props;
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  class:list={[
+    'theme-toggle',
+    { 'theme-toggle--fixed': position === 'fixed' }
+  ]}
+  data-variant={variant}
+  data-start={start}
+  data-blur={blur}
+  data-gif-url={gifUrl}
+  aria-label="Toggle theme"
+  title="Toggle theme (T)"
+>
+  <!-- Yin-Yang inspired icon with rotation animation -->
+  <svg viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="theme-icon">
+    <g class="icon-inner">
+      <path
+        d="M120 67.5C149.25 67.5 172.5 90.75 172.5 120C172.5 149.25 149.25 172.5 120 172.5"
+        fill="currentColor"
+        class="icon-light-half"
+      />
+      <path
+        d="M120 67.5C90.75 67.5 67.5 90.75 67.5 120C67.5 149.25 90.75 172.5 120 172.5"
+        fill="var(--icon-dark-fill)"
+        class="icon-dark-half"
+      />
+    </g>
+    <path
+      class="icon-outer"
+      d="M120 3.75C55.5 3.75 3.75 55.5 3.75 120C3.75 184.5 55.5 236.25 120 236.25C184.5 236.25 236.25 184.5 236.25 120C236.25 55.5 184.5 3.75 120 3.75ZM120 214.5V172.5C90.75 172.5 67.5 149.25 67.5 120C67.5 90.75 90.75 67.5 120 67.5V25.5C172.5 25.5 214.5 67.5 214.5 120C214.5 172.5 172.5 214.5 120 214.5Z"
+      fill="currentColor"
+    />
+  </svg>
+</button>
+
+<style>
+  /* ========================================
+     THEME TOGGLE - Skiper UI Inspired
+     ======================================== */
+
+  .theme-toggle {
+    --toggle-size: 44px;
+    --icon-size: 24px;
+
+    /* Dark mode colors */
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg-hover: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-border-hover: rgba(255, 255, 255, 0.25);
+    --icon-color: rgba(255, 255, 255, 0.9);
+    --icon-dark-fill: #000;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--toggle-size);
+    height: var(--toggle-size);
+    padding: 0;
+
+    /* Glass Effect */
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+      0 4px 16px -4px rgba(0, 0, 0, 0.3);
+
+    color: var(--icon-color);
+    cursor: pointer;
+
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    view-transition-name: theme-toggle;
+  }
+
+  .theme-toggle--fixed {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
+  }
+
+  .theme-toggle:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+      0 8px 24px -4px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .theme-toggle:focus-visible {
+    outline: none;
+    border-color: rgba(77, 162, 255, 0.6);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+      0 0 0 3px rgba(77, 162, 255, 0.25);
+  }
+
+  .theme-toggle:active {
+    transform: scale(0.95);
+  }
+
+  /* Icon */
+  .theme-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+
+  .icon-inner {
+    transform-origin: center;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .icon-outer {
+    transform-origin: center;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Dark mode icon rotation */
+  :global([data-theme="dark"]) .icon-inner {
+    transform: rotate(0deg);
+  }
+
+  :global([data-theme="dark"]) .icon-outer {
+    transform: rotate(0deg);
+  }
+
+  /* Light mode icon rotation */
+  :global([data-theme="light"]) .icon-inner {
+    transform: rotate(-180deg);
+  }
+
+  :global([data-theme="light"]) .icon-outer {
+    transform: rotate(180deg);
+  }
+
+  /* Light mode button colors */
+  :global([data-theme="light"]) .theme-toggle {
+    --glass-bg: rgba(0, 0, 0, 0.06);
+    --glass-bg-hover: rgba(0, 0, 0, 0.1);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-border-hover: rgba(0, 0, 0, 0.2);
+    --icon-color: rgba(0, 0, 0, 0.8);
+    --icon-dark-fill: #fff;
+
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+      0 4px 16px -4px rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-theme="light"]) .theme-toggle:hover {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+      0 8px 24px -4px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle,
+    .icon-inner,
+    .icon-outer {
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * Advanced Theme Toggle with View Transition API
+   * Inspired by Skiper UI theme toggle animations
+   * Includes GIF mask animation variant
+   */
+
+  type AnimationVariant = 'circle' | 'rectangle' | 'polygon' | 'circle-blur' | 'gif';
+  type AnimationStart = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+
+  interface Animation {
+    name: string;
+    css: string;
+  }
+
+  const styleId = 'theme-transition-styles';
+
+  function getClipPathPosition(position: AnimationStart): string {
+    switch (position) {
+      case 'top-left': return '0% 0%';
+      case 'top-right': return '100% 0%';
+      case 'bottom-left': return '0% 100%';
+      case 'bottom-right': return '100% 100%';
+      case 'center': return '50% 50%';
+      default: return '100% 0%';
+    }
+  }
+
+  function createAnimation(
+    variant: AnimationVariant,
+    start: AnimationStart,
+    blur: boolean,
+    gifUrl?: string
+  ): Animation {
+    const clipPosition = getClipPathPosition(start);
+    const blurStart = blur ? 'filter: blur(8px);' : '';
+    const blurMid = blur ? '50% { filter: blur(4px); }' : '';
+    const blurEnd = blur ? 'filter: blur(0px);' : '';
+    const blurBase = blur ? 'filter: blur(2px);' : '';
+
+    // Circle variant
+    if (variant === 'circle') {
+      return {
+        name: `circle-${start}${blur ? '-blur' : ''}`,
+        css: `
+          ::view-transition-group(root) {
+            animation-duration: 0.7s;
+            animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          ::view-transition-new(root) {
+            animation-name: reveal-circle;
+            ${blurBase}
+          }
+
+          ::view-transition-old(root) {
+            animation: none;
+            z-index: -1;
+          }
+
+          @keyframes reveal-circle {
+            from {
+              clip-path: circle(0% at ${clipPosition});
+              ${blurStart}
+            }
+            ${blurMid}
+            to {
+              clip-path: circle(150% at ${clipPosition});
+              ${blurEnd}
+            }
+          }
+        `
+      };
+    }
+
+    // Rectangle variant
+    if (variant === 'rectangle') {
+      const getClipPath = (pos: AnimationStart) => {
+        switch (pos) {
+          case 'top-left':
+            return { from: 'polygon(0% 0%, 0% 0%, 0% 0%, 0% 0%)', to: 'polygon(0% 0%, 200% 0%, 200% 200%, 0% 200%)' };
+          case 'top-right':
+            return { from: 'polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%)', to: 'polygon(-100% 0%, 100% 0%, 100% 200%, -100% 200%)' };
+          case 'bottom-left':
+            return { from: 'polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)', to: 'polygon(0% -100%, 200% -100%, 200% 100%, 0% 100%)' };
+          case 'bottom-right':
+            return { from: 'polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)', to: 'polygon(-100% -100%, 100% -100%, 100% 100%, -100% 100%)' };
+          default:
+            return { from: 'polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)', to: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)' };
+        }
+      };
+
+      const clipPath = getClipPath(start);
+
+      return {
+        name: `rectangle-${start}${blur ? '-blur' : ''}`,
+        css: `
+          ::view-transition-group(root) {
+            animation-duration: 0.6s;
+            animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          ::view-transition-new(root) {
+            animation-name: reveal-rect;
+            ${blurBase}
+          }
+
+          ::view-transition-old(root) {
+            animation: none;
+            z-index: -1;
+          }
+
+          @keyframes reveal-rect {
+            from {
+              clip-path: ${clipPath.from};
+              ${blurStart}
+            }
+            ${blurMid}
+            to {
+              clip-path: ${clipPath.to};
+              ${blurEnd}
+            }
+          }
+        `
+      };
+    }
+
+    // Polygon variant (diagonal wipe)
+    if (variant === 'polygon') {
+      const getPolygonClip = (pos: AnimationStart) => {
+        switch (pos) {
+          case 'top-left':
+            return { from: 'polygon(0% 0%, 0% 0%, 0% 0%)', to: 'polygon(0% 0%, 200% 0%, 0% 200%)' };
+          case 'top-right':
+            return { from: 'polygon(100% 0%, 100% 0%, 100% 0%)', to: 'polygon(100% 0%, 100% 200%, -100% 0%)' };
+          case 'bottom-left':
+            return { from: 'polygon(0% 100%, 0% 100%, 0% 100%)', to: 'polygon(0% 100%, 200% 100%, 0% -100%)' };
+          case 'bottom-right':
+            return { from: 'polygon(100% 100%, 100% 100%, 100% 100%)', to: 'polygon(100% 100%, -100% 100%, 100% -100%)' };
+          default:
+            return { from: 'polygon(50% 50%, 50% 50%, 50% 50%)', to: 'polygon(-50% -50%, 150% -50%, 150% 150%, -50% 150%)' };
+        }
+      };
+
+      const clipPath = getPolygonClip(start);
+
+      return {
+        name: `polygon-${start}${blur ? '-blur' : ''}`,
+        css: `
+          ::view-transition-group(root) {
+            animation-duration: 0.7s;
+            animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          ::view-transition-new(root) {
+            animation-name: reveal-polygon;
+            ${blurBase}
+          }
+
+          ::view-transition-old(root) {
+            animation: none;
+            z-index: -1;
+          }
+
+          @keyframes reveal-polygon {
+            from {
+              clip-path: ${clipPath.from};
+              ${blurStart}
+            }
+            ${blurMid}
+            to {
+              clip-path: ${clipPath.to};
+              ${blurEnd}
+            }
+          }
+        `
+      };
+    }
+
+    // Circle-blur variant (soft edge circle)
+    if (variant === 'circle-blur') {
+      return {
+        name: `circle-blur-${start}`,
+        css: `
+          ::view-transition-group(root) {
+            animation-duration: 0.8s;
+            animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          ::view-transition-new(root) {
+            animation-name: reveal-circle-blur;
+            filter: blur(0px);
+          }
+
+          ::view-transition-old(root) {
+            animation: none;
+            z-index: -1;
+          }
+
+          @keyframes reveal-circle-blur {
+            0% {
+              clip-path: circle(0% at ${clipPosition});
+              filter: blur(12px);
+            }
+            50% {
+              filter: blur(6px);
+            }
+            100% {
+              clip-path: circle(150% at ${clipPosition});
+              filter: blur(0px);
+            }
+          }
+        `
+      };
+    }
+
+    // GIF mask variant - EXACTLY like Skiper UI implementation
+    // The GIF acts as a CSS mask that scales from 0 to reveal the new theme
+    // The mask-size animation creates a "reveal through shape" effect
+    if (variant === 'gif' && gifUrl) {
+      return {
+        name: 'gif-mask',
+        css: `
+          ::view-transition-group(root) {
+            animation-timing-function: var(--expo-in, cubic-bezier(0.95, 0.05, 0.795, 0.035));
+          }
+
+          ::view-transition-new(root) {
+            mask: url('${gifUrl}') center / 0 no-repeat;
+            -webkit-mask: url('${gifUrl}') center / 0 no-repeat;
+            animation: scale 3s;
+          }
+
+          ::view-transition-old(root),
+          .dark::view-transition-old(root) {
+            animation: scale 3s;
+          }
+
+          @keyframes scale {
+            0% {
+              mask-size: 0;
+              -webkit-mask-size: 0;
+            }
+            10% {
+              mask-size: 50vmax;
+              -webkit-mask-size: 50vmax;
+            }
+            90% {
+              mask-size: 50vmax;
+              -webkit-mask-size: 50vmax;
+            }
+            100% {
+              mask-size: 2000vmax;
+              -webkit-mask-size: 2000vmax;
+            }
+          }
+        `
+      };
+    }
+
+    // Default fallback
+    return {
+      name: 'default',
+      css: `
+        ::view-transition-new(root) {
+          animation: fade-in 0.3s ease;
+        }
+        ::view-transition-old(root) {
+          animation: none;
+          z-index: -1;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `
+    };
+  }
+
+  function updateStyles(css: string) {
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement | null;
+
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
+    }
+
+    styleElement.textContent = css;
+  }
+
+  function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle') as HTMLButtonElement | null;
+    const root = document.documentElement;
+
+    if (!toggle) return;
+
+    // Get animation settings from data attributes
+    const variant = (toggle.dataset.variant || 'circle') as AnimationVariant;
+    const start = (toggle.dataset.start || 'top-right') as AnimationStart;
+    const blur = toggle.dataset.blur === 'true';
+    const gifUrl = toggle.dataset.gifUrl;
+
+    // Get initial theme
+    function getInitialTheme(): 'light' | 'dark' {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'light' || stored === 'dark') return stored;
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+
+    // Apply theme
+    function applyTheme(theme: 'light' | 'dark') {
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      toggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    }
+
+    // Toggle with View Transition API
+    // Uses CSS mask with GIF for the 'gif' variant - exactly like Skiper UI
+    async function toggleTheme() {
+      const currentTheme = root.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      // Create and apply animation CSS
+      const animation = createAnimation(variant, start, blur, gifUrl);
+      updateStyles(animation.css);
+
+      // Check for View Transitions API support
+      if (document.startViewTransition) {
+        try {
+          const transition = document.startViewTransition(() => {
+            applyTheme(newTheme);
+          });
+          // Wait for transition to finish (or fail)
+          await transition.finished;
+        } catch (e) {
+          // If transition fails, still apply the theme
+          console.warn('View transition failed, applying theme directly:', e);
+          applyTheme(newTheme);
+        }
+      } else {
+        applyTheme(newTheme);
+      }
+    }
+
+    // Initialize
+    applyTheme(getInitialTheme());
+
+    // Event listeners
+    toggle.addEventListener('click', toggleTheme);
+
+    // Keyboard shortcut (T key)
+    document.addEventListener('keydown', (e) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) return;
+
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        toggleTheme();
+      }
+    });
+
+    // System preference change
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('theme')) {
+        applyTheme(e.matches ? 'light' : 'dark');
+      }
+    });
+  }
+
+  // Initialize
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initThemeToggle);
+  } else {
+    initThemeToggle();
+  }
+
+  // Re-init on Astro page transitions
+  document.addEventListener('astro:page-load', initThemeToggle);
+</script>

@@ -1,0 +1,1377 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/astro/Header.astro';
+import ThemeToggle from '../components/astro/ThemeToggle.astro';
+import { ScrollProgress } from '../components/react/ScrollProgress';
+import { RevealOnScroll } from '../components/react/TextReveal';
+import { BlurOverlay, ReadingBlur } from '../components/react/ProgressiveBlur';
+import SpiralIntro from '../components/astro/SpiralIntro.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  publishDate: Date;
+  category: 'announcement' | 'tutorial' | 'wrapup' | 'guide';
+  author?: string;
+  heroImage?: string;
+  sections?: { id: string; title: string }[];
+  tags?: string[];
+}
+
+const {
+  title,
+  description,
+  publishDate,
+  category,
+  author = 'Harry Phan',
+  heroImage,
+  sections = [],
+  tags = [],
+} = Astro.props;
+
+const categoryStyles = {
+  announcement: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
+  tutorial: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' },
+  wrapup: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
+  guide: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' },
+};
+
+const style = categoryStyles[category];
+
+const formattedDate = publishDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<BaseLayout title={title} description={description}>
+  <!-- Spiral Animation Intro - Shows once per session -->
+  <SpiralIntro title={title} duration={4000} />
+
+  <Header currentPath={Astro.url.pathname} />
+
+  <!-- Theme Toggle Button -->
+  <ThemeToggle position="fixed" />
+
+  <!-- Scroll Progress Bar -->
+  <ScrollProgress
+    client:load
+    sections={sections}
+    showSectionNav={sections.length > 0}
+    accentColor="#4da2ff"
+  />
+
+  <!-- Progressive Blur for immersive reading (top appears on scroll, bottom always visible) -->
+  <!-- Theme-aware: automatically adapts to light/dark mode -->
+  <ReadingBlur
+    client:load
+    position="both"
+    height="150px"
+    blurAmount={8}
+    topOffset="56px"
+    bottomOffset="0px"
+  />
+
+  <main class="min-h-screen">
+    <!-- Hero Section -->
+    <header class="relative pt-8 pb-12 border-b border-white/10">
+      <!-- Background blur effect -->
+      {heroImage && (
+        <div class="absolute inset-0 overflow-hidden">
+          <img
+            src={heroImage}
+            alt=""
+            class="w-full h-full object-cover opacity-10 blur-2xl scale-110"
+          />
+          <div class="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
+        </div>
+      )}
+
+      <div class="relative max-w-3xl mx-auto px-4">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center gap-2 text-sm font-mono text-white/40 mb-6">
+          <a href="/blog" class="hover:text-white transition-colors">~/blog</a>
+          <span>/</span>
+          <a href={`/blog/category/${category}`} class="hover:text-white transition-colors">
+            {category}
+          </a>
+          <span>/</span>
+          <span class="text-white/60 truncate max-w-[200px]">{title.toLowerCase().replace(/\s+/g, '-')}</span>
+        </nav>
+
+        <!-- Category & Date -->
+        <div class="flex items-center gap-3 mb-4">
+          <span class={`tag ${style.bg} ${style.text} ${style.border}`}>
+            [{category}]
+          </span>
+          <time datetime={publishDate.toISOString()} class="text-white/40 text-sm font-mono">
+            {formattedDate}
+          </time>
+        </div>
+
+        <!-- Title with Text Reveal -->
+        <RevealOnScroll client:load delay={0.2} direction="left">
+          <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+            {title}
+          </h1>
+        </RevealOnScroll>
+
+        <!-- Description -->
+        <p class="text-white/60 text-lg leading-relaxed mb-6">
+          {description}
+        </p>
+
+        <!-- Author & Tags -->
+        <div class="flex flex-wrap items-center gap-4">
+          <a
+            href="https://x.com/harry_phan06"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+          >
+            <img
+              src="https://pbs.twimg.com/profile_images/1940628029622857728/Ky8PI-T4_400x400.jpg"
+              alt={author}
+              class="w-8 h-8 rounded-full object-cover border border-white/20 group-hover:border-primary/50 transition-colors"
+            />
+            <span class="text-white/70 text-sm">
+              <span class="text-white/50">Writer:</span> {author}
+            </span>
+          </a>
+
+          {tags.length > 0 && (
+            <div class="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <span class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 text-white/40 border border-white/10">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Image (if provided) -->
+    {heroImage && (
+      <div class="relative max-w-4xl mx-auto px-4 -mt-4 mb-8">
+        <div class="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+          <img
+            src={heroImage}
+            alt={title}
+            class="w-full h-auto"
+            loading="eager"
+          />
+        </div>
+        <BlurOverlay client:load direction="bottom" intensity="medium" height="60px" />
+      </div>
+    )}
+
+    <!-- Article Content -->
+    <article class="max-w-3xl mx-auto px-4 py-12">
+      <div class="prose prose-invert prose-lg max-w-none">
+        <slot />
+      </div>
+    </article>
+
+    <!-- Footer Navigation -->
+    <footer class="max-w-3xl mx-auto px-4 py-8 border-t border-white/10">
+      <div class="flex items-center justify-between">
+        <a
+          href="/blog"
+          class="flex items-center gap-2 text-white/50 hover:text-white transition-colors font-mono text-sm"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          cd ~/blog
+        </a>
+
+        <div class="flex items-center gap-4">
+          <button
+            id="share-btn"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors text-sm font-mono"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M10.5 5.25C11.4665 5.25 12.25 4.4665 12.25 3.5C12.25 2.5335 11.4665 1.75 10.5 1.75C9.5335 1.75 8.75 2.5335 8.75 3.5C8.75 4.4665 9.5335 5.25 10.5 5.25Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.5 8.75C4.4665 8.75 5.25 7.9665 5.25 7C5.25 6.0335 4.4665 5.25 3.5 5.25C2.5335 5.25 1.75 6.0335 1.75 7C1.75 7.9665 2.5335 8.75 3.5 8.75Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10.5 12.25C11.4665 12.25 12.25 11.4665 12.25 10.5C12.25 9.5335 11.4665 8.75 10.5 8.75C9.5335 8.75 8.75 9.5335 8.75 10.5C8.75 11.4665 9.5335 12.25 10.5 12.25Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.02344 8.00781L8.98344 9.49219" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8.97656 4.50781L5.02344 5.99219" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            share
+          </button>
+
+          <button
+            id="copy-link-btn"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors text-sm font-mono"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M11.6667 5.25H6.41667C5.77233 5.25 5.25 5.77233 5.25 6.41667V11.6667C5.25 12.311 5.77233 12.8333 6.41667 12.8333H11.6667C12.311 12.8333 12.8333 12.311 12.8333 11.6667V6.41667C12.8333 5.77233 12.311 5.25 11.6667 5.25Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2.91797 8.75H2.33464C2.02522 8.75 1.72847 8.62708 1.50968 8.40829C1.29089 8.1895 1.16797 7.89275 1.16797 7.58333V2.33333C1.16797 2.02392 1.29089 1.72717 1.50968 1.50838C1.72847 1.28958 2.02522 1.16667 2.33464 1.16667H7.58464C7.89405 1.16667 8.1908 1.28958 8.40959 1.50838C8.62839 1.72717 8.7513 2.02392 8.7513 2.33333V2.91667" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            copy link
+          </button>
+        </div>
+      </div>
+    </footer>
+  </main>
+</BaseLayout>
+
+<script>
+  // Share functionality
+  document.getElementById('share-btn')?.addEventListener('click', async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: document.title,
+          url: window.location.href,
+        });
+      } catch (err) {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback to copy
+      await navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    }
+  });
+
+  // Copy link functionality
+  document.getElementById('copy-link-btn')?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    const btn = document.getElementById('copy-link-btn');
+    if (btn) {
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M11.6667 4.08333L5.25 10.5L2.33333 7.58333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        copied!
+      `;
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2000);
+    }
+  });
+</script>
+
+<style is:global>
+  /* ========================================
+     THEME VARIABLES
+     ======================================== */
+
+  :root {
+    /* Dark theme (default) */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --text-primary: rgba(255, 255, 255, 0.95);
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-muted: rgba(255, 255, 255, 0.55);
+    --border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="light"] {
+    /* Light theme */
+    --bg-primary: #fafafa;
+    --bg-secondary: #f5f5f5;
+    --text-primary: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --text-muted: rgba(0, 0, 0, 0.5);
+    --border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Apply theme colors */
+  [data-theme="light"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  [data-theme="light"] .bg-background {
+    background-color: var(--bg-primary) !important;
+  }
+
+  /* Reduced motion for View Transitions */
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none !important;
+    }
+  }
+
+  /* ========================================
+     LIQUID GLASS DESIGN SYSTEM
+     Inspired by Apple's Liquid Glass (WWDC 2025)
+     ======================================== */
+
+  /* ---- CSS VARIABLES ---- */
+  .prose {
+    /* Glass colors */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-bg-hover: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-hover: rgba(255, 255, 255, 0.15);
+    --glass-highlight: rgba(255, 255, 255, 0.12);
+
+    /* Accent colors */
+    --accent-primary: #4da2ff;
+    --accent-light: #7dc4ff;
+    --accent-glow: rgba(77, 162, 255, 0.15);
+    --accent-border: rgba(77, 162, 255, 0.25);
+
+    /* Text colors */
+    --text-primary: rgba(255, 255, 255, 0.95);
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-muted: rgba(255, 255, 255, 0.55);
+
+    /* Prose defaults */
+    --tw-prose-body: var(--text-secondary);
+    --tw-prose-headings: var(--text-primary);
+    --tw-prose-links: var(--accent-primary);
+    --tw-prose-bold: var(--text-primary);
+    --tw-prose-code: var(--text-primary);
+    --tw-prose-pre-bg: rgba(0, 0, 0, 0.4);
+    --tw-prose-pre-code: rgba(255, 255, 255, 0.85);
+    --tw-prose-quotes: var(--text-secondary);
+    --tw-prose-quote-borders: var(--accent-primary);
+
+    font-size: 1.0625rem;
+    line-height: 1.8;
+  }
+
+  /* ========================================
+     HEADINGS - Liquid Glass Style
+     ======================================== */
+
+  /* H2 - Section Headers with Glass Underline */
+  .prose :where(h2):not(:where([class~="not-prose"] *)) {
+    scroll-margin-top: 80px;
+    margin-top: 3.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    position: relative;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+  }
+
+  .prose :where(h2):not(:where([class~="not-prose"] *))::before {
+    content: "## ";
+    color: var(--accent-primary);
+    font-family: ui-monospace, monospace;
+    font-weight: 400;
+    opacity: 0.8;
+  }
+
+  .prose :where(h2):not(:where([class~="not-prose"] *))::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      var(--accent-primary) 0%,
+      var(--glass-border) 50%,
+      transparent 100%
+    );
+  }
+
+  /* H3 - Liquid Glass Cards */
+  .prose :where(h3):not(:where([class~="not-prose"] *)) {
+    scroll-margin-top: 80px;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+
+    /* Liquid Glass Effect */
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.02) 50%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    /* Glass Border */
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+
+    /* Inner highlight (top edge refraction) */
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+      0 4px 24px -8px rgba(0, 0, 0, 0.3);
+
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+
+    /* Smooth transition */
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .prose :where(h3):not(:where([class~="not-prose"] *)):hover {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 50%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+    border-color: var(--glass-border-hover);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+      0 8px 32px -8px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* H4 - Subtle Glass Accent */
+  .prose :where(h4):not(:where([class~="not-prose"] *)) {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    padding-left: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-left: 2px solid var(--accent-glow);
+    transition: border-color 0.2s ease;
+  }
+
+  .prose :where(h4):not(:where([class~="not-prose"] *)):hover {
+    border-left-color: var(--accent-primary);
+  }
+
+  /* ========================================
+     PARAGRAPHS & TEXT
+     ======================================== */
+
+  .prose :where(p):not(:where([class~="not-prose"] *)) {
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .prose :where(h3 + p):not(:where([class~="not-prose"] *)) {
+    margin-top: 1rem;
+  }
+
+  .prose :where(strong):not(:where([class~="not-prose"] *)) {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* Lead paragraph after H2 */
+  .prose :where(h2 + p):not(:where([class~="not-prose"] *)) {
+    font-size: 1.125rem;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+  }
+
+  /* ========================================
+     LISTS - Liquid Glass Style
+     ======================================== */
+
+  .prose ul {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    padding-left: 0 !important;
+    list-style: none !important;
+  }
+
+  .prose ul > li {
+    position: relative !important;
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem !important;
+    margin-bottom: 0.5rem !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+
+    /* Subtle glass background on hover */
+    border-radius: 0.5rem;
+    transition: background 0.2s ease;
+  }
+
+  .prose ul > li:hover {
+    background: var(--glass-bg);
+  }
+
+  .prose ul > li::marker {
+    content: none !important;
+    display: none !important;
+  }
+
+  .prose ul > li::before {
+    content: "→" !important;
+    position: absolute !important;
+    left: 0.5rem !important;
+    color: var(--accent-primary) !important;
+    font-family: ui-monospace, monospace !important;
+    font-weight: 500 !important;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .prose ul > li:hover::before {
+    opacity: 1;
+    transform: translateX(2px);
+  }
+
+  /* Ordered lists - Glass Number Badges */
+  .prose ol {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    padding-left: 0 !important;
+    list-style: none !important;
+    counter-reset: list-counter !important;
+  }
+
+  .prose ol > li {
+    position: relative !important;
+    padding: 0.75rem 1rem 0.75rem 3.5rem !important;
+    margin-bottom: 0.75rem !important;
+    counter-increment: list-counter !important;
+    line-height: 1.75 !important;
+
+    /* Glass card for each item */
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .prose ol > li:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+  }
+
+  .prose ol > li::marker {
+    content: none !important;
+    display: none !important;
+  }
+
+  .prose ol > li::before {
+    content: counter(list-counter) !important;
+    position: absolute !important;
+    left: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2rem !important;
+    height: 2rem !important;
+
+    /* Glass number badge */
+    background: linear-gradient(
+      135deg,
+      var(--accent-glow) 0%,
+      rgba(77, 162, 255, 0.08) 100%
+    ) !important;
+    backdrop-filter: blur(8px);
+    color: var(--accent-primary) !important;
+    font-family: ui-monospace, monospace !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    border-radius: 0.625rem !important;
+    border: 1px solid var(--accent-border) !important;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* ========================================
+     CODE - Liquid Glass Style
+     ======================================== */
+
+  /* Inline code */
+  .prose :where(code):not(:where([class~="not-prose"] *)) {
+    position: relative;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.875em;
+    font-weight: 500;
+    font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+
+    /* Liquid Glass Effect */
+    background: linear-gradient(
+      135deg,
+      rgba(77, 162, 255, 0.12) 0%,
+      rgba(77, 162, 255, 0.06) 100%
+    );
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    color: var(--accent-light);
+    border: 1px solid var(--accent-border);
+    border-radius: 0.5rem;
+
+    /* Inner glow */
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+      0 0 12px -4px rgba(77, 162, 255, 0.3);
+
+    transition: all 0.2s ease;
+  }
+
+  .prose :where(code):not(:where([class~="not-prose"] *)):hover {
+    background: linear-gradient(
+      135deg,
+      rgba(77, 162, 255, 0.18) 0%,
+      rgba(77, 162, 255, 0.1) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+      0 0 16px -2px rgba(77, 162, 255, 0.4);
+  }
+
+  /* Code blocks */
+  .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    position: relative;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    overflow-x: auto;
+
+    /* Deep glass effect */
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+
+    /* Depth shadow */
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
+      0 8px 32px -8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Code block header bar */
+  .prose :where(pre):not(:where([class~="not-prose"] *))::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      var(--accent-primary) 0%,
+      rgba(77, 162, 255, 0.3) 50%,
+      transparent 100%
+    );
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .prose :where(pre code):not(:where([class~="not-prose"] *)) {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+    line-height: 1.75;
+    box-shadow: none;
+  }
+
+  .prose :where(pre code):not(:where([class~="not-prose"] *)):hover {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* ========================================
+     SHIKI LINE HIGHLIGHTING RESET (Dark Mode)
+     Reset ALL unwanted backgrounds from Shiki
+     ======================================== */
+
+  /* Reset ALL line backgrounds - catches diff, highlighted, etc */
+  .prose pre .line,
+  .prose pre code .line,
+  .prose pre [class*="line"],
+  .prose pre .highlighted,
+  .prose pre .highlight,
+  .prose pre .diff,
+  .prose pre .add,
+  .prose pre .remove,
+  .prose pre .inserted,
+  .prose pre .deleted,
+  .astro-code .line,
+  .astro-code .highlighted,
+  .astro-code [class*="diff"],
+  .shiki .line,
+  .shiki [class*="diff"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Reset any inline background styles Shiki might add */
+  .prose pre span[style*="background"],
+  .prose pre code span[style*="background"],
+  .astro-code span[style*="background"],
+  .shiki span[style*="background"] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* Specifically target diff syntax highlighting backgrounds */
+  .prose pre span[style*="#"],
+  .prose pre code span[style*="rgba"],
+  .prose pre .line span[style] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* ========================================
+     LINKS - Subtle Glass Hover
+     ======================================== */
+
+  .prose :where(a):not(:where([class~="not-prose"] *)) {
+    color: var(--accent-primary);
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(77, 162, 255, 0.4);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .prose :where(a):not(:where([class~="not-prose"] *)):hover {
+    color: var(--accent-light);
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent-primary);
+    text-shadow: 0 0 12px rgba(77, 162, 255, 0.4);
+  }
+
+  /* ========================================
+     BLOCKQUOTES - Glass Quote Card
+     ======================================== */
+
+  .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+
+    /* Liquid Glass */
+    background: linear-gradient(
+      135deg,
+      rgba(77, 162, 255, 0.08) 0%,
+      rgba(77, 162, 255, 0.03) 100%
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(77, 162, 255, 0.15);
+    border-left: 3px solid var(--accent-primary);
+    border-radius: 0 1rem 1rem 0;
+
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+      0 4px 20px -8px rgba(77, 162, 255, 0.2);
+
+    font-style: normal;
+    color: var(--text-secondary);
+
+    transition: all 0.25s ease;
+  }
+
+  .prose :where(blockquote):not(:where([class~="not-prose"] *)):hover {
+    background: linear-gradient(
+      135deg,
+      rgba(77, 162, 255, 0.12) 0%,
+      rgba(77, 162, 255, 0.05) 100%
+    );
+    border-left-width: 4px;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+      0 8px 28px -8px rgba(77, 162, 255, 0.3);
+  }
+
+  .prose :where(blockquote p):not(:where([class~="not-prose"] *)) {
+    margin: 0;
+  }
+
+  /* ========================================
+     HORIZONTAL RULE - Glass Divider
+     ======================================== */
+
+  .prose :where(hr):not(:where([class~="not-prose"] *)) {
+    margin-top: 3.5rem;
+    margin-bottom: 3.5rem;
+    border: none;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--glass-border) 15%,
+      var(--accent-glow) 50%,
+      var(--glass-border) 85%,
+      transparent 100%
+    );
+  }
+
+  /* ========================================
+     TABLES - Glass Table
+     ======================================== */
+
+  .prose :where(table):not(:where([class~="not-prose"] *)) {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9375rem;
+
+    /* Glass container */
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .prose :where(th):not(:where([class~="not-prose"] *)) {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .prose :where(th):not(:where([class~="not-prose"] *)):first-child {
+    border-top-left-radius: 1rem;
+  }
+
+  .prose :where(th):not(:where([class~="not-prose"] *)):last-child {
+    border-top-right-radius: 1rem;
+  }
+
+  .prose :where(td):not(:where([class~="not-prose"] *)) {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    transition: background 0.15s ease;
+  }
+
+  .prose :where(tr):not(:where([class~="not-prose"] *)):last-child td {
+    border-bottom: none;
+  }
+
+  .prose :where(tr):not(:where([class~="not-prose"] *)):hover td {
+    background: var(--glass-bg-hover);
+  }
+
+  /* ========================================
+     IMAGES - Glass Frame
+     ======================================== */
+
+  .prose :where(img):not(:where([class~="not-prose"] *)) {
+    border-radius: 1rem;
+    border: 1px solid var(--glass-border);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    box-shadow:
+      0 8px 32px -8px rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .prose :where(img):not(:where([class~="not-prose"] *)):hover {
+    border-color: var(--glass-border-hover);
+    box-shadow:
+      0 12px 40px -8px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* ========================================
+     KEYBOARD SHORTCUTS - Glass Keys
+     ======================================== */
+
+  .prose :where(kbd):not(:where([class~="not-prose"] *)) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.5rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8em;
+    font-weight: 500;
+
+    /* Glass key cap effect */
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    backdrop-filter: blur(8px);
+
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.375rem;
+
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+      0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ========================================
+     ANIMATIONS - Smooth Transitions
+     ======================================== */
+
+  @keyframes glass-shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .prose * {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+
+  /* ========================================
+     LIGHT MODE OVERRIDES
+     ======================================== */
+
+  [data-theme="light"] .prose {
+    /* Light mode glass colors */
+    --glass-bg: rgba(0, 0, 0, 0.02);
+    --glass-bg-hover: rgba(0, 0, 0, 0.04);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-border-hover: rgba(0, 0, 0, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.8);
+
+    /* Light mode accent colors */
+    --accent-primary: #2563eb;
+    --accent-light: #1d4ed8;
+    --accent-glow: rgba(37, 99, 235, 0.1);
+    --accent-border: rgba(37, 99, 235, 0.2);
+
+    /* Light mode text colors */
+    --text-primary: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --text-muted: rgba(0, 0, 0, 0.5);
+
+    /* Light mode prose defaults */
+    --tw-prose-body: var(--text-secondary);
+    --tw-prose-headings: var(--text-primary);
+    --tw-prose-links: var(--accent-primary);
+    --tw-prose-bold: var(--text-primary);
+    --tw-prose-code: var(--text-primary);
+    --tw-prose-pre-bg: rgba(0, 0, 0, 0.04);
+    --tw-prose-pre-code: rgba(0, 0, 0, 0.85);
+    --tw-prose-quotes: var(--text-secondary);
+    --tw-prose-quote-borders: var(--accent-primary);
+  }
+
+  /* Light mode header */
+  [data-theme="light"] header.border-b {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Light mode title */
+  [data-theme="light"] h1.text-white {
+    color: var(--text-primary);
+  }
+
+  /* Light mode description */
+  [data-theme="light"] .text-white\/60 {
+    color: var(--text-muted);
+  }
+
+  [data-theme="light"] .text-white\/70 {
+    color: var(--text-secondary);
+  }
+
+  [data-theme="light"] .text-white\/40 {
+    color: var(--text-muted);
+  }
+
+  /* Light mode tags */
+  [data-theme="light"] .bg-white\/5 {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  [data-theme="light"] .border-white\/10 {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  /* Light mode footer */
+  [data-theme="light"] footer.border-t {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme="light"] .text-white\/50 {
+    color: var(--text-muted);
+  }
+
+  /* Light mode code blocks - Clean terminal style */
+  [data-theme="light"] .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    /* Dark terminal background for contrast */
+    background: linear-gradient(
+      180deg,
+      #1e293b 0%,
+      #0f172a 100%
+    ) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+  }
+
+  [data-theme="light"] .prose :where(pre):not(:where([class~="not-prose"] *))::before {
+    /* Subtle cyan accent bar for terminal feel */
+    background: linear-gradient(
+      90deg,
+      #06b6d4 0%,
+      rgba(6, 182, 212, 0.4) 40%,
+      transparent 80%
+    );
+  }
+
+  [data-theme="light"] .prose :where(pre code):not(:where([class~="not-prose"] *)) {
+    color: #e2e8f0 !important;
+    text-shadow: none;
+    background: transparent !important;
+  }
+
+  /* ========================================
+     SHIKI LINE HIGHLIGHTING RESET (Light Mode)
+     Reset ALL unwanted backgrounds from Shiki
+     ======================================== */
+
+  /* Reset ALL line backgrounds - catches diff, highlighted, etc */
+  [data-theme="light"] .prose pre .line,
+  [data-theme="light"] .prose pre code .line,
+  [data-theme="light"] .prose pre [class*="line"],
+  [data-theme="light"] .prose pre .highlighted,
+  [data-theme="light"] .prose pre .highlight,
+  [data-theme="light"] .prose pre .diff,
+  [data-theme="light"] .prose pre .add,
+  [data-theme="light"] .prose pre .remove,
+  [data-theme="light"] .prose pre .inserted,
+  [data-theme="light"] .prose pre .deleted,
+  [data-theme="light"] .astro-code .line,
+  [data-theme="light"] .astro-code .highlighted,
+  [data-theme="light"] .astro-code [class*="diff"],
+  [data-theme="light"] .shiki .line,
+  [data-theme="light"] .shiki [class*="diff"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Reset any inline background styles Shiki might add */
+  [data-theme="light"] .prose pre span[style*="background"],
+  [data-theme="light"] .prose pre code span[style*="background"],
+  [data-theme="light"] .astro-code span[style*="background"],
+  [data-theme="light"] .shiki span[style*="background"],
+  [data-theme="light"] .prose pre code span,
+  [data-theme="light"] .prose pre [style*="background"] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* Specifically target diff syntax highlighting backgrounds */
+  [data-theme="light"] .prose pre span[style*="#"],
+  [data-theme="light"] .prose pre code span[style*="rgba"],
+  [data-theme="light"] .prose pre .line span[style] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* Light mode code block syntax highlighting - VSCode-inspired colors */
+  /* Comments */
+  [data-theme="light"] .prose pre .hljs-comment,
+  [data-theme="light"] .prose pre .comment,
+  [data-theme="light"] .prose pre span[style*="color:#6A737D"],
+  [data-theme="light"] .prose pre span[style*="color: #6A737D"] {
+    color: #6b7280 !important;
+    font-style: italic;
+  }
+
+  /* Keywords (purple) */
+  [data-theme="light"] .prose pre .hljs-keyword,
+  [data-theme="light"] .prose pre .keyword,
+  [data-theme="light"] .prose pre span[style*="color:#F97583"],
+  [data-theme="light"] .prose pre span[style*="color: #F97583"] {
+    color: #c084fc !important;
+  }
+
+  /* Strings (green) */
+  [data-theme="light"] .prose pre .hljs-string,
+  [data-theme="light"] .prose pre .string,
+  [data-theme="light"] .prose pre span[style*="color:#9ECBFF"],
+  [data-theme="light"] .prose pre span[style*="color: #9ECBFF"] {
+    color: #4ade80 !important;
+  }
+
+  /* Numbers (orange) */
+  [data-theme="light"] .prose pre .hljs-number,
+  [data-theme="light"] .prose pre .number,
+  [data-theme="light"] .prose pre span[style*="color:#79B8FF"],
+  [data-theme="light"] .prose pre span[style*="color: #79B8FF"] {
+    color: #fb923c !important;
+  }
+
+  /* Functions (blue) */
+  [data-theme="light"] .prose pre .hljs-function,
+  [data-theme="light"] .prose pre .function,
+  [data-theme="light"] .prose pre span[style*="color:#B392F0"],
+  [data-theme="light"] .prose pre span[style*="color: #B392F0"] {
+    color: #60a5fa !important;
+  }
+
+  /* Classes (yellow) */
+  [data-theme="light"] .prose pre .hljs-class,
+  [data-theme="light"] .prose pre .class-name {
+    color: #fbbf24 !important;
+  }
+
+  /* Variables/properties (pink) */
+  [data-theme="light"] .prose pre .hljs-variable,
+  [data-theme="light"] .prose pre .variable {
+    color: #f472b6 !important;
+  }
+
+  /* Operators and punctuation (gray) */
+  [data-theme="light"] .prose pre .hljs-operator,
+  [data-theme="light"] .prose pre .operator,
+  [data-theme="light"] .prose pre .hljs-punctuation,
+  [data-theme="light"] .prose pre .punctuation {
+    color: #94a3b8 !important;
+  }
+
+  /* Default text in code blocks */
+  [data-theme="light"] .prose pre span[style*="color:#E1E4E8"],
+  [data-theme="light"] .prose pre span[style*="color: #E1E4E8"] {
+    color: #e2e8f0 !important;
+  }
+
+  /* Light mode inline code */
+  [data-theme="light"] .prose :where(code):not(:where([class~="not-prose"] *)) {
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.08) 0%,
+      rgba(37, 99, 235, 0.04) 100%
+    );
+    color: var(--accent-primary);
+    border-color: rgba(37, 99, 235, 0.15);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
+      0 0 8px -4px rgba(37, 99, 235, 0.2);
+  }
+
+  /* Light mode blockquote */
+  [data-theme="light"] .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.05) 0%,
+      rgba(37, 99, 235, 0.02) 100%
+    );
+    border-color: rgba(37, 99, 235, 0.1);
+    border-left-color: var(--accent-primary);
+  }
+
+  /* Light mode tables */
+  [data-theme="light"] .prose :where(table):not(:where([class~="not-prose"] *)) {
+    background: rgba(0, 0, 0, 0.01);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  [data-theme="light"] .prose :where(th):not(:where([class~="not-prose"] *)) {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.04) 0%,
+      rgba(0, 0, 0, 0.02) 100%
+    );
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+  }
+
+  [data-theme="light"] .prose :where(td):not(:where([class~="not-prose"] *)) {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+  }
+
+  /* Light mode ordered list */
+  [data-theme="light"] .prose ol > li::before {
+    background: linear-gradient(
+      135deg,
+      var(--accent-glow) 0%,
+      rgba(37, 99, 235, 0.05) 100%
+    ) !important;
+    color: var(--accent-primary) !important;
+    border-color: rgba(37, 99, 235, 0.15) !important;
+  }
+
+  /* Light mode horizontal rule */
+  [data-theme="light"] .prose :where(hr):not(:where([class~="not-prose"] *)) {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.08) 15%,
+      rgba(37, 99, 235, 0.15) 50%,
+      rgba(0, 0, 0, 0.08) 85%,
+      transparent 100%
+    );
+  }
+
+  /* Light mode images */
+  [data-theme="light"] .prose :where(img):not(:where([class~="not-prose"] *)) {
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 8px 32px -8px rgba(0, 0, 0, 0.15),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  }
+
+  /* Light mode kbd */
+  [data-theme="light"] .prose :where(kbd):not(:where([class~="not-prose"] *)) {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.05) 0%,
+      rgba(0, 0, 0, 0.02) 100%
+    );
+    color: var(--text-primary);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+      0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Light mode H3 glass cards - ensure text is readable */
+  [data-theme="light"] .prose :where(h3):not(:where([class~="not-prose"] *)) {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.03) 0%,
+      rgba(0, 0, 0, 0.01) 50%,
+      rgba(0, 0, 0, 0.02) 100%
+    );
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.9);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+      0 4px 24px -8px rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme="light"] .prose :where(h3):not(:where([class~="not-prose"] *)):hover {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.05) 0%,
+      rgba(0, 0, 0, 0.02) 50%,
+      rgba(0, 0, 0, 0.03) 100%
+    );
+    border-color: rgba(0, 0, 0, 0.12);
+  }
+
+  /* ========================================
+     GLOBAL LIGHT MODE FIXES
+     For elements outside .prose
+     ======================================== */
+
+  /* Fix all white text classes in light mode */
+  [data-theme="light"] .text-white {
+    color: rgba(0, 0, 0, 0.9) !important;
+  }
+
+  [data-theme="light"] .text-white\/90 {
+    color: rgba(0, 0, 0, 0.85) !important;
+  }
+
+  [data-theme="light"] .text-white\/80 {
+    color: rgba(0, 0, 0, 0.75) !important;
+  }
+
+  [data-theme="light"] .text-white\/70 {
+    color: rgba(0, 0, 0, 0.65) !important;
+  }
+
+  [data-theme="light"] .text-white\/60 {
+    color: rgba(0, 0, 0, 0.55) !important;
+  }
+
+  [data-theme="light"] .text-white\/50 {
+    color: rgba(0, 0, 0, 0.45) !important;
+  }
+
+  [data-theme="light"] .text-white\/40 {
+    color: rgba(0, 0, 0, 0.35) !important;
+  }
+
+  /* Fix buttons with white backgrounds */
+  [data-theme="light"] .bg-white\/5 {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+
+  [data-theme="light"] .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  [data-theme="light"] .hover\:bg-white\/5:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+
+  [data-theme="light"] .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Fix borders */
+  [data-theme="light"] .border-white\/10 {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  [data-theme="light"] .border-white\/20 {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* Fix hover states for text */
+  [data-theme="light"] .hover\:text-white:hover {
+    color: rgba(0, 0, 0, 0.9) !important;
+  }
+
+  /* Fix main content area background */
+  [data-theme="light"] main {
+    background-color: #fafafa;
+  }
+
+  /* Fix scroll progress and section nav buttons */
+  [data-theme="light"] button {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  [data-theme="light"] button:hover {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  /* Ensure prose body text is readable */
+  [data-theme="light"] .prose {
+    color: rgba(0, 0, 0, 0.75);
+  }
+
+  [data-theme="light"] .prose p {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  [data-theme="light"] .prose strong {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  /* Fix primary/accent colored elements */
+  [data-theme="light"] .bg-primary\/20 {
+    background-color: rgba(37, 99, 235, 0.1) !important;
+  }
+
+  [data-theme="light"] .border-primary\/30 {
+    border-color: rgba(37, 99, 235, 0.2) !important;
+  }
+</style>

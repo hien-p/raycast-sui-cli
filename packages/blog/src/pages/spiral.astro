@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SpiralDemo } from '../components/ui/spiral-demo';
+---
+
+<BaseLayout title="Spiral Animation Demo" description="A mesmerizing spiral animation with GSAP">
+  <SpiralDemo client:only="react" />
+</BaseLayout>

@@ -1,0 +1,176 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/astro/Header.astro';
+import PostCard from '../../components/astro/PostCard.astro';
+import { RevealOnScroll } from '../../components/react/TextReveal';
+import AnimatedGradientBackground from '../../components/ui/animated-gradient-background';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const categories = ['announcement', 'tutorial', 'wrapup', 'guide'] as const;
+  return categories.map((category) => ({
+    params: { category },
+    props: { category },
+  }));
+}
+
+type Category = 'announcement' | 'tutorial' | 'wrapup' | 'guide';
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const posts = allPosts
+  .filter((post) => post.data.category === category)
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+
+const categoryMeta = {
+  announcement: {
+    icon: '📢',
+    title: 'Announcements',
+    description: 'Product updates, new features, and important news about Sui CLI Web.',
+    color: 'blue',
+  },
+  tutorial: {
+    icon: '📚',
+    title: 'Tutorials',
+    description: 'Step-by-step guides to help you master Sui blockchain development.',
+    color: 'green',
+  },
+  wrapup: {
+    icon: '📊',
+    title: 'Wrap-ups',
+    description: 'Monthly summaries of updates, community highlights, and ecosystem news.',
+    color: 'purple',
+  },
+  guide: {
+    icon: '🗺️',
+    title: 'Guides',
+    description: 'In-depth guides covering concepts, best practices, and advanced topics.',
+    color: 'yellow',
+  },
+};
+
+const meta = categoryMeta[category];
+const categories = ['announcement', 'tutorial', 'wrapup', 'guide'] as const;
+---
+
+<BaseLayout
+  title={`${meta.title} - Sui CLI Web Blog`}
+  description={meta.description}
+>
+  <!-- Animated Gradient Background -->
+  <div class="fixed inset-0 -z-10">
+    <AnimatedGradientBackground
+      client:load
+      breathing={true}
+      startingGap={125}
+      breathingRange={5}
+      animationSpeed={0.02}
+      topOffset={0}
+    />
+  </div>
+
+  <Header currentPath={`/blog/category/${category}`} />
+
+  <main class="min-h-screen pt-4 pb-16 relative z-0">
+    <div class="max-w-4xl mx-auto px-4">
+      <!-- Category Header -->
+      <section class="py-8 mb-8 border-b border-white/10">
+        <div class="flex items-center gap-2 text-sm font-mono text-white/60 mb-4 drop-shadow-lg">
+          <span class="text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">$</span>
+          <span>cd ~/blog/category/{category}</span>
+        </div>
+
+        <div class="flex items-center gap-4 mb-4">
+          <span class="text-4xl drop-shadow-lg">{meta.icon}</span>
+          <RevealOnScroll client:load direction="left">
+            <h1 class="text-3xl md:text-4xl font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+              {meta.title}
+            </h1>
+          </RevealOnScroll>
+        </div>
+
+        <p class="text-white/80 text-lg max-w-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+          {meta.description}
+        </p>
+
+        <div class="flex items-center gap-2 mt-4 text-sm font-mono text-white/50 drop-shadow-lg">
+          <span>total:</span>
+          <span class="text-primary drop-shadow-[0_0_6px_rgba(77,162,255,0.5)]">{posts.length} posts</span>
+        </div>
+      </section>
+
+      <!-- Category Filters -->
+      <section class="mb-8">
+        <div class="flex flex-wrap gap-2">
+          <a
+            href="/blog"
+            class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/30 backdrop-blur-md text-white/70 hover:text-white hover:bg-black/50 transition-colors border border-white/10 shadow-md"
+          >
+            all ({allPosts.length})
+          </a>
+          {categories.map((cat) => {
+            const count = allPosts.filter((p) => p.data.category === cat).length;
+            const isActive = cat === category;
+            return (
+              <a
+                href={`/blog/category/${cat}`}
+                class:list={[
+                  'px-3 py-1.5 rounded-lg text-sm font-mono transition-colors border backdrop-blur-md shadow-md',
+                  isActive
+                    ? 'bg-black/40 text-white border-white/20'
+                    : 'bg-black/30 text-white/70 hover:text-white hover:bg-black/50 border-white/10',
+                ]}
+              >
+                {cat} ({count})
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+      <!-- Posts List -->
+      {posts.length > 0 ? (
+        <section>
+          <div class="flex items-center gap-2 text-sm font-mono text-white/40 mb-4">
+            <span class="text-green-400">$</span>
+            <span>ls -la</span>
+          </div>
+
+          <div class="space-y-3">
+            {posts.map((post, index) => (
+              <PostCard
+                title={post.data.title}
+                description={post.data.description}
+                publishDate={post.data.publishDate}
+                category={post.data.category}
+                slug={post.slug}
+                heroImage={post.data.heroImage}
+                index={index}
+              />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section class="text-center py-16">
+          <div class="text-4xl mb-4">{meta.icon}</div>
+          <h2 class="text-xl font-semibold text-white mb-2">No {meta.title.toLowerCase()} yet</h2>
+          <p class="text-white/50 mb-6">Check back soon or explore other categories!</p>
+          <a
+            href="/blog"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg font-mono hover:bg-white/20 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to all posts
+          </a>
+        </section>
+      )}
+    </div>
+  </main>
+</BaseLayout>

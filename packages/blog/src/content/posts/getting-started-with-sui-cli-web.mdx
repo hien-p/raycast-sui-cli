@@ -1,0 +1,195 @@
+---
+title: "Getting Started: Your First 5 Minutes with Sui CLI Web"
+description: "A quick tutorial to get you up and running with Sui CLI Web. Learn to manage wallets, send tokens, and explore objects."
+publishDate: 2024-12-17
+category: tutorial
+tags: ["beginner", "tutorial", "wallet", "quickstart"]
+author: "Harry Phan"
+sections:
+  - id: "prerequisites"
+    title: "Prerequisites"
+  - id: "installation"
+    title: "Installation"
+  - id: "first-steps"
+    title: "First Steps"
+  - id: "sending-tokens"
+    title: "Sending Tokens"
+  - id: "keyboard-shortcuts"
+    title: "Keyboard Shortcuts"
+---
+
+import { AccordionCTA } from '../../components/react/BouncyAccordion';
+import { RevealOnScroll } from '../../components/react/TextReveal';
+
+Welcome to Sui CLI Web! This tutorial will get you from zero to hero in just 5 minutes.
+
+## Prerequisites
+
+Before we start, make sure you have:
+
+- **Node.js 18+** installed ([download here](https://nodejs.org/))
+- **Sui CLI** installed ([installation guide](https://docs.sui.io/build/install))
+- A modern browser (Chrome, Firefox, Safari, or Edge)
+
+Don't have Sui CLI yet? Run this:
+
+```bash
+# macOS/Linux
+curl -fsSL https://get.sui.io | sh
+
+# or with npm
+npm install -g @mysten/sui
+```
+
+## Installation
+
+Installing Sui CLI Web Server takes one command:
+
+```bash
+npm install -g sui-cli-web-server
+```
+
+Now start the server:
+
+```bash
+sui-cli-web-server
+```
+
+You should see:
+
+```
+🚀 Sui CLI Web Server v1.5.0
+📡 Server running at http://localhost:3001
+🔐 Security: localhost only (your keys are safe)
+✅ Ready to connect!
+```
+
+<RevealOnScroll client:visible>
+## First Steps
+
+### Opening the App
+
+Navigate to [cli.firstmovers.io](https://cli.firstmovers.io) in your browser. The app will automatically detect your local server.
+
+> **Tip**: If you see "Connecting...", make sure your server is running!
+
+### Creating Your First Wallet
+
+1. Press `Cmd+K` (or `Ctrl+K` on Windows) to open the command palette
+2. Type "create wallet" and press Enter
+3. Choose a name for your wallet (e.g., "dev-wallet")
+4. Done! Your new wallet is ready to use
+
+### Getting Testnet Tokens
+
+1. Make sure you're on testnet (check the network indicator in the top right)
+2. Open command palette (`Cmd+K`)
+3. Type "faucet" and press Enter
+4. Wait a few seconds for tokens to arrive
+
+Your balance will update automatically!
+</RevealOnScroll>
+
+## Sending Tokens
+
+Let's send some SUI:
+
+### Method 1: Command Palette
+
+```
+1. Press Cmd+K
+2. Type "send" or "transfer"
+3. Enter recipient address
+4. Enter amount
+5. Confirm and sign
+```
+
+### Method 2: Direct Navigation
+
+```
+1. Press Cmd+T to open Transfer panel
+2. Select token (SUI)
+3. Paste recipient address
+4. Enter amount
+5. Click "Send" or press Enter
+```
+
+### Understanding Gas Fees
+
+Sui uses a unique gas model:
+- Gas is paid in SUI tokens
+- Transactions typically cost 0.001-0.01 SUI
+- Failed transactions still consume gas
+
+<AccordionCTA
+  client:visible
+  icon="⛽"
+  title="Learn about Gas Management"
+  description="Advanced gas management features like coin splitting and merging can help optimize your transaction costs."
+  link="https://cli.firstmovers.io"
+  linkText="Open Gas Station"
+/>
+
+## Keyboard Shortcuts
+
+Master these shortcuts to navigate like a pro:
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+K` | Open command palette |
+| `Cmd+1` | Go to Dashboard |
+| `Cmd+2` | Go to Wallet |
+| `Cmd+3` | Go to Objects |
+| `Cmd+T` | Quick Transfer |
+| `Cmd+N` | Switch Network |
+| `Esc` | Close modal/panel |
+| `↑/↓` | Navigate lists |
+| `Enter` | Select/Confirm |
+
+### Pro Tips
+
+1. **Quick Address Copy**: Click any address to copy it
+2. **Search Everything**: The command palette searches across all features
+3. **Network Switching**: `Cmd+N` lets you quickly switch between mainnet, testnet, and devnet
+
+## Next Steps
+
+Now that you're set up, explore these features:
+
+- **Object Explorer** — Browse your NFTs and owned objects
+- **Gas Station** — Manage your gas coins efficiently
+- **Transaction History** — View your past transactions
+
+---
+
+## Troubleshooting
+
+### "Cannot connect to server"
+
+1. Make sure the server is running (`sui-cli-web-server`)
+2. Check if port 3001 is available
+3. Try restarting the server
+
+### "Transaction failed"
+
+1. Check your SUI balance (need gas!)
+2. Verify the recipient address is valid
+3. Make sure you're on the right network
+
+### Still stuck?
+
+<AccordionCTA
+  client:visible
+  icon="💬"
+  title="Need Help?"
+  description="Join our Discord community for support, tips, and to connect with other Sui developers."
+  link="https://discord.gg/sui"
+  linkText="Join Discord"
+/>
+
+---
+
+Happy building! Check out our other tutorials:
+- [Advanced Gas Management](/blog/posts/advanced-gas-management)
+- [Working with Objects](/blog/posts/working-with-objects)
+- [Smart Contract Deployment](/blog/posts/smart-contract-deployment)
