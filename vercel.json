@@ -1,45 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "packages/client/dist",
+  "rewrites": [
     {
-      "src": "packages/client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "source": "/blog",
+      "destination": "/blog/index.html"
     },
     {
-      "src": "packages/blog/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/blog$",
-      "dest": "/packages/blog/dist/index.html"
+      "source": "/blog/:path*",
+      "destination": "/blog/:path*"
     },
     {
-      "src": "/blog/$",
-      "dest": "/packages/blog/dist/index.html"
-    },
-    {
-      "src": "/blog/_astro/(.*)",
-      "dest": "/packages/blog/dist/_astro/$1"
-    },
-    {
-      "src": "/blog/(.*)",
-      "dest": "/packages/blog/dist/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/((?!blog).*)",
-      "dest": "/packages/client/dist/index.html"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }

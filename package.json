@@ -31,7 +31,7 @@
     "dev:server": "npm run dev -w sui-cli-web-server",
     "dev:client": "npm run dev -w @sui-cli-web/client",
     "dev:blog": "npm run dev -w @sui-cli-web/blog",
-    "build": "npm run build -w @sui-cli-web/shared && npm run build -w sui-cli-web-server && npm run build -w @sui-cli-web/client",
+    "build": "npm run build -w @sui-cli-web/shared && npm run build -w sui-cli-web-server && npm run build -w @sui-cli-web/client && npm run build -w @sui-cli-web/blog && cp -r packages/blog/dist packages/client/dist/blog",
     "build:server": "npm run build -w sui-cli-web-server",
     "build:client": "npm run build -w @sui-cli-web/client",
     "build:blog": "npm run build -w @sui-cli-web/blog",
