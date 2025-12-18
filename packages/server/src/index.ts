@@ -16,6 +16,15 @@ import { devtoolsRoutes } from './routes/devtools';
 import { securityRoutes } from './routes/security';
 import { coinRoutes } from './routes/coin';
 import { gameDemoRoutes } from './routes/game-demo';
+// New routes for enhanced features
+import { ptbBuilderRoutes } from './routes/ptb-builder';
+import { replayRoutes } from './routes/replay';
+import { gasRoutes } from './routes/gas';
+import { eventsRoutes } from './routes/events';
+import { migrationRoutes } from './routes/migration';
+import { localNetworkRoutes } from './routes/local-network';
+import { payRoutes } from './routes/pay';
+import { outputsRoutes } from './routes/outputs';
 import { SuiCliExecutor } from './cli/SuiCliExecutor';
 import { createRateLimitHook } from './utils/rateLimiter';
 import { createRequire } from 'module';
@@ -378,6 +387,122 @@ async function main() {
         }
       });
       await instance.register(gameDemoRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // ============================================
+  // NEW ENHANCED FEATURE ROUTES
+  // ============================================
+
+  // PTB Builder routes - Visual PTB construction
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(ptbBuilderRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Replay routes - Enhanced transaction replay with traces
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(replayRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Gas Analysis routes - Gas breakdown and optimization
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(gasRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Events routes - Event parsing and querying
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(eventsRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Migration routes - Move 2024 migration
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', writeRateLimit);
+      await instance.register(migrationRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Local Network routes - sui start management
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        // Allow SSE endpoints without rate limiting
+        if (request.url.includes('/stream/')) {
+          return;
+        }
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(localNetworkRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Pay routes - Multi-recipient payments
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', writeRateLimit);
+      await instance.register(payRoutes);
+    },
+    { prefix: '/api' }
+  );
+
+  // Outputs routes - Large output file management
+  await fastify.register(
+    async (instance) => {
+      instance.addHook('onRequest', async (request, reply) => {
+        if (request.method === 'GET') {
+          await readRateLimit(request, reply);
+        } else {
+          await writeRateLimit(request, reply);
+        }
+      });
+      await instance.register(outputsRoutes);
     },
     { prefix: '/api' }
   );

@@ -204,17 +204,19 @@ export function CoinSplit() {
 
     try {
       const amounts = splitAmounts.map((a) => a.rawValue);
-      const response = await api.dryRunSplitCoin({
+      // fetchApi returns data.data directly, which is CoinOperationResult
+      const result = await api.dryRunSplitCoin({
         coinId: coin.coinObjectId,
         coinType: coinTypeParam,
         amounts,
       });
 
-      if (response.success && response.data) {
-        setDryRunResult(response.data);
+      // result IS the CoinOperationResult directly (success, gasUsed, error)
+      if (result.success) {
+        setDryRunResult(result);
         setShowPreview(true);
       } else {
-        showErrorToast({ message: response.error || 'Dry run failed' });
+        showErrorToast({ message: result.error || 'Dry run failed' });
       }
     } catch (error) {
       console.error('Dry run error:', error);
@@ -232,21 +234,19 @@ export function CoinSplit() {
 
     try {
       const amounts = splitAmounts.map((a) => a.rawValue);
-      const response = await api.splitGenericCoin({
+      // fetchApi returns data.data directly, which is CoinOperationResult
+      const result = await api.splitGenericCoin({
         coinId: coin.coinObjectId,
         coinType: coinTypeParam,
         amounts,
       });
 
-      if (response.success && response.data) {
-        setSplitResult(response.data);
-        if (response.data.success) {
-          showSuccessToast({ message: 'Coin split successfully!' });
-        } else {
-          showErrorToast({ message: response.data.error || 'Split failed' });
-        }
+      // result IS the CoinOperationResult directly (success, digest, error)
+      setSplitResult(result);
+      if (result.success) {
+        showSuccessToast({ message: 'Coin split successfully!' });
       } else {
-        showErrorToast({ message: response.error || 'Split failed' });
+        showErrorToast({ message: result.error || 'Split failed' });
       }
     } catch (error) {
       console.error('Split error:', error);

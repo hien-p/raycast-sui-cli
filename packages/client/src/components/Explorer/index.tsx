@@ -1,9 +1,26 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FileTree, type FileNode } from '@/components/ui/file-tree';
 import { useAppStore } from '@/stores/useAppStore';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
+
+// Check if user is a member (has tier or community membership)
+function useIsMember() {
+  const { isCommunityMember, tierInfo, fetchTierInfo, fetchCommunityStatus } = useAppStore();
+
+  // Fetch membership data on mount if not already loaded
+  useEffect(() => {
+    if (tierInfo === null) {
+      fetchTierInfo();
+    }
+    if (!isCommunityMember) {
+      fetchCommunityStatus();
+    }
+  }, [tierInfo, isCommunityMember, fetchTierInfo, fetchCommunityStatus]);
+
+  return isCommunityMember || (tierInfo !== null && tierInfo.level > 0);
+}
 
 interface ExplorerProps {
   className?: string;
@@ -27,7 +44,7 @@ function addressesToFileTree(addresses: any[]): AddressFileNode[] {
 }
 
 // Navigation items as file tree with nested structure
-function getNavTree(currentPath: string): FileNode[] {
+function getNavTree(currentPath: string, isMember: boolean): FileNode[] {
   const navStructure = [
     {
       path: '/app',
@@ -140,13 +157,39 @@ function getNavTree(currentPath: string): FileNode[] {
       icon: '🔍',
       type: 'folder' as const,
       children: [
-        { path: '/app/inspector', name: 'inspect.tsx', icon: '👁️' },
-        { path: '/app/inspector?tab=replay', name: 'replay.tsx', icon: '🔄' },
-        { path: '/app/inspector?tab=execute', name: 'execute.tsx', icon: '📤' },
-        { path: '/app/inspector?tab=ptb', name: 'ptb.tsx', icon: '🧱' },
-        { path: '/app/inspector?view=gas', name: 'gas-analysis.tsx', icon: '⛽', disabled: true, badge: 'soon' },
-        { path: '/app/inspector?view=events', name: 'events.tsx', icon: '📡', disabled: true, badge: 'soon' },
+        { path: '/app/inspector', name: 'inspect.tsx', icon: '👁️', disabled: !isMember, badge: 'member' },
+        { path: '/app/inspector?tab=replay', name: 'replay.tsx', icon: '🔄', disabled: !isMember, badge: 'member' },
+        { path: '/app/inspector?tab=execute', name: 'execute-tx.tsx', icon: '📤', disabled: !isMember, badge: 'member' },
+        { path: '/app/inspector?tab=ptb', name: 'ptb.tsx', icon: '🧱', disabled: !isMember, badge: 'member' },
+        { path: '/app/inspector?tab=gas', name: 'gas.tsx', icon: '⛽' },
+        { path: '/app/inspector?tab=events', name: 'events.tsx', icon: '📡' },
       ]
+    },
+    {
+      path: '/app/network',
+      name: 'network',
+      icon: '🌐',
+      type: 'folder' as const,
+      children: [
+        { path: '/app/network', name: 'local-network.tsx', icon: '💻' },
+        { path: '/app/network?tab=status', name: 'network-status.tsx', icon: '📊' },
+      ]
+    },
+    {
+      path: '/app/payments',
+      name: 'payments',
+      icon: '💰',
+      type: 'folder' as const,
+      children: [
+        { path: '/app/payments', name: 'multi-pay.tsx', icon: '👥' },
+        { path: '/app/payments?tab=history', name: 'pay-history.tsx', icon: '📜', disabled: true, badge: 'soon' },
+      ]
+    },
+    {
+      path: '/app/migrate',
+      name: 'migrate.tsx',
+      icon: '🔄',
+      type: 'file' as const,
     },
   ];
 
@@ -186,6 +229,7 @@ export function Explorer({ className }: ExplorerProps) {
   const { addresses, switchAddress } = useAppStore();
   const [activeTab, setActiveTab] = useState<'nav' | 'addresses'>('nav');
   const [switching, setSwitching] = useState<string | null>(null);
+  const isMember = useIsMember();
 
   const activeAddress = addresses.find(a => a.isActive);
 
@@ -196,9 +240,9 @@ export function Explorer({ className }: ExplorerProps) {
         return addressesToFileTree(addresses);
       case 'nav':
       default:
-        return getNavTree(location.pathname);
+        return getNavTree(location.pathname, isMember);
     }
-  }, [activeTab, addresses, location.pathname]);
+  }, [activeTab, addresses, location.pathname, isMember]);
 
   const handleFileClick = async (node: FileNode) => {
     // Handle addresses tab - switch address
@@ -265,14 +309,21 @@ export function Explorer({ className }: ExplorerProps) {
         'verify-source.tsx': '/app/security',
         'verify-bytecode.tsx': '/app/security?tab=bytecode',
         'decode-tx.tsx': '/app/security?tab=decode',
-        // Inspector
+        // Inspector (member only for some tabs)
         'inspect.tsx': '/app/inspector',
         'replay.tsx': '/app/inspector?tab=replay',
-        'execute.tsx': '/app/inspector?tab=execute',
+        'execute-tx.tsx': '/app/inspector?tab=execute',
         'ptb.tsx': '/app/inspector?tab=ptb',
-        // Coming soon
-        'gas-analysis.tsx': '/app/inspector?view=gas',
-        'events.tsx': '/app/inspector?view=events',
+        'gas.tsx': '/app/inspector?tab=gas',
+        'events.tsx': '/app/inspector?tab=events',
+        // Network
+        'local-network.tsx': '/app/network',
+        'network-status.tsx': '/app/network?tab=status',
+        // Payments
+        'multi-pay.tsx': '/app/payments',
+        'pay-history.tsx': '/app/payments?tab=history',
+        // Migrate
+        'migrate.tsx': '/app/migrate',
       };
 
       // Check main nav first
@@ -295,6 +346,9 @@ export function Explorer({ className }: ExplorerProps) {
           'keytool': '/app/keytool',
           'security': '/app/security',
           'inspector': '/app/inspector',
+          'network': '/app/network',
+          'payments': '/app/payments',
+          'migrate': '/app/migrate',
         };
         path = folderPaths[node.name];
       }

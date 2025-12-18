@@ -159,17 +159,19 @@ export function CoinMerge() {
 
     try {
       const coinIdsToMerge = Array.from(selectedCoinIds);
-      const response = await api.dryRunMergeCoins({
+      // fetchApi returns data.data directly, which is CoinOperationResult
+      const result = await api.dryRunMergeCoins({
         primaryCoinId,
         coinIdsToMerge,
         coinType: coinTypeParam,
       });
 
-      if (response.success && response.data) {
-        setDryRunResult(response.data);
+      // result IS the CoinOperationResult directly (success, gasUsed, error)
+      if (result.success) {
+        setDryRunResult(result);
         setShowPreview(true);
       } else {
-        showErrorToast({ message: response.error || 'Dry run failed' });
+        showErrorToast({ message: result.error || 'Dry run failed' });
       }
     } catch (error) {
       console.error('Dry run error:', error);
@@ -187,21 +189,19 @@ export function CoinMerge() {
 
     try {
       const coinIdsToMerge = Array.from(selectedCoinIds);
-      const response = await api.mergeGenericCoins({
+      // fetchApi returns data.data directly, which is CoinOperationResult
+      const result = await api.mergeGenericCoins({
         primaryCoinId,
         coinIdsToMerge,
         coinType: coinTypeParam,
       });
 
-      if (response.success && response.data) {
-        setMergeResult(response.data);
-        if (response.data.success) {
-          showSuccessToast({ message: 'Coins merged successfully!' });
-        } else {
-          showErrorToast({ message: response.data.error || 'Merge failed' });
-        }
+      // result IS the CoinOperationResult directly (success, digest, error)
+      setMergeResult(result);
+      if (result.success) {
+        showSuccessToast({ message: 'Coins merged successfully!' });
       } else {
-        showErrorToast({ message: response.error || 'Merge failed' });
+        showErrorToast({ message: result.error || 'Merge failed' });
       }
     } catch (error) {
       console.error('Merge error:', error);

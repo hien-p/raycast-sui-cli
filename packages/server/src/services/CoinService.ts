@@ -317,8 +317,10 @@ export class CoinService {
       }
 
       // For other coin types, use PTB
-      // Format: sui client ptb --split-coins @coinId "[amount1, amount2]" --assign new_coins --transfer-objects "[new_coins]" @sender
+      // Format: sui client ptb --split-coins @coinId "[amt1, amt2]" --assign coins --transfer-objects "[coins.0, coins.1]" @sender
+      // Note: Must index into result array with coins.0, coins.1, etc.
       const amountsJson = `[${amounts.join(', ')}]`;
+      const coinsToTransfer = amounts.map((_, i) => `new_coins.${i}`).join(', ');
       const args = [
         'client',
         'ptb',
@@ -328,7 +330,7 @@ export class CoinService {
         '--assign',
         'new_coins',
         '--transfer-objects',
-        '[new_coins]',
+        `[${coinsToTransfer}]`,
         `@${sender}`,
         '--gas-budget',
         gasBudget,
@@ -525,7 +527,10 @@ export class CoinService {
       }
 
       // For other coin types, use PTB with dry-run
+      // Note: PTB --dry-run does NOT support JSON output, so don't use { json: true }
+      // Must index into result array with new_coins.0, new_coins.1, etc.
       const amountsJson = `[${amounts.join(', ')}]`;
+      const coinsToTransfer = amounts.map((_, i) => `new_coins.${i}`).join(', ');
       const args = [
         'client',
         'ptb',
@@ -535,14 +540,14 @@ export class CoinService {
         '--assign',
         'new_coins',
         '--transfer-objects',
-        '[new_coins]',
+        `[${coinsToTransfer}]`,
         `@${sender}`,
         '--gas-budget',
         gasBudget,
         '--dry-run',
       ];
 
-      const output = await this.executor.execute(args, { json: true });
+      const output = await this.executor.execute(args);
       return this.parseDryRunResult(output);
     } catch (error) {
       return {
@@ -563,6 +568,7 @@ export class CoinService {
   ): Promise<CoinOperationResult> {
     try {
       // Always use PTB for merging (CLI merge-coin only supports one coin at a time)
+      // Note: PTB --dry-run does NOT support JSON output, so don't use { json: true }
       const coinsToMergeJson = `[${coinIdsToMerge.map((id) => `@${id}`).join(', ')}]`;
       const args = [
         'client',
@@ -575,7 +581,7 @@ export class CoinService {
         '--dry-run',
       ];
 
-      const output = await this.executor.execute(args, { json: true });
+      const output = await this.executor.execute(args);
       return this.parseDryRunResult(output);
     } catch (error) {
       return {
@@ -775,6 +781,7 @@ export class CoinService {
   }
 
   private parseDryRunResult(output: string): CoinOperationResult {
+    // First try JSON parsing (for non-PTB commands)
     try {
       const data = JSON.parse(output);
 
@@ -796,6 +803,54 @@ export class CoinService {
         success,
         gasUsed: totalGas,
         error: !success ? data.effects?.status?.error : undefined,
+      };
+    } catch {
+      // Not JSON - try parsing text output (for PTB dry-run)
+      return this.parsePtbDryRunText(output);
+    }
+  }
+
+  /**
+   * Parse PTB dry-run text output (not JSON)
+   * Example: "Dry run completed, execution status: success"
+   * Example: "Dry run completed, execution status: failure due to InsufficientCoinBalance in command 0"
+   * Example: "Estimated gas cost (includes a small buffer): 2000000 MIST"
+   */
+  private parsePtbDryRunText(output: string): CoinOperationResult {
+    try {
+      // Check for success status - look for "execution status: success" or "execution status: failure"
+      const statusMatch = output.match(/execution status:\s*(\w+)/i);
+      const success = statusMatch?.[1]?.toLowerCase() === 'success';
+
+      // Extract estimated gas cost
+      const gasMatch = output.match(/Estimated gas cost[^:]*:\s*(\d+)\s*MIST/i);
+      const gasUsed = gasMatch?.[1] || '0';
+
+      // Check for failure status - extract error from "failure due to X" pattern
+      if (!success) {
+        // Try to extract error from "execution status: failure due to <ERROR>"
+        const failureMatch = output.match(/execution status:\s*failure\s+due\s+to\s+([^\n]+)/i);
+        let errorMsg = failureMatch?.[1]?.trim();
+
+        // Clean up common error messages for user-friendly display
+        if (errorMsg) {
+          if (errorMsg.includes('InsufficientCoinBalance')) {
+            errorMsg = 'Insufficient balance for this split';
+          } else if (errorMsg.includes('InvalidResultArity')) {
+            errorMsg = 'Invalid transaction structure';
+          }
+        }
+
+        return {
+          success: false,
+          gasUsed,
+          error: errorMsg || 'Dry run failed',
+        };
+      }
+
+      return {
+        success: true,
+        gasUsed,
       };
     } catch {
       return {

@@ -26,11 +26,40 @@ interface MembershipGuardProps {
 }
 
 export function MembershipGuard({ children, featureName, requiredTier = 0 }: MembershipGuardProps) {
-  const { isCommunityMember, tierInfo } = useAppStore();
+  const { isCommunityMember, tierInfo, isLoading, addresses } = useAppStore();
   const navigate = useNavigate();
 
   // Check if user meets requirements
-  const hasAccess = isCommunityMember && (requiredTier === 0 || (tierInfo && tierInfo.level >= requiredTier));
+  // User is a member if either isCommunityMember is true OR they have tier info (both indicate membership)
+  const isMember = isCommunityMember || (tierInfo !== null && tierInfo.level > 0);
+  const hasAccess = isMember && (requiredTier === 0 || (tierInfo && tierInfo.level >= requiredTier));
+
+  // Check if still loading membership data (addresses not loaded yet means membership check hasn't run)
+  const isCheckingMembership = isLoading || addresses.length === 0;
+
+  // Show loading state while checking membership
+  if (isCheckingMembership) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col items-center justify-center min-h-[300px] gap-4"
+      >
+        <div className="p-4 bg-card/50 border border-primary/30 rounded-full">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          >
+            <Shield className="w-8 h-8 text-primary" />
+          </motion.div>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-foreground">Checking membership...</p>
+          <p className="text-xs text-muted-foreground mt-1">Verifying your access to {featureName}</p>
+        </div>
+      </motion.div>
+    );
+  }
 
   // If user has access, show the feature with a premium badge
   if (hasAccess) {

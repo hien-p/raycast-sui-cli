@@ -29,6 +29,13 @@ const CoinMerge = lazy(() => import('./components/CoinMerge').then(m => ({ defau
 const CoinTransfer = lazy(() => import('./components/CoinTransfer').then(m => ({ default: m.CoinTransfer })));
 const GameDemo = lazy(() => import('./components/GameDemo').then(m => ({ default: m.GameDemo })));
 
+// New feature components
+const GasAnalysis = lazy(() => import('./components/GasAnalysis').then(m => ({ default: m.GasAnalysis })));
+const EventExplorer = lazy(() => import('./components/EventExplorer').then(m => ({ default: m.EventExplorer })));
+const LocalNetwork = lazy(() => import('./components/LocalNetwork').then(m => ({ default: m.LocalNetwork })));
+const MoveMigrate = lazy(() => import('./components/MoveMigrate').then(m => ({ default: m.MoveMigrate })));
+const MultiPay = lazy(() => import('./components/MultiPay').then(m => ({ default: m.MultiPay })));
+
 // Lazy load heavy background component
 const FaultyTerminal = lazy(() => import('./components/backgrounds/FaultyTerminal'));
 
@@ -140,6 +147,12 @@ export function App() {
                   </MembershipGuard>
                 }
               />
+              {/* New Feature Routes */}
+              <Route path="gas-analysis" element={<GasAnalysis />} />
+              <Route path="events" element={<EventExplorer />} />
+              <Route path="network" element={<LocalNetwork />} />
+              <Route path="migrate" element={<MoveMigrate />} />
+              <Route path="payments" element={<MultiPay />} />
             </Route>
           </Routes>
         </Suspense>

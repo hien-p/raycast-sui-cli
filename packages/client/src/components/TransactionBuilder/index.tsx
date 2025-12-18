@@ -20,11 +20,15 @@ import {
   Send,
   Plus,
   Trash2,
+  Fuel,
+  Activity,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TransactionSummary } from '@/components/TransactionInspector/TransactionSummary';
 import { GasBreakdown } from '@/components/TransactionInspector/GasBreakdown';
 import { EnhancedReplaySummary } from '@/components/TransactionInspector/EnhancedReplaySummary';
+import { GasAnalysis } from '@/components/GasAnalysis';
+import { EventExplorer } from '@/components/EventExplorer';
 import { analyzeTransaction } from '@/utils/transactionAnalyzer';
 import { getApiBaseUrl, executePreSignedTransaction, executePtb, PtbCommand, PtbOptions } from '@/api/client';
 
@@ -65,7 +69,7 @@ type ActiveOperation = 'inspect' | 'replay' | 'execute' | 'ptb' | 'idle';
 export function TransactionBuilder() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const validTabs = ['inspect', 'replay', 'execute', 'ptb'];
+  const validTabs = ['inspect', 'replay', 'execute', 'ptb', 'gas', 'events'];
   const [activeTab, setActiveTab] = useState(() =>
     tabParam && validTabs.includes(tabParam) ? tabParam : 'inspect'
   );
@@ -427,6 +431,20 @@ export function TransactionBuilder() {
             >
               <Layers className="w-3.5 h-3.5" />
               PTB
+            </TabsTrigger>
+            <TabsTrigger
+              value="gas"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-mono rounded transition-all data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border data-[state=active]:border-blue-500/50 data-[state=inactive]:text-blue-500/60 data-[state=inactive]:hover:text-blue-400 data-[state=inactive]:bg-transparent"
+            >
+              <Fuel className="w-3.5 h-3.5" />
+              Gas
+            </TabsTrigger>
+            <TabsTrigger
+              value="events"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-mono rounded transition-all data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border data-[state=active]:border-blue-500/50 data-[state=inactive]:text-blue-500/60 data-[state=inactive]:hover:text-blue-400 data-[state=inactive]:bg-transparent"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              Events
             </TabsTrigger>
           </TabsList>
 
@@ -1092,6 +1110,17 @@ export function TransactionBuilder() {
               </div>
             </div>
           </TabsContent>
+
+          {/* Gas Analysis Tab */}
+          <TabsContent value="gas" className="space-y-4 mt-0">
+            <GasAnalysis />
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events" className="space-y-4 mt-0">
+            <EventExplorer />
+          </TabsContent>
+
         </Tabs>
       </motion.div>
 
