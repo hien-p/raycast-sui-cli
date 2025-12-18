@@ -55,7 +55,8 @@ export function FeaturesGrid() {
             <FeatureCard key={feature.title} className={feature.className} title={feature.title}>
               <FeatureTitle>{feature.title}</FeatureTitle>
               <FeatureDescription>{feature.description}</FeatureDescription>
-              <div className="h-full w-full" aria-hidden="true">{feature.skeleton}</div>
+              {/* Hide skeleton previews on mobile for cleaner UI */}
+              <div className="hidden sm:block h-full w-full" aria-hidden="true">{feature.skeleton}</div>
             </FeatureCard>
           ))}
         </div>
@@ -94,7 +95,7 @@ const FeatureCard = ({
   title?: string;
 }) => {
   return (
-    <article className={cn(`p-3 sm:p-4 md:p-8 relative overflow-hidden`, className)} role="listitem" aria-label={title}>
+    <article className={cn(`p-4 sm:p-4 md:p-8 relative overflow-hidden`, className)} role="listitem" aria-label={title}>
       {children}
     </article>
   );

@@ -325,8 +325,10 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* ============ STICKY CARDS SECTION ============ */}
-        <StickyCardsSection />
+        {/* ============ STICKY CARDS SECTION - Hidden on mobile for cleaner UX ============ */}
+        <div className="hidden md:block">
+          <StickyCardsSection />
+        </div>
 
         {/* ============ FEATURES GRID (Bento Style) ============ */}
         <FeaturesGrid />
@@ -490,8 +492,8 @@ export function HomePage() {
           </div>
         </section>
 
-        {/* ============ PROFILE CARD PREVIEW ============ */}
-        <section className="relative z-20 py-16 sm:py-20 md:py-24 px-4">
+        {/* ============ PROFILE CARD PREVIEW - Hidden on mobile ============ */}
+        <section className="hidden md:block relative z-20 py-16 sm:py-20 md:py-24 px-4">
           <div className="max-w-4xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -506,7 +508,7 @@ export function HomePage() {
               <p className="text-white/40 mt-2 text-xs sm:text-sm px-4">Join the community and get your unique profile card</p>
             </motion.div>
 
-            {/* ProfileCard with demo data - Disable 3D on mobile for performance */}
+            {/* ProfileCard with demo data */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
