@@ -4,7 +4,10 @@ node_modules
 
 # Raycast
 .raycast
+
+# Build outputs (except shared package which is needed for workspace imports)
 dist
+!packages/shared/dist
 
 # Logs
 npm-debug.log*
