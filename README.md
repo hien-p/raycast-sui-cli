@@ -1,6 +1,6 @@
 # Sui CLI Web
 
-A Raycast-style web interface for interacting with your local Sui CLI. Manage addresses, switch environments, request faucet tokens, and more - all from a beautiful web UI.
+A keyboard-first web interface for First Movers building on Sui. Manage addresses, switch environments, request faucet tokens, and more - all from a beautiful web UI designed for power users.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![npm](https://img.shields.io/npm/v/sui-cli-web-server)

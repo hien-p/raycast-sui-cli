@@ -2,7 +2,7 @@
 node_modules
 .DS_Store
 
-# Raycast
+# Legacy
 .raycast
 
 # Build outputs (except shared package which is needed for workspace imports)
@@ -35,6 +35,19 @@ PLAN.md
 *VERIFICATION*.md
 *ANALYSIS*.md
 *SUMMARY*.md
+
+# Internal Docs (not for public GitHub)
+# Keep README.md and packages/server/README.md for npm
+IMPLEMENTATION_PLAN.md
+FEATURES.md
+docs/
+plans/
+contracts/community_registry/CONTRACT_INFO.md
+
+# Screenshots (local only)
+*.png
+!packages/client/public/*.png
+!packages/blog/public/*.png
 
 # Environment & Secrets
 .env

@@ -170,8 +170,8 @@ export function LandingPage() {
             </h1>
 
             <p className="text-xl sm:text-2xl text-white/70 max-w-2xl mx-auto mb-8">
-              Raycast-inspired web interface for{' '}
-              <span className="text-rose-400 font-semibold">Sui blockchain CLI</span>.
+              Keyboard-first web interface for{' '}
+              <span className="text-rose-400 font-semibold">First Movers on Sui</span>.
               <br />
               Local, secure, and supercharged.
             </p>
@@ -258,7 +258,7 @@ export function LandingPage() {
                 See it in <span className="text-rose-400">Action</span>
               </h2>
               <p className="text-white/60 max-w-xl mx-auto">
-                A beautiful, Raycast-inspired interface for all your Sui blockchain needs.
+                A keyboard-first interface designed for First Movers building on Sui blockchain.
               </p>
             </div>
 
@@ -275,7 +275,7 @@ export function LandingPage() {
                   />
                 </div>
               </div>
-              <p className="text-center text-white/40 text-sm mt-4">Command Palette - Raycast-style access to all Sui CLI commands</p>
+              <p className="text-center text-white/40 text-sm mt-4">Command Palette - Keyboard-first access to all Sui CLI commands for power users</p>
             </div>
 
             {/* Feature Screenshots Grid */}

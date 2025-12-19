@@ -10,10 +10,11 @@ const navItems = [
   { href: '/blog/category/tutorial', label: 'Tutorials', icon: '📚' },
   { href: '/blog/category/announcement', label: 'News', icon: '📢' },
   { href: 'https://cli.firstmovers.io', label: 'App', icon: '🚀', external: true },
+  { href: 'https://github.com/hien-p/raycast-sui-cli', label: 'GitHub', icon: '⭐', external: true },
 ];
 ---
 
-<header class="sticky top-0 z-40 bg-black/40 backdrop-blur-2xl border-b border-white/10">
+<header class="header-nav sticky top-0 z-40 backdrop-blur-2xl border-b transition-colors">
   <nav class="max-w-4xl mx-auto px-4 py-3">
     <div class="flex items-center justify-between">
       <!-- Logo / Brand -->
@@ -23,7 +24,7 @@ const navItems = [
           <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
         </div>
-        <span class="font-mono text-sm text-white/80 group-hover:text-white transition-colors">
+        <span class="header-brand font-mono text-sm transition-colors">
           ~/blog
         </span>
       </a>
@@ -41,10 +42,8 @@ const navItems = [
                 target={item.external ? '_blank' : undefined}
                 rel={item.external ? 'noopener noreferrer' : undefined}
                 class:list={[
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-mono transition-all',
-                  isActive
-                    ? 'text-white bg-white/15'
-                    : 'text-white/60 hover:text-white hover:bg-white/10',
+                  'header-nav-item flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-mono transition-all',
+                  isActive ? 'active' : '',
                 ]}
               >
                 <span class="text-xs">{item.icon}</span>
@@ -62,3 +61,61 @@ const navItems = [
     </div>
   </nav>
 </header>
+
+<style>
+  /* Dark mode (default) */
+  .header-nav {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .header-brand {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .header-brand:hover {
+    color: white;
+  }
+
+  .header-nav-item {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .header-nav-item:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .header-nav-item.active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Light mode */
+  :global([data-theme="light"]) .header-nav {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-theme="light"]) .header-brand {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  :global([data-theme="light"]) .header-brand:hover {
+    color: rgba(0, 0, 0, 1);
+  }
+
+  :global([data-theme="light"]) .header-nav-item {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  :global([data-theme="light"]) .header-nav-item:hover {
+    color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  :global([data-theme="light"]) .header-nav-item.active {
+    color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+</style>

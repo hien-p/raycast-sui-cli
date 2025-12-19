@@ -1,7 +1,7 @@
 {
   "name": "Sui CLI Web",
   "short_name": "Sui CLI",
-  "description": "Raycast-style interface for Sui blockchain. Manage addresses, transfer SUI, deploy Move contracts from a beautiful web UI.",
+  "description": "Keyboard-first interface for First Movers on Sui. Manage addresses, transfer SUI, deploy Move contracts from a powerful web UI.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a1929",

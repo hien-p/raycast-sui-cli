@@ -10,7 +10,12 @@ export default defineConfig({
   base: '/blog',
   integrations: [
     mdx(),
-    sitemap(),
+    sitemap({
+      filter: (page) => !page.includes('/api/'),
+      changefreq: 'weekly',
+      priority: 0.7,
+      lastmod: new Date(),
+    }),
     tailwind(),
     react(),
   ],

@@ -16,6 +16,24 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      // Blog routes - forward to Astro dev server
+      '/blog': {
+        target: 'http://localhost:4321',
+        changeOrigin: true,
+      },
+      // Astro internal scripts and assets for blog hydration
+      '/@id/astro:': {
+        target: 'http://localhost:4321',
+        changeOrigin: true,
+      },
+      '/@fs/': {
+        target: 'http://localhost:4321',
+        changeOrigin: true,
+      },
+      '/_astro/': {
+        target: 'http://localhost:4321',
+        changeOrigin: true,
+      },
     },
   },
   build: {

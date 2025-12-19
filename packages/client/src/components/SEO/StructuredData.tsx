@@ -38,7 +38,7 @@ const softwareApplicationSchema = {
     price: '0',
     priceCurrency: 'USD',
   },
-  description: 'Raycast-style interface for Sui blockchain. Manage addresses, transfer SUI, deploy Move smart contracts from a beautiful web UI.',
+  description: 'Keyboard-first interface for First Movers on Sui blockchain. Manage addresses, transfer SUI, deploy Move smart contracts from a powerful web UI designed for developers.',
   featureList: [
     'Address Management',
     'SUI Token Transfers',

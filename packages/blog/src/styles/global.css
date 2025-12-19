@@ -4,15 +4,35 @@
 
 @layer base {
   :root {
-    --background: #0a0a0a;
-    --surface: #111111;
-    --surface-hover: #1a1a1a;
-    --primary: #4da2ff;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a0;
-    --text-muted: #606060;
+    /* Dark mode (default) - RGB values for Tailwind opacity support */
+    --background: 10 10 10;
+    --surface: 17 17 17;
+    --surface-hover: 26 26 26;
+    --primary: 77 162 255;
+    --text-primary: 255 255 255;
+    --text-secondary: 160 160 160;
+    --text-muted: 96 96 96;
     --border: rgba(255, 255, 255, 0.1);
     --border-hover: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Light mode */
+  [data-theme="light"] {
+    --background: 250 250 250;
+    --surface: 255 255 255;
+    --surface-hover: 245 245 245;
+    --primary: 37 99 235;
+    --text-primary: 17 17 17;
+    --text-secondary: 74 74 74;
+    --text-muted: 136 136 136;
+    --border: rgba(0, 0, 0, 0.1);
+    --border-hover: rgba(0, 0, 0, 0.2);
+  }
+
+  /* Apply background color based on theme */
+  [data-theme="light"] body {
+    background-color: rgb(var(--background));
+    color: rgb(var(--text-primary));
   }
 
   html {
@@ -20,13 +40,16 @@
   }
 
   body {
-    @apply bg-background text-white antialiased;
+    background-color: rgb(var(--background));
+    color: rgb(var(--text-primary));
+    @apply antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* Terminal-style selection */
   ::selection {
-    @apply bg-primary/30 text-white;
+    background-color: rgba(77, 162, 255, 0.3);
+    color: white;
   }
 
   /* Custom scrollbar */

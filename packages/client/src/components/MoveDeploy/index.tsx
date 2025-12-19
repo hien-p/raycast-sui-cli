@@ -603,7 +603,7 @@ export function MoveDeploy() {
                 failedSteps={
                   new Set([
                     buildOutput && buildOutput.includes('error') ? 'build' : '',
-                    testOutput && testOutput.includes('Failed') && !testOutput.includes('Failed: 0') ? 'test' : '',
+                    testOutput && testOutput.includes('failed') && !testOutput.includes('failed: 0') ? 'test' : '',
                     publishResult && !publishResult.success ? 'publish' : '',
                   ].filter(Boolean))
                 }
@@ -612,7 +612,7 @@ export function MoveDeploy() {
             </motion.div>
           )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 w-full min-w-0">
           {/* Left Column: Package Selection - Compact */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
@@ -682,7 +682,7 @@ export function MoveDeploy() {
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.15 }}
-            className="lg:col-span-2 space-y-2 min-w-0 overflow-hidden"
+            className="lg:col-span-3 space-y-2 min-w-0 overflow-hidden"
           >
             {/* Package Configuration - Compact */}
             <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors shadow-md relative overflow-hidden">
@@ -827,11 +827,12 @@ export function MoveDeploy() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Develop Tab - Compact */}
+              {/* Develop Tab - Redesigned: Actions on top, Output below full-width */}
               <TabsContent value="develop" className="space-y-3 mt-2">
+                {/* Action Buttons - Compact 2 columns */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Build Card - Compact */}
-                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors min-h-[160px] relative shadow-md rounded-xl">
+                  {/* Build Action */}
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors relative shadow-md rounded-xl">
                     <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl transition-all z-10 ${
                       building ? 'bg-green-500 animate-pulse' :
                       buildOutput && !buildOutput.includes('error') ? 'bg-green-500' :
@@ -852,7 +853,7 @@ export function MoveDeploy() {
                         )}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="px-3 pb-3 space-y-2">
+                    <CardContent className="px-3 pb-3">
                       <button
                         onClick={handleBuild}
                         disabled={!isValidPath || building || isAnyLoading}
@@ -864,39 +865,15 @@ export function MoveDeploy() {
                           <><Building2 className="w-3 h-3" />Build Package</>
                         )}
                       </button>
-                      <AnimatePresence mode="wait">
-                        {building && !buildOutput && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="space-y-1.5 p-2 bg-green-500/10 border border-green-500/30 rounded"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
-                              <span className="text-xs text-green-400 font-mono">Compiling...</span>
-                            </div>
-                            <Skeleton className="h-2 w-full bg-green-500/20" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <AnimatePresence mode="wait">
-                        {buildOutput && (
-                          <TerminalBuildOutput
-                            output={buildOutput}
-                            isError={buildOutput.includes('error') || buildOutput.includes('Error')}
-                          />
-                        )}
-                      </AnimatePresence>
                     </CardContent>
                   </Card>
 
-                  {/* Test Card - Compact */}
-                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors min-h-[160px] relative shadow-md rounded-xl">
+                  {/* Test Action */}
+                  <Card className="bg-black/40 backdrop-blur-md border-green-500/30 hover:border-green-500/50 transition-colors relative shadow-md rounded-xl">
                     <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl transition-all z-10 ${
                       testing ? 'bg-green-500 animate-pulse' :
-                      testOutput && testOutput.includes('Failed: 0') ? 'bg-green-500' :
-                      testOutput && testOutput.includes('Failed') ? 'bg-red-500' :
+                      testOutput && testOutput.includes('failed: 0') ? 'bg-green-500' :
+                      testOutput && testOutput.includes('failed') ? 'bg-red-500' :
                       'bg-green-500/30'
                     }`} />
                     <CardHeader className="py-2 px-3">
@@ -904,11 +881,11 @@ export function MoveDeploy() {
                         <TestTube2 className="w-3.5 h-3.5 text-green-500" />
                         Run Tests
                         {testOutput && !testing && (
-                          <Badge className={`text-xs ml-auto ${testOutput.includes('Failed: 0') ?
+                          <Badge className={`text-xs ml-auto ${testOutput.includes('failed: 0') ?
                             'bg-green-500/20 text-green-400 border-green-500/30' :
                             'bg-red-500/20 text-red-400 border-red-500/30'
                           } font-mono`}>
-                            {testOutput.includes('Failed: 0') ? 'Passed' : 'Failed'}
+                            {testOutput.includes('failed: 0') ? 'Passed' : 'Failed'}
                           </Badge>
                         )}
                       </CardTitle>
@@ -933,30 +910,83 @@ export function MoveDeploy() {
                           <><TestTube2 className="w-3 h-3" />Run Tests</>
                         )}
                       </button>
-                      <AnimatePresence mode="wait">
-                        {testing && !testOutput && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="space-y-1.5 p-2 bg-green-500/10 border border-green-500/30 rounded"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
-                              <span className="text-xs text-green-400 font-mono">Running tests...</span>
-                            </div>
-                            <Skeleton className="h-2 w-full bg-green-500/20" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <AnimatePresence mode="wait">
-                        {testOutput && (
-                          <TerminalTestOutput output={testOutput} passed={testPassed} failed={testFailed} />
-                        )}
-                      </AnimatePresence>
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Output Section - FULL WIDTH below buttons */}
+                {(building || testing || buildOutput || testOutput) && (
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* Build Output - Full Width */}
+                    {(building || buildOutput) && (
+                      <Card className="bg-black/40 backdrop-blur-md border-green-500/30 shadow-md rounded-xl">
+                        <CardHeader className="py-2 px-3 border-b border-green-500/20">
+                          <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                            <Building2 className="w-3.5 h-3.5 text-green-500" />
+                            Build Output
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <AnimatePresence mode="wait">
+                            {building && !buildOutput && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="space-y-1.5 p-2 bg-green-500/10 border border-green-500/30 rounded"
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
+                                  <span className="text-xs text-green-400 font-mono">Compiling...</span>
+                                </div>
+                                <Skeleton className="h-2 w-full bg-green-500/20" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                          {buildOutput && (
+                            <TerminalBuildOutput
+                              output={buildOutput}
+                              isError={buildOutput.includes('error') || buildOutput.includes('Error')}
+                            />
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Test Output - Full Width */}
+                    {(testing || testOutput) && (
+                      <Card className="bg-black/40 backdrop-blur-md border-green-500/30 shadow-md rounded-xl">
+                        <CardHeader className="py-2 px-3 border-b border-green-500/20">
+                          <CardTitle className="text-sm flex items-center gap-1.5 text-green-400 font-mono">
+                            <TestTube2 className="w-3.5 h-3.5 text-green-500" />
+                            Test Results
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <AnimatePresence mode="wait">
+                            {testing && !testOutput && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="space-y-1.5 p-2 bg-green-500/10 border border-green-500/30 rounded"
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  <Loader2 className="w-3 h-3 text-green-400 animate-spin" />
+                                  <span className="text-xs text-green-400 font-mono">Running tests...</span>
+                                </div>
+                                <Skeleton className="h-2 w-full bg-green-500/20" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                          {testOutput && (
+                            <TerminalTestOutput output={testOutput} passed={testPassed} failed={testFailed} />
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
 
                 {/* Pro Tip - Very Compact */}
                 <div className="flex items-center gap-2 px-3 py-2 border border-green-500/30 bg-green-500/10 backdrop-blur-md rounded-lg">

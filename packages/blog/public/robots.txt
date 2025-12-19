@@ -1,12 +1,12 @@
-# Sui CLI Web - robots.txt
+# Sui CLI Web Blog - robots.txt
 # https://cli.firstmovers.io
 
 User-agent: *
 Allow: /
 
-# Block internal paths
+# Block internal/build paths
+Disallow: /_astro/
 Disallow: /api/
-Disallow: /_internal/
 
-# Blog sitemap (served at /blog)
+# Sitemap location
 Sitemap: https://cli.firstmovers.io/blog/sitemap-index.xml

@@ -25,8 +25,8 @@ const recentPosts = posts.slice(1);
 ---
 
 <BaseLayout
-  title="Blog - Sui CLI Web"
-  description="Learn about Sui blockchain development, CLI tools, and stay updated with the latest features and announcements."
+  title="Sui Development Tutorials & Guides"
+  description="Learn Sui blockchain development with step-by-step tutorials. Deploy Move contracts, transfer tokens, manage gas. The fastest way to build on Sui."
 >
   <!-- Animated Gradient Background -->
   <div class="fixed inset-0 -z-10">
@@ -98,7 +98,7 @@ const recentPosts = posts.slice(1);
         </div>
       </section>
 
-      <!-- Featured Post (if exists) - DISABLED with Coming Soon -->
+      <!-- Featured Post -->
       {featuredPost && (
         <section class="mb-12">
           <div class="flex items-center gap-2 text-sm font-mono text-white/60 mb-4 drop-shadow-lg">
@@ -106,27 +106,14 @@ const recentPosts = posts.slice(1);
             <span>latest</span>
           </div>
 
-          <div class="block cursor-not-allowed">
-            <article class="relative p-6 rounded-xl border border-white/20 bg-black/40 backdrop-blur-xl shadow-xl overflow-hidden">
-              <!-- Coming Soon Overlay -->
-              <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                <div class="text-center">
-                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/40 backdrop-blur-md">
-                    <span class="relative flex h-2 w-2">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                    </span>
-                    <span class="text-sm font-mono text-purple-200">Coming Soon</span>
-                  </div>
-                </div>
-              </div>
-
+          <a href={`/blog/posts/${featuredPost.slug}/`} class="block group">
+            <article class="relative p-6 rounded-xl border border-white/20 bg-black/40 backdrop-blur-xl shadow-xl overflow-hidden hover:border-white/30 hover:bg-black/50 transition-all">
               {featuredPost.data.heroImage && (
                 <div class="mb-4 rounded-lg overflow-hidden border border-white/10">
                   <img
                     src={featuredPost.data.heroImage}
                     alt={featuredPost.data.title}
-                    class="w-full h-48 object-cover opacity-60"
+                    class="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
                     loading="eager"
                   />
                 </div>
@@ -146,19 +133,26 @@ const recentPosts = posts.slice(1);
                 </time>
               </div>
 
-              <h2 class="text-2xl font-bold text-white mb-2 drop-shadow-lg">
+              <h2 class="text-2xl font-bold text-white mb-2 drop-shadow-lg group-hover:text-primary transition-colors">
                 {featuredPost.data.title}
               </h2>
 
               <p class="text-white/70 leading-relaxed">
                 {featuredPost.data.description}
               </p>
+
+              <div class="mt-4 flex items-center gap-2 text-primary font-mono text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Read more</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 8H12M12 8L8 4M12 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
             </article>
-          </div>
+          </a>
         </section>
       )}
 
-      <!-- Recent Posts - DISABLED with Coming Soon -->
+      <!-- Recent Posts -->
       {recentPosts.length > 0 && (
         <section>
           <div class="flex items-center gap-2 text-sm font-mono text-white/60 mb-4 drop-shadow-lg">
@@ -167,15 +161,9 @@ const recentPosts = posts.slice(1);
           </div>
 
           <div class="space-y-3">
-            {recentPosts.map((post, index) => (
-              <div class="relative cursor-not-allowed">
-                <!-- Coming Soon Overlay for each post -->
-                <div class="absolute inset-0 bg-black/50 backdrop-blur-[1px] z-10 rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <span class="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-xs font-mono text-purple-300">
-                    Coming Soon
-                  </span>
-                </div>
-                <article class="p-4 rounded-xl border border-white/10 bg-black/30 backdrop-blur-md">
+            {recentPosts.map((post) => (
+              <a href={`/blog/posts/${post.slug}/`} class="block group">
+                <article class="p-4 rounded-xl border border-white/10 bg-black/30 backdrop-blur-md hover:border-white/20 hover:bg-black/40 transition-all">
                   <div class="flex items-center gap-3 mb-2 font-mono text-xs">
                     <span class={`px-2 py-0.5 rounded border ${
                       post.data.category === 'announcement' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
@@ -189,10 +177,10 @@ const recentPosts = posts.slice(1);
                       {post.data.publishDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </time>
                   </div>
-                  <h3 class="text-lg font-semibold text-white/80 mb-1">{post.data.title}</h3>
+                  <h3 class="text-lg font-semibold text-white/80 mb-1 group-hover:text-primary transition-colors">{post.data.title}</h3>
                   <p class="text-white/50 text-sm line-clamp-2">{post.data.description}</p>
                 </article>
-              </div>
+              </a>
             ))}
           </div>
         </section>

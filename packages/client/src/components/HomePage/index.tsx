@@ -158,17 +158,27 @@ export function HomePage() {
                   <span>GitHub</span>
                 </a>
 
-                {/* Blog - Coming Soon */}
-                <button
-                  disabled
-                  className="relative px-4 py-2.5 bg-white/5 text-white/40 rounded-lg border border-white/10 text-sm cursor-not-allowed min-h-[44px]"
-                  title="Coming soon"
+                {/* Blog - Enhanced with shimmer effect */}
+                <a
+                  href="/blog"
+                  className="group relative px-4 py-2.5 rounded-lg text-sm min-h-[44px] flex items-center gap-2 overflow-hidden"
                 >
-                  <span>Blog</span>
-                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-amber-500/80 text-xs text-black font-bold rounded uppercase">
-                    soon
+                  {/* Animated gradient border */}
+                  <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-500 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  <span className="absolute inset-[1px] rounded-[7px] bg-black/90 group-hover:bg-black/80 transition-colors" />
+
+                  {/* Shimmer effect */}
+                  <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+
+                  {/* Content */}
+                  <span className="relative flex items-center gap-2 text-cyan-300 group-hover:text-cyan-200 font-medium transition-colors">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                    <span>Read Blog</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </span>
-                </button>
+                </a>
               </div>
 
               {/* Right: Mobile menu button */}
@@ -228,6 +238,19 @@ export function HomePage() {
                     <Github className="w-5 h-5" />
                     <span>View on GitHub</span>
                     <ExternalLink className="w-4 h-4 ml-auto" />
+                  </a>
+
+                  {/* Blog - Mobile */}
+                  <a
+                    href="/blog"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-left px-4 py-3.5 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 hover:from-cyan-500/30 hover:to-teal-500/30 text-cyan-300 rounded-lg transition-all border border-cyan-500/30 min-h-[44px] flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                    <span>Read Blog</span>
+                    <ChevronRight className="w-4 h-4 ml-auto" />
                   </a>
 
                   {/* Mobile Stats */}

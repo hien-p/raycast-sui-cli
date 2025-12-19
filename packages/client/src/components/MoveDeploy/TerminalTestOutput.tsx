@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, TestTube2, Copy } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, XCircle, TestTube2, Copy, Maximize2, Minimize2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ interface TerminalTestOutputProps {
 
 export function TerminalTestOutput({ output, passed, failed }: TerminalTestOutputProps) {
   const [showCopied, setShowCopied] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const hasFailures = failed > 0;
 
   const copyOutput = async () => {
@@ -61,15 +62,86 @@ export function TerminalTestOutput({ output, passed, failed }: TerminalTestOutpu
     }
   };
 
+  // Expanded modal overlay
+  const expandedModal = isExpanded && (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        onClick={() => setIsExpanded(false)}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className={`relative w-full max-w-4xl max-h-[85vh] bg-black/95 border ${borderColor} rounded-xl overflow-hidden font-mono shadow-2xl shadow-${colorClass}-500/30`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Expanded Header */}
+          <div className={`border-b ${borderColor} ${bgColor} px-4 py-3 flex items-center justify-between sticky top-0 z-10`}>
+            <div className="flex items-center gap-2">
+              <TestTube2 className={`w-5 h-5 ${textColor}`} style={{ filter: `drop-shadow(0 0 4px rgba(${hasFailures ? '239, 68, 68' : '34, 197, 94'}, 0.5))` }} />
+              <span className={`${textColor} text-sm font-semibold tracking-wide`}>TEST RESULTS</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={copyOutput} className={`p-2 hover:bg-${colorClass}-500/20 rounded transition-colors`} title="Copy results">
+                <Copy className={`w-4 h-4 text-${colorClass}-400/60 hover:text-${colorClass}-400`} />
+              </button>
+              <button onClick={() => setIsExpanded(false)} className={`p-2 hover:bg-${colorClass}-500/20 rounded transition-colors`} title="Minimize">
+                <Minimize2 className={`w-4 h-4 text-${colorClass}-400`} />
+              </button>
+            </div>
+          </div>
+          {/* Expanded Content */}
+          <div className="p-6 overflow-y-auto max-h-[calc(85vh-60px)]">
+            <div className={`text-${colorClass}-500/70 mb-3 text-sm`}>$ sui move test</div>
+            <div className="space-y-1 mb-6">
+              {parsedLines.map((line, idx) => (
+                <div key={idx} className={`${getLineColor(line.type)} leading-relaxed text-sm flex items-start gap-2`}
+                  style={{ textShadow: line.type === 'fail' ? '0 0 8px rgba(239, 68, 68, 0.3)' : line.type === 'pass' ? '0 0 8px rgba(34, 197, 94, 0.3)' : 'none', fontFamily: 'JetBrains Mono, Menlo, Monaco, Courier New, monospace' }}>
+                  {line.type === 'pass' && <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                  {line.type === 'fail' && <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                  <span>{line.text || '\u00A0'}</span>
+                </div>
+              ))}
+            </div>
+            {/* Summary in expanded mode */}
+            <div className={`p-4 bg-black/40 border ${borderColor} rounded-lg`}>
+              <div className="text-sm font-semibold text-cyan-400/80 mb-2">Summary</div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-cyan-400/80">Total Tests:</span>
+                <span className={`${textColor} font-semibold`}>{passed + failed}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-green-400/80 flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" />Passed:</span>
+                <span className="text-green-400 font-semibold">{passed}</span>
+              </div>
+              {failed > 0 && (
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-red-400/80 flex items-center gap-1.5"><XCircle className="w-4 h-4" />Failed:</span>
+                  <span className="text-red-400 font-semibold">{failed}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="relative"
-    >
-      {/* Terminal Container */}
-      <div className={`relative bg-black/20 backdrop-blur-md border ${borderColor} rounded-lg overflow-hidden font-mono shadow-2xl shadow-${colorClass}-500/20`}>
+    <>
+      {expandedModal}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative"
+      >
+        {/* Terminal Container */}
+        <div className={`relative bg-black/20 backdrop-blur-md border ${borderColor} rounded-lg overflow-hidden font-mono shadow-2xl shadow-${colorClass}-500/20`}>
         {/* Scanlines overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-30"
           style={{
@@ -108,23 +180,32 @@ export function TerminalTestOutput({ output, passed, failed }: TerminalTestOutpu
                 TEST RESULTS
               </span>
             </div>
-            <button
-              onClick={copyOutput}
-              className={`p-1.5 hover:bg-${colorClass}-500/20 rounded transition-colors group`}
-              title="Copy results"
-            >
-              {showCopied ? (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="text-green-400 text-xs"
-                >
-                  ✓
-                </motion.span>
-              ) : (
-                <Copy className={`w-3 h-3 text-${colorClass}-400/60 group-hover:text-${colorClass}-400`} />
-              )}
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={copyOutput}
+                className={`p-1.5 hover:bg-${colorClass}-500/20 rounded transition-colors group`}
+                title="Copy results"
+              >
+                {showCopied ? (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="text-green-400 text-xs"
+                  >
+                    ✓
+                  </motion.span>
+                ) : (
+                  <Copy className={`w-3 h-3 text-${colorClass}-400/60 group-hover:text-${colorClass}-400`} />
+                )}
+              </button>
+              <button
+                onClick={() => setIsExpanded(true)}
+                className={`p-1.5 hover:bg-${colorClass}-500/20 rounded transition-colors group`}
+                title="Expand output"
+              >
+                <Maximize2 className={`w-3 h-3 text-${colorClass}-400/60 group-hover:text-${colorClass}-400`} />
+              </button>
+            </div>
           </div>
 
           {/* Terminal Body */}
@@ -136,7 +217,7 @@ export function TerminalTestOutput({ output, passed, failed }: TerminalTestOutpu
               </div>
               <div className={`bg-black/40 border-l-2 border-r-2 border-${colorClass}-500/20 px-4 py-3`}>
                 <div className={`text-${colorClass}-500/70 mb-2`}>$ sui move test</div>
-                <div className="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
+                <div className="space-y-1 max-h-80 overflow-y-auto custom-scrollbar">
                   {parsedLines.map((line, idx) => (
                     <motion.div
                       key={idx}
@@ -250,5 +331,6 @@ export function TerminalTestOutput({ output, passed, failed }: TerminalTestOutpu
         }
       `}</style>
     </motion.div>
+    </>
   );
 }

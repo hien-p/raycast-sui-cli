@@ -13,7 +13,7 @@ const FEATURE_CARDS = [
   {
     id: 'commands',
     title: 'Command Palette',
-    description: 'Raycast-style interface with instant access to all Sui CLI commands',
+    description: 'Keyboard-first interface with instant access to all Sui CLI commands',
     icon: Terminal,
     gradient: 'from-rose-500/20 to-pink-500/20',
     borderColor: 'border-rose-500/30',

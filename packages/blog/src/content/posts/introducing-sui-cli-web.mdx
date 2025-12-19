@@ -1,220 +1,287 @@
 ---
-title: "Introducing Sui CLI Web: The Raycast-Style Interface for Sui Blockchain"
-description: "Meet the fastest way to interact with Sui blockchain. A beautiful, keyboard-first CLI interface that runs in your browser."
-publishDate: 2024-12-18
+title: "Why I Built Sui CLI Web: The Fastest Tool for Sui First Movers"
+description: "Discover how Sui CLI Web became the go-to development tool for Sui blockchain. Transfer tokens, deploy Move contracts, manage gas - all from your browser."
+publishDate: 2024-12-19
 category: announcement
-tags: ["launch", "sui", "cli", "web3"]
+tags: ["launch", "sui", "cli", "web3", "developer-experience", "first-movers", "move-contracts"]
 author: "Harry Phan"
+heroImage: "/blog/images/posts/introducing-sui-cli-web/hero.png"
 ---
 
-import { BouncyAccordion, AccordionCTA } from '../../components/react/BouncyAccordion';
 import { RevealOnScroll } from '../../components/react/TextReveal';
+import { BrandedImage } from '../../components/react/BrandedImage';
+import { ImagePreview } from '../../components/react/ImagePreview';
 
-We're thrilled to announce **Sui CLI Web** — a beautiful, Raycast-inspired interface for interacting with the Sui blockchain directly from your browser.
+## The Problem
 
-## Why We Built This
+Every Sui developer knows this workflow: copy an address from the terminal, paste it into another command, make a typo, start over. Switch networks, forget which one you're on, send to the wrong place. Deploy a contract, stare at a wall of JSON, hunt for your package ID.
 
-Working with blockchain CLIs can be tedious. You need to:
-- Install and configure local tools
-- Remember complex command syntax
-- Copy-paste addresses and transaction hashes
-- Switch between terminal and browser constantly
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/introducing-sui-cli-web/problem_cli.png"
+    alt="The typical Sui developer workflow - terminal with long hashes, multiple windows, constant context switching"
+    width={800}
+    height={450}
+    watermark="cli.firstmovers.io"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    The reality: juggling terminals, copying hashes, and hoping you didn't make a typo
+  </figcaption>
+</figure>
 
-**We wanted something better.** Something that feels modern, fast, and just works.
+The Sui CLI is powerful. But <span className="text-primary font-semibold">powerful doesn't mean pleasant</span>.
+
+I was spending more time managing the tooling than actually building.
 
 <RevealOnScroll client:visible>
-## What Makes It Different
+## The First Attempt: Raycast Extension
 
-Sui CLI Web isn't just a CLI wrapper. It's a complete reimagining of how developers interact with Sui:
+My first solution was a [Raycast](https://raycast.com) extension. If you're on macOS, Raycast is like Spotlight on steroids: a command palette for everything.
 
-### ⌨️ Keyboard-First Design
-Navigate everything with keyboard shortcuts. `Cmd+K` opens the command palette, arrow keys navigate, and Enter executes. No mouse required.
+I wrapped common Sui CLI commands into Raycast actions: check balances, transfer tokens, switch networks, inspect objects. All accessible with `⌘K`.
 
-### 🎨 Beautiful Interface
-Dark mode by default, smooth animations, and a design that doesn't look like it's from 2005.
-
-### 🔒 Local-First Security
-Your private keys never leave your machine. All signing happens locally through our lightweight server.
-
-### ⚡ Instant Feedback
-Real-time transaction status, auto-refreshing balances, and intelligent caching for a snappy experience.
-</RevealOnScroll>
-
-## Key Features
-
-<BouncyAccordion
+<ImagePreview
   client:visible
-  items={[
-    {
-      id: 'wallet',
-      icon: '👛',
-      title: 'Wallet Management',
-      description: 'Create, import, and switch between multiple wallets. View balances across all tokens with real-time updates.',
-      link: 'https://cli.firstmovers.io',
-      linkText: 'Try Wallet'
-    },
-    {
-      id: 'transfer',
-      icon: '📤',
-      title: 'Easy Transfers',
-      description: 'Send SUI and other tokens with our intuitive interface. Address book support for frequent contacts.',
-      link: 'https://cli.firstmovers.io',
-      linkText: 'Send Tokens'
-    },
-    {
-      id: 'objects',
-      icon: '📦',
-      title: 'Object Explorer',
-      description: 'Browse and inspect your NFTs and owned objects. View detailed metadata and ownership history.',
-      link: 'https://cli.firstmovers.io',
-      linkText: 'Explore Objects'
-    },
-    {
-      id: 'gas',
-      icon: '⛽',
-      title: 'Gas Station',
-      description: 'Manage gas coins, split and merge for optimal transaction fees. Visualize gas breakdown.',
-      link: 'https://cli.firstmovers.io',
-      linkText: 'Manage Gas'
-    }
-  ]}
+  src="/blog/images/posts/introducing-sui-cli-web/raycast_cli.png"
+  alt="Sui CLI Raycast Extension"
+  caption="The Raycast extension. Fast, but macOS only."
 />
 
-## Getting Started
+It worked great. For me. On my Mac.
 
-Getting started takes just **30 seconds**:
+But when I wanted to share it with my team:
 
+> "Cool! How do I use it?"
+>
+> "Install Raycast, then add my extension..."
+>
+> "I'm on Windows."
+
+<span className="text-[#ef4444]">A tool locked to one platform isn't really shareable.</span>
+</RevealOnScroll>
+
+<RevealOnScroll client:visible>
+## Second Attempt: Desktop App
+
+Next, I tried building a cross-platform desktop app with Tauri. Same functionality, but packaged as a native application that runs on macOS, Windows, and Linux.
+
+<ImagePreview
+  client:visible
+  src="/blog/images/posts/introducing-sui-cli-web/tauri.png"
+  alt="Sui CLI Desktop App built with Tauri"
+  caption="The Tauri desktop app. Cross-platform, but still requires installation."
+/>
+
+It worked. But sharing still meant: "Download this installer, run it, trust this unsigned app, allow network access..."
+
+<span className="text-[#ef4444]">Too much friction.</span>
+</RevealOnScroll>
+
+<RevealOnScroll client:visible>
+## The Final Answer: Web
+
+What if there was nothing to install at all?
+
+A web app that talks to a local server. The UI runs in your browser. The server runs on your machine and executes CLI commands. Share a URL, and anyone can use it immediately.
+
+The architecture was simple: **a web UI that talks to a local bridge server**. The bridge server runs on your machine and executes Sui CLI commands. Your keys never leave your computer.
+
+```
+Browser (any platform)  →  localhost:3001  →  Your Sui CLI
+        ↑                        ↑                  ↑
+    hosted UI              runs locally        your keys stay here
+```
+
+Setup takes one command:
+
+<ImagePreview
+  client:visible
+  src="/blog/images/posts/introducing-sui-cli-web/setup.png"
+  alt="Sui CLI Web Server setup - one command installation"
+  caption="One command. That's it. Your existing Sui CLI config is automatically detected."
+/>
+
+Three weeks of building later, I had something unexpected:
+
+<span className="text-[#22c55e] font-semibold text-lg">The web version was faster than the terminal.</span>
+
+<ImagePreview
+  client:visible
+  src="/blog/images/posts/introducing-sui-cli-web/first_version.png"
+  alt="First version of Sui CLI Web"
+  caption="The first working version. Keyboard-driven with visual feedback."
+/>
+
+Not because it did less. It did the same things. But keyboard shortcuts eliminated repetitive typing. `⌘K` to open any command. `Tab` to autocomplete. Visual feedback caught errors before I submitted transactions.
+
+The same workflow patterns from Raycast, now accessible to everyone.
+</RevealOnScroll>
+
+<RevealOnScroll client:visible>
+## But Is It Safe?
+
+Here's the problem with most web-based crypto tools: <span className="text-[#ef4444]">they want your private keys.</span>
+
+Every browser wallet, every web app that can sign transactions: they all need access to your keys. That's a massive attack surface. One compromised website, one malicious extension, and your funds are gone.
+
+I refused to build another key-custody tool. But how do you build a web app that can sign transactions without holding keys?
+
+The answer came from an unexpected place: **the architecture of development tools like VS Code's Live Share.**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    YOUR BROWSER                         │
+│              (hosted on cli.firstmovers.io)             │
+│                         │                               │
+│                    HTTP requests                        │
+│                         ▼                               │
+├─────────────────────────────────────────────────────────┤
+│                  localhost:3001                         │
+│            (runs on YOUR machine only)                  │
+│                         │                               │
+│                   CLI commands                          │
+│                         ▼                               │
+├─────────────────────────────────────────────────────────┤
+│                    YOUR SUI CLI                         │
+│              (your keys, your config)                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+The web UI is just a pretty face. All the real work happens on your machine through a tiny bridge server. <span className="text-[#22c55e] font-semibold">Your private keys never touch the internet.</span> They never leave your computer. The hosted web app literally cannot access them.
+
+<div className="p-4 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 my-6">
+  <p className="text-white/90 font-medium">The best of both worlds: convenience of a web interface + security of local key storage.</p>
+</div>
+</RevealOnScroll>
+
+## Real Workflows, Real Examples
+
+Enough theory. Let me show you what using Sui CLI Web actually looks like.
+
+### Example 1: Checking Balances Across Networks
+
+**The old way (terminal):**
 ```bash
-# Install the server globally
-npm install -g sui-cli-web-server
-
-# Start the server
-sui-cli-web-server
-
-# Open your browser
-open https://cli.firstmovers.io
+sui client switch --env testnet
+sui client gas
+# Copy output, parse mentally
+sui client switch --env mainnet
+sui client gas
+# Try to remember testnet numbers
 ```
 
-That's it! The web app will automatically connect to your local server.
+**The Sui CLI Web way:**
+Press `Cmd+K`, type "balance". See all your addresses, all networks, all tokens in one view. Click to switch. No commands to remember.
 
-## Architecture
+<ImagePreview
+  client:visible
+  src="/blog/images/posts/introducing-sui-cli-web/check_balance.png"
+  alt="Checking balances in Sui CLI Web"
+  caption="All wallets, all networks, one view."
+/>
 
+### Example 2: Transferring SUI Tokens
+
+**The old way:**
+```bash
+# First, find recipient address (where did I put it?)
+# Check balance to pick a coin
+sui client gas
+# Copy coin object ID
+sui client transfer-sui --to 0x1234...abcd --sui-coin-object-id 0xabc...123 --gas-budget 10000000
+# Hope you didn't typo anything
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Browser App   │ ←→  │  Local Server   │ ←→  │    Sui CLI      │
-│  (Vercel CDN)   │     │  (localhost)    │     │   (your keys)   │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+
+**The Sui CLI Web way:**
+`Cmd+K` → "transfer" → Select recipient from address book → Pick coin visually → Confirm. Done in 5 seconds with zero chance of address typos.
+
+<ImagePreview
+  client:visible
+  src="/blog/images/posts/introducing-sui-cli-web/transfer_tokens.png"
+  alt="Transferring SUI tokens in Sui CLI Web"
+  caption="Visual token selection. No more copying object IDs."
+/>
+
+### Example 3: Deploying a Move Contract
+
+**The old way:**
+```bash
+cd my-project
+sui move build
+# Scroll through warnings
+sui client publish --gas-budget 100000000
+# Wait... did it work? Parse the JSON output
+# Try to find the package ID in the wall of text
 ```
 
-- **Browser App**: Beautiful React frontend, hosted on Vercel's edge network
-- **Local Server**: Lightweight Fastify server running on your machine
-- **Sui CLI**: The official Sui CLI handles all blockchain operations
+**The Sui CLI Web way:**
+Open Move tab → Select project folder → Click Build → Review results visually → Click Deploy → See your package ID highlighted, ready to copy.
 
-This architecture means:
+<ImagePreview
+  client:visible
+  src="/blog/images/posts/introducing-sui-cli-web/deploy_contract.png"
+  alt="Deploying Move contract in Sui CLI Web"
+  caption="Build, deploy, copy package ID. All visual."
+/>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-6 not-prose">
-  <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-    <span className="text-green-400 text-lg">✓</span>
-    <span className="text-white/80 text-sm">Zero private key exposure</span>
-  </div>
-  <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-    <span className="text-green-400 text-lg">✓</span>
-    <span className="text-white/80 text-sm">Fast, responsive UI with CDN</span>
-  </div>
-  <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-    <span className="text-green-400 text-lg">✓</span>
-    <span className="text-white/80 text-sm">Works with existing Sui config</span>
-  </div>
-  <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-    <span className="text-green-400 text-lg">✓</span>
-    <span className="text-white/80 text-sm">No account creation required</span>
-  </div>
+<div className="p-6 rounded-xl bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 my-8">
+  <p className="text-white/90 text-lg font-medium mb-2">The Difference</p>
+  <p className="text-white/60">It's not about doing things the CLI can't do. It's about doing the same things faster, with fewer mistakes, and without breaking your flow.</p>
 </div>
 
 ## What's Next
 
-We're just getting started. Here's what's coming:
+The core covers about <span className="text-primary font-semibold">95% of Sui CLI commands</span>: address management, token transfers, gas splitting/merging, Move development, PTB builder, transaction inspection, key management, dynamic fields, security verification. Most daily workflows are already here.
 
-<div className="space-y-3 my-6 not-prose">
-  <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors">
-    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20 text-primary font-mono font-bold text-sm shrink-0">1</span>
-    <div>
-      <h4 className="text-white font-semibold mb-1">Transaction History</h4>
-      <p className="text-white/60 text-sm">Browse and filter your past transactions</p>
-    </div>
+But there's still room to improve.
+
+<div className="space-y-4 my-6 not-prose">
+  <div className="p-4 rounded-xl bg-white/5 border border-white/10 border-l-4 border-l-primary">
+    <h4 className="text-white font-semibold mb-1">Transaction history</h4>
+    <p className="text-white/60 text-sm">Browse recent activity, filter by type, search by hash. The data exists on-chain. It just needs a proper interface.</p>
   </div>
-  <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors">
-    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20 text-primary font-mono font-bold text-sm shrink-0">2</span>
-    <div>
-      <h4 className="text-white font-semibold mb-1">Smart Contract Deployment</h4>
-      <p className="text-white/60 text-sm">Deploy Move packages with a visual interface</p>
-    </div>
+
+  <div className="p-4 rounded-xl bg-white/5 border border-white/10 border-l-4 border-l-[#22c55e]">
+    <h4 className="text-white font-semibold mb-1">NFT gallery</h4>
+    <p className="text-white/60 text-sm">See your NFTs as images instead of object IDs. Grid view, collection grouping, quick transfer actions.</p>
   </div>
-  <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors">
-    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20 text-primary font-mono font-bold text-sm shrink-0">3</span>
-    <div>
-      <h4 className="text-white font-semibold mb-1">Multi-Network Support</h4>
-      <p className="text-white/60 text-sm">Switch between mainnet, testnet, and devnet seamlessly</p>
-    </div>
-  </div>
-  <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors">
-    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20 text-primary font-mono font-bold text-sm shrink-0">4</span>
-    <div>
-      <h4 className="text-white font-semibold mb-1">Community Registry</h4>
-      <p className="text-white/60 text-sm">Discover and share useful commands</p>
-    </div>
+
+  <div className="p-4 rounded-xl bg-white/5 border border-white/10 border-l-4 border-l-[#eab308]">
+    <h4 className="text-white font-semibold mb-1">Better onboarding</h4>
+    <p className="text-white/60 text-sm">Installation guides for Windows, Linux, macOS. Video walkthroughs for common tasks.</p>
   </div>
 </div>
 
-## Try It Now
+The development philosophy stays simple: ship features that solve real problems. No bloat. Every addition has to earn its place.
 
-<AccordionCTA
-  client:visible
-  icon="🚀"
-  title="Ready to dive in?"
-  description="Install the server and start using Sui CLI Web in under a minute. No signup required."
-  link="https://cli.firstmovers.io"
-  linkText="Launch Sui CLI Web"
-/>
+<div className="p-6 rounded-xl bg-gradient-to-r from-primary/20 to-transparent border border-primary/30 my-8">
+  <p className="text-white text-lg font-medium italic">"The best features come from real pain points."</p>
+  <p className="text-white/60 text-sm mt-2">If you're using the tool and hit friction, I want to know.</p>
+</div>
 
 ---
 
-We'd love to hear your feedback! Join our community:
+## Try It
 
-<div className="flex flex-wrap gap-3 my-6 not-prose">
-  <a
-    href="https://github.com/hien-p/raycast-sui-cli"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group"
-  >
-    <svg className="w-5 h-5 text-white/70 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-    </svg>
-    <span className="text-white/80 group-hover:text-white text-sm font-medium">GitHub</span>
+```bash
+npx sui-cli-web-server
+```
+
+Then open [cli.firstmovers.io](https://cli.firstmovers.io). Your existing Sui CLI config works automatically.
+
+<div className="grid md:grid-cols-2 gap-4 my-8 not-prose">
+  <a href="https://cli.firstmovers.io" target="_blank" rel="noopener noreferrer" className="block p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 transition-colors">
+    <h4 className="text-white font-semibold mb-2">Launch the App</h4>
+    <p className="text-white/60 text-sm">Jump straight in. The app will guide you through server setup if needed.</p>
   </a>
-  <a
-    href="https://twitter.com/harry_phan06"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-sky-500/10 hover:border-sky-500/30 transition-all group"
-  >
-    <svg className="w-5 h-5 text-white/70 group-hover:text-sky-400" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-    </svg>
-    <span className="text-white/80 group-hover:text-sky-400 text-sm font-medium">Twitter</span>
-  </a>
-  <a
-    href="https://discord.gg/sui"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all group"
-  >
-    <svg className="w-5 h-5 text-white/70 group-hover:text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
-    </svg>
-    <span className="text-white/80 group-hover:text-indigo-400 text-sm font-medium">Discord</span>
+
+  <a href="https://x.com/harry_phan06" target="_blank" rel="noopener noreferrer" className="block p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 transition-colors">
+    <h4 className="text-white font-semibold mb-2">Follow Updates</h4>
+    <p className="text-white/60 text-sm">Feature announcements and ecosystem insights on X.</p>
   </a>
 </div>
 
-Happy building! 🏗️
+---
+
+Questions or feedback? Find me on [X](https://x.com/harry_phan06).

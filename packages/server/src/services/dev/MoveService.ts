@@ -93,12 +93,26 @@ export class MoveService {
 
             const output = await this.executor.execute(args, { cwd: packagePath });
 
-            // Parse output for stats
-            const passedMatch = output.match(/(\d+) \/ \d+ test\(s\) passed/);
-            const failedMatch = output.match(/(\d+) \/ \d+ test\(s\) failed/);
+            // Parse output for stats - support multiple Sui CLI output formats
+            // Format 1: "Test result: OK. Total tests: 9; passed: 9; failed: 0"
+            // Format 2: "X / Y test(s) passed" / "X / Y test(s) failed"
+            let passed = 0;
+            let failed = 0;
 
-            const passed = passedMatch ? parseInt(passedMatch[1]) : 0;
-            const failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+            // Try new format first: "passed: X; failed: Y"
+            const newPassedMatch = output.match(/passed:\s*(\d+)/i);
+            const newFailedMatch = output.match(/failed:\s*(\d+)/i);
+
+            if (newPassedMatch || newFailedMatch) {
+                passed = newPassedMatch ? parseInt(newPassedMatch[1]) : 0;
+                failed = newFailedMatch ? parseInt(newFailedMatch[1]) : 0;
+            } else {
+                // Fallback to old format: "X / Y test(s) passed/failed"
+                const passedMatch = output.match(/(\d+) \/ \d+ test\(s\) passed/);
+                const failedMatch = output.match(/(\d+) \/ \d+ test\(s\) failed/);
+                passed = passedMatch ? parseInt(passedMatch[1]) : 0;
+                failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+            }
 
             return {
                 success: failed === 0,

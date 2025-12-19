@@ -8,10 +8,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#4da2ff',
-        background: '#0a0a0a',
-        surface: '#111111',
-        'surface-hover': '#1a1a1a',
+        primary: 'rgb(var(--primary) / <alpha-value>)',
+        background: 'rgb(var(--background) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        'surface-hover': 'rgb(var(--surface-hover) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

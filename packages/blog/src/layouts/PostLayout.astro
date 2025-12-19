@@ -16,6 +16,7 @@ interface Props {
   heroImage?: string;
   sections?: { id: string; title: string }[];
   tags?: string[];
+  faqItems?: Array<{question: string; answer: string}>;
 }
 
 const {
@@ -27,6 +28,7 @@ const {
   heroImage,
   sections = [],
   tags = [],
+  faqItems = [],
 } = Astro.props;
 
 const categoryStyles = {
@@ -45,7 +47,7 @@ const formattedDate = publishDate.toLocaleDateString('en-US', {
 });
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} faqItems={faqItems}>
   <!-- Spiral Animation Intro - Shows once per session -->
   <SpiralIntro title={title} duration={4000} />
 
@@ -996,13 +998,21 @@ const formattedDate = publishDate.toLocaleDateString('en-US', {
     color: var(--text-muted);
   }
 
-  /* Light mode tags */
+  /* Light mode tags - higher contrast */
   [data-theme="light"] .bg-white\/5 {
-    background-color: rgba(0, 0, 0, 0.03);
+    background-color: rgba(0, 0, 0, 0.06) !important;
   }
 
   [data-theme="light"] .border-white\/10 {
-    border-color: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Tag text specifically */
+  [data-theme="light"] span.bg-white\/5,
+  [data-theme="light"] .rounded.bg-white\/5 {
+    color: rgba(0, 0, 0, 0.7) !important;
+    background-color: rgba(0, 0, 0, 0.06) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
   }
 
   /* Light mode footer */
@@ -1160,6 +1170,19 @@ const formattedDate = publishDate.toLocaleDateString('en-US', {
     color: #e2e8f0 !important;
   }
 
+  /* Reset ALL underlines/borders in code blocks (light mode) */
+  [data-theme="light"] .prose pre *,
+  [data-theme="light"] .prose pre code *,
+  [data-theme="light"] .prose pre span,
+  [data-theme="light"] .prose pre code span,
+  [data-theme="light"] .astro-code *,
+  [data-theme="light"] .shiki * {
+    text-decoration: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+  }
+
   /* Light mode inline code */
   [data-theme="light"] .prose :where(code):not(:where([class~="not-prose"] *)) {
     background: linear-gradient(
@@ -1279,33 +1302,49 @@ const formattedDate = publishDate.toLocaleDateString('en-US', {
      For elements outside .prose
      ======================================== */
 
-  /* Fix all white text classes in light mode */
-  [data-theme="light"] .text-white {
+  /* Fix all white text classes in light mode - with high specificity */
+  [data-theme="light"] .text-white,
+  [data-theme="light"] h4.text-white,
+  [data-theme="light"] p.text-white,
+  [data-theme="light"] span.text-white,
+  [data-theme="light"] div .text-white {
     color: rgba(0, 0, 0, 0.9) !important;
   }
 
-  [data-theme="light"] .text-white\/90 {
+  [data-theme="light"] .text-white\/90,
+  [data-theme="light"] div .text-white\/90 {
     color: rgba(0, 0, 0, 0.85) !important;
   }
 
-  [data-theme="light"] .text-white\/80 {
+  [data-theme="light"] .text-white\/80,
+  [data-theme="light"] div .text-white\/80 {
     color: rgba(0, 0, 0, 0.75) !important;
   }
 
-  [data-theme="light"] .text-white\/70 {
+  [data-theme="light"] .text-white\/70,
+  [data-theme="light"] div .text-white\/70 {
     color: rgba(0, 0, 0, 0.65) !important;
   }
 
-  [data-theme="light"] .text-white\/60 {
+  [data-theme="light"] .text-white\/60,
+  [data-theme="light"] p.text-white\/60,
+  [data-theme="light"] div .text-white\/60 {
     color: rgba(0, 0, 0, 0.55) !important;
   }
 
-  [data-theme="light"] .text-white\/50 {
+  [data-theme="light"] .text-white\/50,
+  [data-theme="light"] div .text-white\/50 {
     color: rgba(0, 0, 0, 0.45) !important;
   }
 
-  [data-theme="light"] .text-white\/40 {
+  [data-theme="light"] .text-white\/40,
+  [data-theme="light"] div .text-white\/40 {
     color: rgba(0, 0, 0, 0.35) !important;
+  }
+
+  [data-theme="light"] .text-white\/30,
+  [data-theme="light"] div .text-white\/30 {
+    color: rgba(0, 0, 0, 0.25) !important;
   }
 
   /* Fix buttons with white backgrounds */

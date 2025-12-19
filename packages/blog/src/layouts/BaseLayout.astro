@@ -7,14 +7,16 @@ interface Props {
   image?: string;
   keywords?: string;
   noindex?: boolean;
+  faqItems?: Array<{question: string; answer: string}>;
 }
 
 const {
   title,
-  description = 'Learn Sui blockchain development with tutorials, guides, and CLI tools. Build faster with Sui CLI Web.',
+  description = 'Master Sui blockchain development with tutorials, guides, and the fastest CLI tools. Deploy Move contracts, transfer SUI tokens, manage gas - all keyboard-first.',
   image = '/blog/og-image.png',
-  keywords = 'Sui blockchain, Sui CLI, Web3 development, blockchain tutorials, Move language, Sui development',
-  noindex = false
+  keywords = 'Sui blockchain, Sui CLI, Web3 development, Move smart contracts, Sui tutorial, blockchain developer tools, Sui testnet, Sui mainnet, first movers, sui transfer, deploy move contract',
+  noindex = false,
+  faqItems = []
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -76,6 +78,22 @@ const GA_ID = 'G-Z37RHCYYX6';
         }
       }
     })} />
+
+    <!-- FAQ Schema (if provided) -->
+    {faqItems && faqItems.length > 0 && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faqItems.map(item => ({
+          "@type": "Question",
+          "name": item.question,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": item.answer
+          }
+        }))
+      })} />
+    )}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -132,9 +132,16 @@ const {
 
   .theme-toggle--fixed {
     position: fixed;
-    top: 1rem;
+    top: 4.5rem; /* Below navbar on mobile */
     right: 1rem;
     z-index: 100;
+  }
+
+  /* Desktop: move back to top-right */
+  @media (min-width: 640px) {
+    .theme-toggle--fixed {
+      top: 1rem;
+    }
   }
 
   .theme-toggle:hover {

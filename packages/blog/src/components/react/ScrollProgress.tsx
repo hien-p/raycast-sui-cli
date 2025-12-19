@@ -51,22 +51,33 @@ export function ScrollProgress({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track active section
+  // Track active section using getBoundingClientRect for accurate positioning
+  // (offsetTop can be inaccurate when elements are inside transformed containers)
   useEffect(() => {
     if (sections.length === 0) return;
 
     const handleScroll = () => {
-      const scrollPos = window.scrollY + window.innerHeight / 3;
+      // Find the section currently in view (closest to top third of viewport)
+      const viewportThreshold = window.innerHeight / 3;
+      let currentSection = 0;
 
-      sections.forEach((section, index) => {
-        const el = document.getElementById(section.id);
-        if (el && scrollPos >= el.offsetTop) {
-          setActiveSection(index);
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sections[i].id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // If the top of this section is above the threshold, it's the active one
+          if (rect.top <= viewportThreshold) {
+            currentSection = i;
+            break;
+          }
         }
-      });
+      }
+
+      setActiveSection(currentSection);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
     return () => window.removeEventListener('scroll', handleScroll);
   }, [sections]);
 
@@ -93,10 +104,10 @@ export function ScrollProgress({
         />
       </motion.div>
 
-      {/* Floating Percentage Indicator */}
+      {/* Floating Percentage Indicator - Hidden on mobile, positioned to avoid ThemeToggle overlap */}
       {showPercentage && (
         <motion.div
-          className="fixed top-4 right-4 z-50"
+          className="fixed top-20 sm:top-4 right-4 sm:right-20 z-40 hidden sm:block"
           initial={{ opacity: 0, y: -20, scale: 0.9 }}
           animate={{
             opacity: isVisible ? 1 : 0,
@@ -114,10 +125,10 @@ export function ScrollProgress({
         </motion.div>
       )}
 
-      {/* Section Navigation Cards - Responsive */}
+      {/* Section Navigation - Hidden on mobile, shown on desktop */}
       {showSectionNav && sections.length > 0 && (
         <motion.div
-          className="fixed bottom-4 sm:bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto max-w-[95vw]"
+          className="fixed bottom-6 left-1/2 z-50 hidden sm:block w-[calc(100vw-48px)] max-w-4xl"
           initial={{ opacity: 0, y: 20, x: '-50%' }}
           animate={{
             opacity: isVisible ? 1 : 0,
@@ -126,7 +137,7 @@ export function ScrollProgress({
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
         >
-          <div className="glass rounded-full px-1.5 sm:px-2 py-1 sm:py-1.5 flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide justify-center sm:justify-start">
+          <div className="glass rounded-full px-2 py-1.5 flex gap-1 justify-center">
             {sections.map((section, index) => (
               <motion.button
                 key={section.id}
@@ -137,8 +148,8 @@ export function ScrollProgress({
                   });
                 }}
                 className={`
-                  px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-mono transition-all duration-200
-                  whitespace-nowrap flex-shrink-0
+                  px-2 lg:px-3 py-1.5 rounded-full text-[10px] lg:text-xs font-mono transition-all duration-200
+                  truncate min-w-0
                   ${index === activeSection
                     ? 'bg-[#4da2ff] text-white shadow-lg shadow-[#4da2ff]/25'
                     : 'text-white/50 hover:text-white hover:bg-white/10'
@@ -146,9 +157,46 @@ export function ScrollProgress({
                 `}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                title={section.title}
               >
                 {section.title}
               </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Mobile: Simple dot navigation */}
+      {showSectionNav && sections.length > 0 && (
+        <motion.div
+          className="fixed bottom-4 left-1/2 z-50 sm:hidden"
+          initial={{ opacity: 0, y: 20, x: '-50%' }}
+          animate={{
+            opacity: isVisible ? 1 : 0,
+            y: isVisible ? 0 : 20,
+            x: '-50%',
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
+        >
+          <div className="glass rounded-full px-3 py-2 flex gap-2 items-center">
+            {sections.map((section, index) => (
+              <button
+                key={section.id}
+                onClick={() => {
+                  document.getElementById(section.id)?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  });
+                }}
+                className={`
+                  w-2 h-2 rounded-full transition-all duration-200
+                  ${index === activeSection
+                    ? 'bg-[#4da2ff] scale-125'
+                    : 'bg-white/30 hover:bg-white/50'
+                  }
+                `}
+                aria-label={section.title}
+              />
             ))}
           </div>
         </motion.div>
