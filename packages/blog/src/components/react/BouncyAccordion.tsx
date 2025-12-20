@@ -42,7 +42,7 @@ export function BouncyAccordion({ items, allowMultiple = false }: BouncyAccordio
   const isOpen = (id: string) => openIds.has(id);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 not-prose">
       {items.map((item, index) => (
         <motion.div
           key={item.id}
@@ -78,7 +78,7 @@ export function BouncyAccordion({ items, allowMultiple = false }: BouncyAccordio
             </motion.div>
 
             {/* Title */}
-            <span className="flex-1 text-left font-medium text-white">
+            <span className="flex-1 text-left font-medium text-text-primary">
               {item.title}
             </span>
 
@@ -90,7 +90,7 @@ export function BouncyAccordion({ items, allowMultiple = false }: BouncyAccordio
               fill="none"
               animate={{ rotate: isOpen(item.id) ? 180 : 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="text-white/50"
+              className="text-text-muted"
             >
               <path
                 d="M5 7.5L10 12.5L15 7.5"
@@ -134,7 +134,7 @@ export function BouncyAccordion({ items, allowMultiple = false }: BouncyAccordio
                 className="overflow-hidden"
               >
                 <div className="p-4 pt-0 glass border-t-0 rounded-b-xl">
-                  <p className="text-white/60 text-sm mb-4 leading-relaxed">
+                  <p className="text-text-secondary text-sm mb-4 leading-relaxed">
                     {item.description}
                   </p>
 
@@ -143,7 +143,8 @@ export function BouncyAccordion({ items, allowMultiple = false }: BouncyAccordio
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#4da2ff]/20 text-[#4da2ff] rounded-lg text-sm font-mono hover:bg-[#4da2ff]/30 transition-colors border border-[#4da2ff]/30"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#4da2ff]/20 rounded-lg text-sm font-mono hover:bg-[#4da2ff]/30 transition-colors border border-[#4da2ff]/30"
+                      style={{ color: '#4da2ff' }}
                       whileHover={{ scale: 1.02, x: 4 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -188,7 +189,7 @@ export function AccordionCTA({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="my-6 rounded-xl overflow-hidden">
+    <div className="my-6 rounded-xl overflow-hidden not-prose">
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         className={`
@@ -202,7 +203,7 @@ export function AccordionCTA({
         <div className="w-10 h-10 rounded-lg bg-[#4da2ff]/20 border border-[#4da2ff]/30 flex items-center justify-center text-lg">
           {icon}
         </div>
-        <span className="flex-1 text-left font-medium text-white">{title}</span>
+        <span className="flex-1 text-left font-medium text-text-primary">{title}</span>
         <motion.svg
           width="20"
           height="20"
@@ -210,7 +211,7 @@ export function AccordionCTA({
           fill="none"
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="text-white/50"
+          className="text-text-muted"
         >
           <path
             d="M5 7.5L10 12.5L15 7.5"
@@ -232,13 +233,14 @@ export function AccordionCTA({
             className="overflow-hidden"
           >
             <div className="p-4 pt-2 glass border-t-0 rounded-b-xl">
-              <p className="text-white/60 text-sm mb-4">{description}</p>
+              <p className="text-text-secondary text-sm mb-4">{description}</p>
               {link && (
                 <a
                   href={link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#4da2ff] text-white rounded-lg text-sm font-mono hover:bg-[#4da2ff]/90 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#4da2ff] rounded-lg text-sm font-mono hover:bg-[#4da2ff]/90 transition-colors border-0"
+                  style={{ color: 'white' }}
                 >
                   {linkText}
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

@@ -5,18 +5,21 @@
  * A full-screen cinematic intro with canvas spiral animation.
  * Uses vanilla JS + GSAP to avoid React hydration issues in Astro.
  *
- * Shows once per session, with skip button and auto-dismiss.
+ * Shows once per post visit (uses postId to track), with skip button and auto-dismiss.
  */
 interface Props {
   title?: string;
   duration?: number;
+  postId?: string;
 }
 
-const { title = "Loading...", duration = 4000 } = Astro.props;
+const { title = "Loading...", duration = 4000, postId } = Astro.props;
 const words = title.split(' ');
+// Generate a unique ID from title if postId not provided
+const uniqueId = postId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
 ---
 
-<div id="spiral-intro-overlay" class="spiral-overlay" data-duration={duration}>
+<div id="spiral-intro-overlay" class="spiral-overlay" data-duration={duration} data-post-id={uniqueId}>
   <!-- Canvas for Spiral Animation -->
   <canvas id="spiral-canvas" class="spiral-canvas"></canvas>
 
@@ -554,12 +557,7 @@ const words = title.split(' ');
     const overlay = document.getElementById('spiral-intro-overlay');
     if (!overlay) return;
 
-    // Check if already shown in this session
-    const sessionKey = 'spiral-intro-shown';
-    if (sessionStorage.getItem(sessionKey)) {
-      overlay.classList.add('hidden');
-      return;
-    }
+    // Always show animation on every visit (no session storage check)
 
     const duration = parseInt(overlay.dataset.duration || '4000', 10);
     const words = overlay.querySelectorAll('.word');
@@ -629,7 +627,6 @@ const words = title.split(' ');
     // Dismiss function
     function dismiss() {
       overlay.classList.add('fading');
-      sessionStorage.setItem(sessionKey, 'true');
       setTimeout(() => {
         overlay.classList.add('hidden');
         controller.destroy();

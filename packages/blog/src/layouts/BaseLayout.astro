@@ -103,6 +103,12 @@ const GA_ID = 'G-Z37RHCYYX6';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
+    <!-- Preload Twitter widgets for faster embed loading -->
+    <link rel="preconnect" href="https://platform.twitter.com" />
+    <link rel="dns-prefetch" href="https://platform.twitter.com" />
+    <link rel="preconnect" href="https://syndication.twitter.com" />
+    <link rel="dns-prefetch" href="https://syndication.twitter.com" />
+
     <!-- Google Analytics -->
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
     <script is:inline define:vars={{ GA_ID }}>
