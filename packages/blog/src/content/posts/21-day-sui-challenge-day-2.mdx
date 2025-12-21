@@ -1,0 +1,839 @@
+---
+title: "21-Day Sui Challenge Day 2: Functions & Unit Testing in Move"
+description: "Learn Move functions, visibility modifiers, and unit testing. Write your first test with assert_eq and expected_failure."
+publishDate: 2024-12-21
+category: tutorial
+tags: ["sui-challenge", "learn-move", "move-functions", "unit-testing", "sui-tutorial", "day-2", "beginner"]
+author: "Harry Phan"
+heroImage: "/blog/images/posts/21-day-sui-challenge/sui-cli-web-test.png"
+draft: false
+sections:
+  - id: "the-anatomy-of-a-function"
+    title: "The Anatomy of a Function"
+  - id: "visibility-and-access"
+    title: "Visibility and Access"
+  - id: "return-patterns"
+    title: "Return Patterns"
+  - id: "testing-deep-dive"
+    title: "Testing Deep Dive"
+  - id: "complete-solution"
+    title: "Complete Solution"
+  - id: "whats-next"
+    title: "What's Next"
+  - id: "vietnamese-builders-level-up-your-journey"
+    title: "🇻🇳 First Movers Sprint"
+---
+
+import { AccordionCTA } from '../../components/react/BouncyAccordion';
+import { RevealOnScroll } from '../../components/react/TextReveal';
+import { BrandedImage } from '../../components/react/BrandedImage';
+
+**Day 2 of the 21-Day Sui Challenge.**
+
+Yesterday you defined constants and explored Move's type system. Today, we're making things *do* something. Functions are the heart of any program, and Move has some unique twists you need to understand.
+
+<AccordionCTA
+  client:visible
+  icon="📚"
+  title="Day 2 Challenge"
+  description="Write a sum function and test it. Simple on the surface, deep when you look closer."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_02"
+  linkText="View on GitHub"
+/>
+
+---
+
+## The Anatomy of a Function
+
+Let's start with the basics. Here's what a Move function looks like:
+
+```move
+public fun sum(a: u64, b: u64): u64 {
+    a + b
+}
+```
+
+Five parts to understand:
+
+1. **`public`** — Visibility modifier (who can call this)
+2. **`fun`** — Keyword that declares a function
+3. **`sum`** — The function name
+4. **`(a: u64, b: u64)`** — Parameters with explicit types
+5. **`: u64`** — Return type
+
+### No Return Keyword Needed
+
+Here's the thing that trips up developers from other languages: **Move functions automatically return the last expression.**
+
+```move
+// These are identical:
+public fun add_v1(a: u64, b: u64): u64 {
+    return a + b  // explicit return
+}
+
+public fun add_v2(a: u64, b: u64): u64 {
+    a + b  // implicit return (preferred)
+}
+```
+
+Notice the missing semicolon in `add_v2`. That's intentional. In Move:
+- **Expression** (no semicolon) → returns a value
+- **Statement** (with semicolon) → returns nothing
+
+```move
+// This WON'T compile:
+public fun broken(a: u64, b: u64): u64 {
+    a + b;  // semicolon makes it a statement, returns ()
+}
+// Error: expected 'u64', found '()'
+```
+
+This is borrowed from Rust, and once you get it, it feels natural.
+
+---
+
+## Visibility and Access
+
+Move has four visibility levels, but for Day 2, you need to know two:
+
+### `public fun` — Callable from Anywhere
+
+```move
+public fun greet(): vector<u8> {
+    b"Hello, Sui!"
+}
+```
+
+Anyone can call this: other modules, other packages, even external transactions.
+
+### `fun` (no modifier) — Private
+
+```move
+fun internal_helper(x: u64): u64 {
+    x * 2
+}
+```
+
+Only functions in the *same module* can call this. It's hidden from the outside world.
+
+### Why This Matters
+
+Good Move code uses private functions for implementation details and only exposes what's necessary:
+
+```move
+module challenge::calculator {
+    // Public API
+    public fun calculate(a: u64, b: u64, op: u8): u64 {
+        if (op == 0) add(a, b)
+        else if (op == 1) subtract(a, b)
+        else multiply(a, b)
+    }
+
+    // Private helpers
+    fun add(a: u64, b: u64): u64 { a + b }
+    fun subtract(a: u64, b: u64): u64 { a - b }
+    fun multiply(a: u64, b: u64): u64 { a * b }
+}
+```
+
+External callers only see `calculate`. The internal logic is hidden and can be changed without breaking the public API.
+
+---
+
+## Return Patterns
+
+Let's go deeper than the basic `sum` function.
+
+### Multiple Return Values
+
+Move functions can return tuples:
+
+```move
+public fun divide_with_remainder(a: u64, b: u64): (u64, u64) {
+    let quotient = a / b;
+    let remainder = a % b;
+    (quotient, remainder)
+}
+
+// Usage:
+fun use_division() {
+    let (q, r) = divide_with_remainder(17, 5);
+    // q = 3, r = 2
+}
+```
+
+This is cleaner than returning a struct for simple cases.
+
+### Early Returns with Conditions
+
+Sometimes you need to bail out early:
+
+```move
+public fun safe_divide(a: u64, b: u64): u64 {
+    if (b == 0) {
+        return 0  // Early return to avoid division by zero
+    };
+    a / b
+}
+```
+
+Note the semicolon after the `if` block — it's a statement here. The final `a / b` is the expression that gets returned for non-zero `b`.
+
+### Functions That Return Nothing
+
+Some functions are just for side effects:
+
+```move
+public fun log_value(value: u64) {
+    // In real code, this might emit an event
+    // For now, it does nothing visible
+    let _ = value;
+}
+```
+
+The return type is `()` (unit type), which is implicit when you don't specify one.
+
+---
+
+## Testing Deep Dive
+
+This is where Day 2 really shines. Move's testing system is built into the language, not bolted on as an afterthought.
+
+### Basic Test Structure
+
+```move
+#[test]
+fun test_sum() {
+    let result = sum(1, 2);
+    assert!(result == 3, 0);
+}
+```
+
+The `#[test]` attribute tells the Move compiler this is a test function. It won't be included in production builds.
+
+### Assert vs Assert_eq
+
+Move gives you two main assertion tools:
+
+```move
+#[test_only]
+use std::unit_test::assert_eq;
+
+#[test]
+fun test_with_assert() {
+    let result = sum(10, 20);
+    assert!(result == 30, 0);  // Basic assertion
+}
+
+#[test]
+fun test_with_assert_eq() {
+    let result = sum(10, 20);
+    assert_eq!(result, 30);  // More descriptive on failure
+}
+```
+
+`assert_eq!` is a macro (note the `!`) that gives better error messages when tests fail. Use it.
+
+### The `#[test_only]` Pattern
+
+You don't want test utilities in production code:
+
+```move
+module challenge::day_02 {
+    // This import only exists during testing
+    #[test_only]
+    use std::unit_test::assert_eq;
+
+    public fun sum(a: u64, b: u64): u64 {
+        a + b
+    }
+
+    // This function only exists during testing
+    #[test_only]
+    fun create_test_value(): u64 {
+        42
+    }
+
+    #[test]
+    fun test_sum() {
+        let expected = create_test_value();
+        // ...
+    }
+}
+```
+
+The `#[test_only]` attribute on the import and helper function means they're stripped from the final bytecode. Your production module stays lean.
+
+### Testing Edge Cases
+
+Good tests cover more than the happy path:
+
+```move
+#[test]
+fun test_sum_zero() {
+    assert_eq!(sum(0, 0), 0);
+    assert_eq!(sum(0, 100), 100);
+    assert_eq!(sum(100, 0), 100);
+}
+
+#[test]
+fun test_sum_large_numbers() {
+    let large = 1_000_000_000_000;
+    assert_eq!(sum(large, large), 2_000_000_000_000);
+}
+```
+
+### Expected Failures
+
+Sometimes you *want* code to fail. Move lets you test for that:
+
+```move
+#[test]
+#[expected_failure(arithmetic_error, location = Self)]
+fun test_overflow_aborts() {
+    let max: u64 = 18_446_744_073_709_551_615;
+    let _result = sum(max, 1);  // This overflows!
+}
+```
+
+If the code *doesn't* abort, the test fails. This is crucial for security — you need to verify that dangerous operations actually get blocked.
+
+### Abort Codes
+
+You can also test for specific abort codes:
+
+```move
+public fun divide(a: u64, b: u64): u64 {
+    assert!(b != 0, 1001);  // Abort code 1001 for division by zero
+    a / b
+}
+
+#[test]
+#[expected_failure(abort_code = 1001)]
+fun test_divide_by_zero() {
+    let _result = divide(10, 0);  // Should abort with code 1001
+}
+```
+
+This is how professional Move code handles errors — each failure has a unique code that can be caught and tested.
+
+---
+
+## Complete Solution
+
+Here's my complete Day 2 implementation. It goes well beyond the minimum requirements:
+
+```move
+/// DAY 2: Primitive Types & Simple Functions - Complete Solution
+///
+/// This demonstrates:
+/// - Basic functions with parameters and return values
+/// - Multiple function patterns (helpers, wrappers, mathematical)
+/// - Comprehensive testing strategies
+/// - Edge case handling
+
+module challenge::day_02 {
+    // ═══════════════════════════════════════════════════════════════
+    // IMPORTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test_only]
+    use std::unit_test::assert_eq;
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONSTANTS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Error code for division by zero
+    const E_DIVISION_BY_ZERO: u64 = 1001;
+
+    /// Error code for invalid input
+    const E_INVALID_INPUT: u64 = 1002;
+
+    // ═══════════════════════════════════════════════════════════════
+    // CORE FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Adds two numbers
+    /// The basic function required by Day 2
+    public fun sum(a: u64, b: u64): u64 {
+        a + b
+    }
+
+    /// Subtracts b from a
+    /// Note: Will abort if b > a (no negative numbers in Move!)
+    public fun subtract(a: u64, b: u64): u64 {
+        a - b
+    }
+
+    /// Multiplies two numbers
+    public fun multiply(a: u64, b: u64): u64 {
+        a * b
+    }
+
+    /// Divides a by b with explicit zero-check
+    public fun divide(a: u64, b: u64): u64 {
+        assert!(b != 0, E_DIVISION_BY_ZERO);
+        a / b
+    }
+
+    /// Returns quotient and remainder
+    public fun divide_with_remainder(a: u64, b: u64): (u64, u64) {
+        assert!(b != 0, E_DIVISION_BY_ZERO);
+        (a / b, a % b)
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS (Private)
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Checks if a number is even
+    fun is_even(n: u64): bool {
+        n % 2 == 0
+    }
+
+    /// Checks if a number is odd
+    fun is_odd(n: u64): bool {
+        !is_even(n)
+    }
+
+    /// Returns the larger of two numbers
+    fun max(a: u64, b: u64): u64 {
+        if (a > b) a else b
+    }
+
+    /// Returns the smaller of two numbers
+    fun min(a: u64, b: u64): u64 {
+        if (a < b) a else b
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADVANCED FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Calculates power: base^exponent
+    /// Uses iterative approach to avoid stack overflow
+    public fun power(base: u64, exponent: u64): u64 {
+        if (exponent == 0) {
+            return 1
+        };
+
+        let mut result = 1;
+        let mut i = 0;
+        while (i < exponent) {
+            result = result * base;
+            i = i + 1;
+        };
+        result
+    }
+
+    /// Calculates factorial: n!
+    /// n! = n * (n-1) * (n-2) * ... * 1
+    public fun factorial(n: u64): u64 {
+        if (n <= 1) {
+            return 1
+        };
+
+        let mut result = 1;
+        let mut i = 2;
+        while (i <= n) {
+            result = result * i;
+            i = i + 1;
+        };
+        result
+    }
+
+    /// Calculates the average of two numbers (integer division)
+    public fun average(a: u64, b: u64): u64 {
+        // Safe average that doesn't overflow
+        // Instead of (a + b) / 2, use a/2 + b/2 + (a%2 + b%2)/2
+        let half_a = a / 2;
+        let half_b = b / 2;
+        let remainder = ((a % 2) + (b % 2)) / 2;
+        half_a + half_b + remainder
+    }
+
+    /// Calculates absolute difference between two numbers
+    public fun abs_diff(a: u64, b: u64): u64 {
+        if (a > b) a - b else b - a
+    }
+
+    /// Clamps a value between min and max bounds
+    public fun clamp(value: u64, min_val: u64, max_val: u64): u64 {
+        assert!(min_val <= max_val, E_INVALID_INPUT);
+        if (value < min_val) {
+            min_val
+        } else if (value > max_val) {
+            max_val
+        } else {
+            value
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Basic
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_sum_basic() {
+        assert_eq!(sum(1, 2), 3);
+    }
+
+    #[test]
+    fun test_sum_zero() {
+        assert_eq!(sum(0, 0), 0);
+        assert_eq!(sum(0, 100), 100);
+        assert_eq!(sum(100, 0), 100);
+    }
+
+    #[test]
+    fun test_sum_large() {
+        let billion = 1_000_000_000;
+        assert_eq!(sum(billion, billion), 2_000_000_000);
+    }
+
+    #[test]
+    fun test_subtract() {
+        assert_eq!(subtract(10, 3), 7);
+        assert_eq!(subtract(100, 100), 0);
+        assert_eq!(subtract(5, 0), 5);
+    }
+
+    #[test]
+    fun test_multiply() {
+        assert_eq!(multiply(6, 7), 42);
+        assert_eq!(multiply(0, 1000), 0);
+        assert_eq!(multiply(1, 999), 999);
+    }
+
+    #[test]
+    fun test_divide() {
+        assert_eq!(divide(20, 4), 5);
+        assert_eq!(divide(17, 5), 3);  // Integer division
+        assert_eq!(divide(0, 10), 0);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Advanced
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_divide_with_remainder() {
+        let (q, r) = divide_with_remainder(17, 5);
+        assert_eq!(q, 3);
+        assert_eq!(r, 2);
+
+        let (q2, r2) = divide_with_remainder(20, 4);
+        assert_eq!(q2, 5);
+        assert_eq!(r2, 0);
+    }
+
+    #[test]
+    fun test_power() {
+        assert_eq!(power(2, 0), 1);
+        assert_eq!(power(2, 1), 2);
+        assert_eq!(power(2, 10), 1024);
+        assert_eq!(power(3, 4), 81);
+        assert_eq!(power(10, 6), 1_000_000);
+    }
+
+    #[test]
+    fun test_factorial() {
+        assert_eq!(factorial(0), 1);
+        assert_eq!(factorial(1), 1);
+        assert_eq!(factorial(5), 120);
+        assert_eq!(factorial(10), 3_628_800);
+    }
+
+    #[test]
+    fun test_average() {
+        assert_eq!(average(10, 20), 15);
+        assert_eq!(average(0, 100), 50);
+        assert_eq!(average(7, 8), 7);  // Integer division: (7+8)/2 = 7
+    }
+
+    #[test]
+    fun test_average_no_overflow() {
+        // This would overflow with naive (a+b)/2 approach
+        let max = 18_446_744_073_709_551_615u64;
+        let result = average(max, max);
+        assert_eq!(result, max);
+    }
+
+    #[test]
+    fun test_abs_diff() {
+        assert_eq!(abs_diff(10, 7), 3);
+        assert_eq!(abs_diff(7, 10), 3);
+        assert_eq!(abs_diff(5, 5), 0);
+    }
+
+    #[test]
+    fun test_clamp() {
+        assert_eq!(clamp(5, 0, 10), 5);   // Within range
+        assert_eq!(clamp(0, 5, 10), 5);   // Below min
+        assert_eq!(clamp(15, 0, 10), 10); // Above max
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Private Functions (test_only access)
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_is_even() {
+        assert!(is_even(0), 0);
+        assert!(is_even(2), 1);
+        assert!(is_even(100), 2);
+        assert!(!is_even(1), 3);
+        assert!(!is_even(99), 4);
+    }
+
+    #[test]
+    fun test_is_odd() {
+        assert!(is_odd(1), 0);
+        assert!(is_odd(99), 1);
+        assert!(!is_odd(0), 2);
+        assert!(!is_odd(100), 3);
+    }
+
+    #[test]
+    fun test_max_min() {
+        assert_eq!(max(10, 5), 10);
+        assert_eq!(max(5, 10), 10);
+        assert_eq!(max(7, 7), 7);
+
+        assert_eq!(min(10, 5), 5);
+        assert_eq!(min(5, 10), 5);
+        assert_eq!(min(7, 7), 7);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Expected Failures
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    #[expected_failure(abort_code = E_DIVISION_BY_ZERO)]
+    fun test_divide_by_zero() {
+        let _result = divide(10, 0);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_DIVISION_BY_ZERO)]
+    fun test_divide_with_remainder_by_zero() {
+        let (_q, _r) = divide_with_remainder(10, 0);
+    }
+
+    #[test]
+    #[expected_failure(arithmetic_error, location = Self)]
+    fun test_subtract_underflow() {
+        let _result = subtract(5, 10);  // 5 - 10 underflows
+    }
+
+    #[test]
+    #[expected_failure(arithmetic_error, location = Self)]
+    fun test_sum_overflow() {
+        let max = 18_446_744_073_709_551_615u64;
+        let _result = sum(max, 1);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_INVALID_INPUT)]
+    fun test_clamp_invalid_bounds() {
+        let _result = clamp(5, 10, 5);  // min > max is invalid
+    }
+}
+```
+
+---
+
+## Running the Tests
+
+Navigate to your Day 2 folder and run:
+
+```bash
+cd day_02
+sui move test
+```
+
+You should see all tests passing:
+
+```
+Running Move unit tests
+[ PASS    ] challenge::day_02::test_abs_diff
+[ PASS    ] challenge::day_02::test_average
+[ PASS    ] challenge::day_02::test_average_no_overflow
+[ PASS    ] challenge::day_02::test_clamp
+[ PASS    ] challenge::day_02::test_clamp_invalid_bounds
+[ PASS    ] challenge::day_02::test_divide
+[ PASS    ] challenge::day_02::test_divide_by_zero
+[ PASS    ] challenge::day_02::test_divide_with_remainder
+[ PASS    ] challenge::day_02::test_divide_with_remainder_by_zero
+[ PASS    ] challenge::day_02::test_factorial
+[ PASS    ] challenge::day_02::test_is_even
+[ PASS    ] challenge::day_02::test_is_odd
+[ PASS    ] challenge::day_02::test_max_min
+[ PASS    ] challenge::day_02::test_multiply
+[ PASS    ] challenge::day_02::test_power
+[ PASS    ] challenge::day_02::test_subtract
+[ PASS    ] challenge::day_02::test_subtract_underflow
+[ PASS    ] challenge::day_02::test_sum_basic
+[ PASS    ] challenge::day_02::test_sum_large
+[ PASS    ] challenge::day_02::test_sum_overflow
+[ PASS    ] challenge::day_02::test_sum_zero
+Test result: OK. 21 passed; 0 failed
+```
+
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/21-day-sui-challenge/sui-cli-web-test.png"
+    alt="Move tests passing in Sui CLI Web"
+    width={800}
+    height={609}
+    watermark="cli.firstmovers.io"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    Run your tests with Sui CLI Web — all tests passing with detailed output
+  </figcaption>
+</figure>
+
+---
+
+## Key Takeaways
+
+<RevealOnScroll client:visible>
+
+### 1. Functions Return Last Expression
+
+No `return` keyword needed. Just leave off the semicolon:
+
+```move
+public fun add(a: u64, b: u64): u64 {
+    a + b  // ← This is returned
+}
+```
+
+### 2. Visibility Controls Access
+
+- `public fun` — Anyone can call
+- `fun` — Only this module can call
+
+### 3. Tests Are First-Class
+
+The `#[test]` attribute integrates testing into the language:
+
+```move
+#[test]
+fun test_something() {
+    assert_eq!(1 + 1, 2);
+}
+```
+
+### 4. Expected Failures Are Powerful
+
+Test that your code fails correctly:
+
+```move
+#[test]
+#[expected_failure(abort_code = 1001)]
+fun test_should_fail() {
+    // This must abort with code 1001
+}
+```
+
+### 5. Error Codes Matter
+
+Define constants for error codes:
+
+```move
+const E_DIVISION_BY_ZERO: u64 = 1001;
+```
+
+This makes debugging easier and tests more precise.
+
+</RevealOnScroll>
+
+---
+
+## What's Next
+
+<RevealOnScroll client:visible>
+
+Tomorrow in **Day 3**, we move from functions to **data structures**. You'll learn:
+
+- How to define structs in Move
+- The difference between `struct` and Sui objects
+- How to create, modify, and destroy data
+
+Functions let you *do* things. Structs let you *hold* things. Together, they're the foundation for everything you'll build on Sui.
+
+<AccordionCTA
+  client:visible
+  icon="🔗"
+  title="Continue the Challenge"
+  description="Day 3 covers structs and data modeling. Time to give your functions something to work with."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_03"
+  linkText="View Day 3"
+/>
+
+</RevealOnScroll>
+
+---
+
+## Commit Your Progress
+
+```bash
+cd day_02
+sui move test
+git add day_02/
+git commit -m "Day 2: practice functions and testing"
+```
+
+**Day 2 complete.** You've learned how Move functions work, written tests that verify behavior, and tested for expected failures. That's real Move development.
+
+See you on Day 3.
+
+---
+
+*Follow: [@ercandotsui](https://x.com/ercandotsui) | [@harry_phan06](https://x.com/harry_phan06)*
+
+---
+
+## 🇻🇳 Vietnamese Builders: Level Up Your Journey
+
+<RevealOnScroll client:visible>
+
+**First Movers Sprint 2026 is here!**
+
+Following the success of CommandOSS Hacker House HCMC, First Movers Sprint 2026 is designed as a stepping-stone Hacker House — a space for builders in the Sui ecosystem to sharpen their skills, accelerate product development, and get fully prepared for the next CommandOSS Hacker House.
+
+Whether you're a developer or a non-technical business/growth builder, you're welcome to join!
+
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/21-day-sui-challenge/first-movers-sprint.png"
+    alt="First Movers Sprint 2026 Hackathon"
+    width={800}
+    height={800}
+    watermark="firstmovers.io"
+  />
+</figure>
+
+**Why join First Movers Sprint?**
+
+- 💼 **Paid internship** at top Sui ecosystem projects (full-time)
+- 🏆 **Exciting prizes** and rewards
+- 🌟 **Learn directly** with top mentors from the Sui ecosystem
+
+Co-organized by [@firstmoversvn](https://x.com/firstmoversvn), [@0xCommandOSS](https://x.com/0xCommandOSS), and ITviec — the leading IT recruitment platform.
+
+<AccordionCTA
+  client:visible
+  icon="🚀"
+  title="Join First Movers Sprint 2026"
+  description="A stepping-stone Hacker House for Vietnamese builders in the Sui ecosystem. Sharpen your skills, accelerate your product, and prepare for CommandOSS."
+  link="https://luma.com/first-movers-sprint"
+  linkText="Apply Now"
+/>
+
+</RevealOnScroll>
