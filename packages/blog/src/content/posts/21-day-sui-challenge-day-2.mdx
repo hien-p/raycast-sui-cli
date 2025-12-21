@@ -138,6 +138,17 @@ module challenge::calculator {
 
 External callers only see `calculate`. The internal logic is hidden and can be changed without breaking the public API.
 
+### A Note on Other Visibility Levels
+
+Move actually has two more visibility modifiers you'll encounter later:
+
+- **`public(package)`** — Only callable within the same package (not from other packages)
+- **`entry`** — Callable from transactions, but *not* from other Move code
+
+The `entry` modifier is particularly useful for security. When you want users to call a function directly but prevent other smart contracts from wrapping it (to avoid composition attacks), use `entry`. You'll see this pattern when working with sensitive operations like token transfers.
+
+For now, `public` and private (`fun`) are all you need.
+
 ---
 
 ## Return Patterns
