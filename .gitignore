@@ -44,10 +44,12 @@ docs/
 plans/
 contracts/community_registry/CONTRACT_INFO.md
 
-# Screenshots (local only)
+# Screenshots (local only, except public assets)
 *.png
 !packages/client/public/*.png
+!packages/client/public/**/*.png
 !packages/blog/public/*.png
+!packages/blog/public/**/*.png
 
 # Environment & Secrets
 .env

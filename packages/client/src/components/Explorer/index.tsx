@@ -191,6 +191,24 @@ function getNavTree(currentPath: string, isMember: boolean): FileNode[] {
       icon: '🔄',
       type: 'file' as const,
     },
+    // Profile section - always visible, shows join prompt if not member
+    {
+      path: '/app/membership',
+      name: 'profile',
+      icon: '🎖️',
+      type: 'folder' as const,
+      children: [
+        { path: '/app/membership', name: 'my-profile.tsx', icon: '👤' },
+        { path: '/app/membership?tab=packages', name: 'packages.tsx', icon: '📦' },
+        { path: '/app/membership?tab=achievements', name: 'achievements.tsx', icon: '🏆', disabled: true, badge: 'soon' },
+      ]
+    },
+    {
+      path: '/app/game-demo',
+      name: 'game-demo.tsx',
+      icon: '🎮',
+      type: 'file' as const,
+    },
   ];
 
   const mapItem = (item: any): FileNode => {
@@ -324,6 +342,12 @@ export function Explorer({ className }: ExplorerProps) {
         'pay-history.tsx': '/app/payments?tab=history',
         // Migrate
         'migrate.tsx': '/app/migrate',
+        // Profile
+        'my-profile.tsx': '/app/membership',
+        'packages.tsx': '/app/membership?tab=packages',
+        'achievements.tsx': '/app/membership?tab=achievements',
+        // Game Demo
+        'game-demo.tsx': '/app/game-demo',
       };
 
       // Check main nav first
@@ -349,6 +373,8 @@ export function Explorer({ className }: ExplorerProps) {
           'network': '/app/network',
           'payments': '/app/payments',
           'migrate': '/app/migrate',
+          'profile': '/app/membership',
+          'game-demo': '/app/game-demo',
         };
         path = folderPaths[node.name];
       }

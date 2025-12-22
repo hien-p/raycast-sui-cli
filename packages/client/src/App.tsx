@@ -35,6 +35,7 @@ const EventExplorer = lazy(() => import('./components/EventExplorer').then(m => 
 const LocalNetwork = lazy(() => import('./components/LocalNetwork').then(m => ({ default: m.LocalNetwork })));
 const MoveMigrate = lazy(() => import('./components/MoveMigrate').then(m => ({ default: m.MoveMigrate })));
 const MultiPay = lazy(() => import('./components/MultiPay').then(m => ({ default: m.MultiPay })));
+const NotFound = lazy(() => import('./components/NotFound').then(m => ({ default: m.NotFound })));
 
 // Lazy load heavy background component
 const FaultyTerminal = lazy(() => import('./components/backgrounds/FaultyTerminal'));
@@ -53,6 +54,8 @@ export function App() {
   const isAppRoute = location.pathname.startsWith('/app');
   const isMoveDevStudio = location.pathname === '/app/move';
   const isMembershipPage = location.pathname === '/membership';
+  const isKnownRoute = ['/', '/setup', '/membership'].includes(location.pathname) || location.pathname.startsWith('/app');
+  const is404Page = !isKnownRoute;
 
   // Show animated background on all pages
   const showAnimatedBackground = true;
@@ -73,19 +76,19 @@ export function App() {
         {showAnimatedBackground ? (
           <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-[#0a1929] via-[#0d2137] to-[#0a1929]" />}>
             <FaultyTerminal
-              tint={isMoveDevStudio ? "#22c55e" : (isAppRoute || isMembershipPage) ? "#4da2ff" : "#ff0000"}
-              brightness={isMoveDevStudio ? 0.2 : (isAppRoute || isMembershipPage) ? 0.3 : 0.25}
-              scale={isMoveDevStudio ? 0.5 : (isAppRoute || isMembershipPage) ? 1.0 : 1.9}
+              tint={is404Page ? "#ef4444" : isMoveDevStudio ? "#22c55e" : (isAppRoute || isMembershipPage) ? "#4da2ff" : "#ff0000"}
+              brightness={is404Page ? 0.35 : isMoveDevStudio ? 0.2 : (isAppRoute || isMembershipPage) ? 0.3 : 0.25}
+              scale={is404Page ? 1.5 : isMoveDevStudio ? 0.5 : (isAppRoute || isMembershipPage) ? 1.0 : 1.9}
               gridMul={isMoveDevStudio ? [4, 2] : [2, 1]}
               digitSize={isMoveDevStudio ? 1.2 : 1.3}
-              glitchAmount={isMoveDevStudio ? 0.8 : 0}
-              flickerAmount={isMoveDevStudio ? 0.5 : 0}
-              scanlineIntensity={isMoveDevStudio ? 0.3 : 0.5}
-              curvature={isMoveDevStudio ? 0.1 : (isAppRoute || isMembershipPage) ? 1.5 : 0.4}
+              glitchAmount={is404Page ? 0.5 : isMoveDevStudio ? 0.8 : 0}
+              flickerAmount={is404Page ? 0.3 : isMoveDevStudio ? 0.5 : 0}
+              scanlineIntensity={is404Page ? 0.4 : isMoveDevStudio ? 0.3 : 0.5}
+              curvature={is404Page ? 0.3 : isMoveDevStudio ? 0.1 : (isAppRoute || isMembershipPage) ? 1.5 : 0.4}
               mouseReact={isMoveDevStudio}
               mouseStrength={isMoveDevStudio ? 0.2 : 0}
-              timeScale={0.5}
-              noiseAmp={isMoveDevStudio ? 0 : (isAppRoute || isMembershipPage) ? 0.3 : 0.5}
+              timeScale={is404Page ? 0.3 : 0.5}
+              noiseAmp={is404Page ? 0.4 : isMoveDevStudio ? 0 : (isAppRoute || isMembershipPage) ? 0.3 : 0.5}
               className="curved-panel"
               dpr={1} // Lower DPR for better performance
               style={{
@@ -154,6 +157,9 @@ export function App() {
               <Route path="migrate" element={<MoveMigrate />} />
               <Route path="payments" element={<MultiPay />} />
             </Route>
+
+            {/* 404 - Catch all unmatched routes */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </div>

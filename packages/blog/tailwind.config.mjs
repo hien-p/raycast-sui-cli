@@ -12,6 +12,9 @@ export default {
         background: 'rgb(var(--background) / <alpha-value>)',
         surface: 'rgb(var(--surface) / <alpha-value>)',
         'surface-hover': 'rgb(var(--surface-hover) / <alpha-value>)',
+        'text-primary': 'rgb(var(--text-primary) / <alpha-value>)',
+        'text-secondary': 'rgb(var(--text-secondary) / <alpha-value>)',
+        'text-muted': 'rgb(var(--text-muted) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

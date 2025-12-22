@@ -11,7 +11,10 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !page.includes('/api/'),
+      filter: (page) =>
+        !page.includes('/api/') &&
+        !page.includes('/spiral') &&
+        !page.includes('/theme-preview'),
       changefreq: 'weekly',
       priority: 0.7,
       lastmod: new Date(),

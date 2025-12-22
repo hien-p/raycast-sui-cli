@@ -45,9 +45,72 @@ const formattedDate = publishDate.toLocaleDateString('en-US', {
   month: 'long',
   day: 'numeric',
 });
+
+// Get the canonical URL for this post
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+// Article/BlogPosting Schema for SEO
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": title,
+  "description": description,
+  "image": heroImage ? new URL(heroImage, Astro.site).toString() : new URL('/blog/og-image.png', Astro.site).toString(),
+  "datePublished": publishDate.toISOString(),
+  "dateModified": publishDate.toISOString(),
+  "author": {
+    "@type": "Person",
+    "name": author,
+    "url": "https://x.com/harry_phan06"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Sui CLI Web",
+    "logo": {
+      "@type": "ImageObject",
+      "url": new URL('/blog/favicon.svg', Astro.site).toString()
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalURL.toString()
+  },
+  "keywords": tags.join(', '),
+  "articleSection": category
+};
+
+// Breadcrumb Schema for SEO
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Blog",
+      "item": new URL('/blog', Astro.site).toString()
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": category.charAt(0).toUpperCase() + category.slice(1),
+      "item": new URL(`/blog/category/${category}`, Astro.site).toString()
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": title
+    }
+  ]
+};
 ---
 
 <BaseLayout title={title} description={description} faqItems={faqItems}>
+  <!-- Article Schema for rich snippets -->
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+
+  <!-- Breadcrumb Schema for navigation -->
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   <!-- Spiral Animation Intro - Shows once per session -->
   <SpiralIntro title={title} duration={4000} />
 
