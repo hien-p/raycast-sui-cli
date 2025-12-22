@@ -66,7 +66,8 @@ export function ProgressiveBlur({
   const blur = useTransform(
     scrollYProgress,
     [blurStart, blurEnd],
-    [0, maxBlur]
+    [0, maxBlur],
+    { clamp: true } // Prevent negative values
   );
 
   const opacity = useTransform(
