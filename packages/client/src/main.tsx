@@ -4,8 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { initializeAnalytics } from './lib/analytics';
-import { initClarity } from './lib/clarity';
-import { initStatsig } from './lib/statsig';
+// import { initClarity } from './lib/clarity'; // Temporarily disabled
+// import { initStatsig } from './lib/statsig'; // Temporarily disabled - __DEFINES__ error
 import './styles/globals.css';
 
 // Handle chunk loading errors (happens after new deployments when user has cached old chunks)
@@ -32,8 +32,8 @@ window.addEventListener('load', () => {
 
 // Initialize Analytics
 initializeAnalytics();
-initClarity();
-initStatsig(); // Session replay + auto-capture
+// initClarity(); // Temporarily disabled
+// initStatsig(); // Session replay + auto-capture - Temporarily disabled
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

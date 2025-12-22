@@ -7,22 +7,24 @@
  * @see https://clarity.microsoft.com
  */
 
-import Clarity from '@microsoft/clarity';
+// Check if we're in production BEFORE importing
+const isProduction = import.meta.env.PROD;
 
 // Clarity Project ID
 const CLARITY_PROJECT_ID = 'uilx4655e6';
 
-// Check if we're in production
-const isProduction = import.meta.env.PROD;
-
 // Track initialization state
 let isInitialized = false;
+
+// Store the Clarity module (any type to avoid importing the type)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let ClarityModule: any = null;
 
 /**
  * Initialize Microsoft Clarity
  * Only runs in production to avoid polluting analytics with dev data
  */
-export function initClarity(): void {
+export async function initClarity(): Promise<void> {
   if (!isProduction) {
     console.log('[Clarity] Skipped - not in production');
     return;
@@ -34,7 +36,9 @@ export function initClarity(): void {
   }
 
   try {
-    Clarity.init(CLARITY_PROJECT_ID);
+    // Dynamic import only in production
+    ClarityModule = await import('@microsoft/clarity');
+    ClarityModule.default.init(CLARITY_PROJECT_ID);
     isInitialized = true;
     console.log('[Clarity] Initialized successfully');
   } catch (error) {
@@ -44,20 +48,17 @@ export function initClarity(): void {
 
 /**
  * Identify user with wallet address
- * Helps track user sessions across visits
  */
 export function identifyUser(address: string, customData?: Record<string, string>): void {
-  if (!isProduction || !isInitialized) return;
+  if (!isProduction || !isInitialized || !ClarityModule) return;
 
   try {
-    // Use short address as identifier (privacy-friendly)
     const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
-    Clarity.identify(address, undefined, undefined, shortAddress);
+    ClarityModule.default.identify(address, undefined, undefined, shortAddress);
 
-    // Set custom session data if provided
     if (customData) {
       Object.entries(customData).forEach(([key, value]) => {
-        Clarity.setTag(key, value);
+        ClarityModule?.default.setTag(key, value);
       });
     }
   } catch (error) {
@@ -67,13 +68,12 @@ export function identifyUser(address: string, customData?: Record<string, string
 
 /**
  * Track custom event
- * Use for important user actions
  */
 export function trackEvent(eventName: string): void {
-  if (!isProduction || !isInitialized) return;
+  if (!isProduction || !isInitialized || !ClarityModule) return;
 
   try {
-    Clarity.event(eventName);
+    ClarityModule.default.event(eventName);
   } catch (error) {
     console.error('[Clarity] Failed to track event:', error);
   }
@@ -81,13 +81,12 @@ export function trackEvent(eventName: string): void {
 
 /**
  * Set custom tag for session
- * Useful for segmentation
  */
 export function setTag(key: string, value: string): void {
-  if (!isProduction || !isInitialized) return;
+  if (!isProduction || !isInitialized || !ClarityModule) return;
 
   try {
-    Clarity.setTag(key, value);
+    ClarityModule.default.setTag(key, value);
   } catch (error) {
     console.error('[Clarity] Failed to set tag:', error);
   }
@@ -95,13 +94,12 @@ export function setTag(key: string, value: string): void {
 
 /**
  * Upgrade session priority
- * Use when user performs important action to ensure session is recorded
  */
 export function upgradeSession(reason: string): void {
-  if (!isProduction || !isInitialized) return;
+  if (!isProduction || !isInitialized || !ClarityModule) return;
 
   try {
-    Clarity.upgrade(reason);
+    ClarityModule.default.upgrade(reason);
   } catch (error) {
     console.error('[Clarity] Failed to upgrade session:', error);
   }
@@ -109,32 +107,19 @@ export function upgradeSession(reason: string): void {
 
 // Pre-defined events for consistent tracking
 export const ClarityEvents = {
-  // Connection
   SERVER_CONNECTED: 'server_connected',
   SERVER_DISCONNECTED: 'server_disconnected',
-
-  // Wallet
   ADDRESS_SWITCHED: 'address_switched',
   ADDRESS_CREATED: 'address_created',
-
-  // Network
   ENVIRONMENT_SWITCHED: 'environment_switched',
-
-  // Transactions
   FAUCET_REQUESTED: 'faucet_requested',
   TRANSFER_COMPLETED: 'transfer_completed',
   TRANSFER_FAILED: 'transfer_failed',
-
-  // Development
   PACKAGE_BUILT: 'package_built',
   PACKAGE_PUBLISHED: 'package_published',
   FUNCTION_CALLED: 'function_called',
-
-  // Inspector
   TRANSACTION_INSPECTED: 'transaction_inspected',
   TRANSACTION_REPLAYED: 'transaction_replayed',
-
-  // Community
   COMMUNITY_JOINED: 'community_joined',
 } as const;
 

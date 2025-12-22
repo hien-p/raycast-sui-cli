@@ -9,7 +9,7 @@
  * 2. enable_analytics_tracking feature flag in Statsig
  */
 
-import { checkGate, FeatureGates } from './statsig';
+// import { checkGate, FeatureGates } from './statsig'; // Temporarily disabled - __DEFINES__ error
 
 // Track if analytics was disabled by feature flag
 let analyticsDisabledByFlag = false;
@@ -86,14 +86,13 @@ export function initializeAnalytics() {
  * Check if tracking is allowed (respects feature flag)
  */
 function isTrackingAllowed(): boolean {
-  // Check the feature flag - if flag is enabled, tracking is allowed
-  // If Statsig isn't initialized yet, default to allowing tracking
-  try {
-    return checkGate(FeatureGates.ENABLE_ANALYTICS_TRACKING);
-  } catch {
-    // Statsig not ready, allow tracking by default
-    return true;
-  }
+  // Statsig temporarily disabled - always allow tracking
+  return true;
+  // try {
+  //   return checkGate(FeatureGates.ENABLE_ANALYTICS_TRACKING);
+  // } catch {
+  //   return true;
+  // }
 }
 
 /**
