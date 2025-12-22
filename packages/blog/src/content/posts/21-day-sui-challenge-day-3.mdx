@@ -1,0 +1,955 @@
+---
+title: "21-Day Sui Challenge Day 3: Structs & Abilities in Move"
+description: "Learn to define custom data types with structs. Understand Move's ability system: copy, drop, store, and key."
+publishDate: 2025-12-22
+category: tutorial
+tags: ["sui-challenge", "learn-move", "structs", "abilities", "sui-tutorial", "day-3", "beginner"]
+author: "Harry Phan"
+heroImage: "/blog/images/posts/21-day-sui-challenge/day-3-hero.png"
+draft: false
+sections:
+  - id: "what-are-structs"
+    title: "What Are Structs"
+  - id: "the-ability-system"
+    title: "The Ability System"
+  - id: "working-with-structs"
+    title: "Working with Structs"
+  - id: "patterns-and-best-practices"
+    title: "Patterns & Best Practices"
+  - id: "complete-solution"
+    title: "Complete Solution"
+  - id: "try-it-live-with-sui-cli-web"
+    title: "Try It Live"
+  - id: "whats-next"
+    title: "What's Next"
+  - id: "vietnamese-builders-level-up-your-journey"
+    title: "🇻🇳 First Movers Sprint"
+---
+
+import { AccordionCTA } from '../../components/react/BouncyAccordion';
+import { RevealOnScroll } from '../../components/react/TextReveal';
+import { BrandedImage } from '../../components/react/BrandedImage';
+
+**Day 3 of the 21-Day Sui Challenge.**
+
+You've mastered primitives and functions. Now it's time to create your own data types. Structs are how you model real-world concepts in Move — and they come with a unique twist called **abilities**.
+
+<AccordionCTA
+  client:visible
+  icon="📚"
+  title="Day 3 Challenge"
+  description="Create a Habit struct with name and completed status. Learn the foundations of data modeling in Move."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_03"
+  linkText="View on GitHub"
+/>
+
+
+
+## What Are Structs
+
+A **struct** is a custom data type that groups related fields together. Think of it as a blueprint for creating objects.
+
+```move
+public struct Habit has copy, drop {
+    name: vector<u8>,
+    completed: bool,
+}
+```
+
+This defines a `Habit` type with two fields:
+- `name` — A byte vector (we'll use proper strings later)
+- `completed` — Whether the habit is done
+
+### Creating Struct Instances
+
+Once you've defined a struct, you create instances like this:
+
+```move
+let habit = Habit {
+    name: b"Exercise",
+    completed: false,
+};
+```
+
+Every field must be initialized. No partial construction allowed — this prevents bugs from uninitialized data.
+
+### Field Shorthand
+
+When your variable name matches the field name, use shorthand:
+
+```move
+fun create_habit(name: vector<u8>, completed: bool): Habit {
+    // Long form
+    Habit { name: name, completed: completed }
+
+    // Shorthand (preferred)
+    Habit { name, completed }
+}
+```
+
+
+
+## The Ability System
+
+Here's where Move gets interesting. Every type has **abilities** that control what you can do with it.
+
+### The Four Abilities
+
+| Ability | What It Allows |
+|---------|----------------|
+| `copy` | Value can be copied (duplicated) |
+| `drop` | Value can be discarded (goes out of scope) |
+| `store` | Value can be stored inside other structs |
+| `key` | Value can be stored directly in global storage (Sui objects!) |
+
+> ⚠️ **Important:** Not all combinations are valid! Structs with `key` cannot have `copy` because Sui objects have unique IDs that can't be duplicated.
+
+### Why This Matters
+
+In most languages, you can copy or discard any value. Move is different — **you must explicitly grant these permissions**.
+
+```move
+// This struct can be copied and dropped
+public struct SafeData has copy, drop {
+    value: u64,
+}
+
+// This struct CANNOT be copied or dropped!
+public struct PreciousData {
+    value: u64,
+}
+```
+
+Try to copy `PreciousData` and the compiler stops you. Try to let it go out of scope without using it — error. This is **linear typing**, and it's how Move prevents resource leaks and double-spending.
+
+### Common Ability Combinations
+
+For Day 3, you'll mostly use:
+
+```move
+// Simple data (can copy, can drop)
+public struct SimpleData has copy, drop {
+    value: u64,
+}
+
+// Storable data (can be nested in other structs)
+public struct StorableData has copy, drop, store {
+    value: u64,
+}
+```
+
+Later, when we create Sui objects, you'll use `key` and `store`:
+
+```move
+// Sui Object (has unique ID, stored on-chain)
+public struct MyObject has key, store {
+    id: UID,
+    value: u64,
+}
+```
+
+But that's Day 7. For now, stick with `copy` and `drop`.
+
+
+
+## Working with Structs
+
+### Constructor Functions
+
+The convention is to create a `new_*` function:
+
+```move
+public fun new_habit(name: vector<u8>): Habit {
+    Habit {
+        name,
+        completed: false,
+    }
+}
+```
+
+This encapsulates initialization logic. Users don't need to know the internal structure — they just call `new_habit`.
+
+### Accessor Functions (Getters)
+
+To read struct fields from outside the module, you need getter functions:
+
+```move
+public fun name(habit: &Habit): &vector<u8> {
+    &habit.name
+}
+
+public fun is_completed(habit: &Habit): bool {
+    habit.completed
+}
+```
+
+Notice the `&` — we're borrowing, not taking ownership. This lets you read without consuming the value.
+
+### Mutator Functions (Setters)
+
+To modify fields, use mutable references:
+
+```move
+public fun complete(habit: &mut Habit) {
+    habit.completed = true;
+}
+
+public fun rename(habit: &mut Habit, new_name: vector<u8>) {
+    habit.name = new_name;
+}
+```
+
+The `&mut` means "mutable borrow" — you can change the value but must give it back.
+
+### Destructuring
+
+You can unpack a struct to get its fields:
+
+```move
+public fun unpack_habit(habit: Habit): (vector<u8>, bool) {
+    let Habit { name, completed } = habit;
+    (name, completed)
+}
+```
+
+This is the only way to "destroy" a struct that doesn't have `drop`. The fields are extracted and the struct wrapper is gone.
+
+
+
+## Patterns and Best Practices
+
+### Pattern 1: Immutable Data
+
+For simple value types that never change:
+
+```move
+public struct Point has copy, drop {
+    x: u64,
+    y: u64,
+}
+
+public fun new_point(x: u64, y: u64): Point {
+    Point { x, y }
+}
+
+public fun x(p: &Point): u64 { p.x }
+public fun y(p: &Point): u64 { p.y }
+```
+
+No setters — once created, a Point is fixed.
+
+### Pattern 2: Builder Pattern
+
+For complex structs with many optional fields:
+
+```move
+public struct Config has copy, drop {
+    timeout: u64,
+    retries: u64,
+    debug: bool,
+}
+
+public fun default_config(): Config {
+    Config {
+        timeout: 1000,
+        retries: 3,
+        debug: false,
+    }
+}
+
+public fun with_timeout(config: Config, timeout: u64): Config {
+    Config { timeout, ..config }
+}
+
+public fun with_debug(config: Config, debug: bool): Config {
+    Config { debug, ..config }
+}
+```
+
+Wait — Move doesn't have `..config` spread syntax! Here's how you actually do it:
+
+```move
+public fun with_timeout(config: Config, timeout: u64): Config {
+    Config {
+        timeout,
+        retries: config.retries,
+        debug: config.debug,
+    }
+}
+```
+
+### Pattern 3: Newtype Pattern
+
+Wrap primitives to add type safety:
+
+```move
+public struct UserId has copy, drop, store {
+    value: u64,
+}
+
+public struct PostId has copy, drop, store {
+    value: u64,
+}
+
+// Now you can't accidentally pass a UserId where a PostId is expected!
+public fun get_post(post_id: PostId): Post { ... }
+```
+
+
+
+## Complete Solution
+
+Here's my comprehensive Day 3 implementation:
+
+```move
+/// DAY 3: Structs & Abilities - Complete Solution
+///
+/// This demonstrates:
+/// - Struct definitions with various ability combinations
+/// - Constructor patterns (new_*, default_*, from_*)
+/// - Accessor and mutator functions
+/// - Destructuring and field access
+/// - Common struct patterns
+
+module challenge::day_03 {
+    // ═══════════════════════════════════════════════════════════════
+    // IMPORTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test_only]
+    use std::unit_test::assert_eq;
+
+    // ═══════════════════════════════════════════════════════════════
+    // STRUCTS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// A simple habit tracker
+    /// - copy: Can be duplicated
+    /// - drop: Can go out of scope
+    public struct Habit has copy, drop {
+        name: vector<u8>,
+        completed: bool,
+    }
+
+    /// A more detailed habit with streak tracking
+    public struct DetailedHabit has copy, drop {
+        name: vector<u8>,
+        description: vector<u8>,
+        completed: bool,
+        streak: u64,
+        total_completions: u64,
+    }
+
+    /// A 2D point (immutable data pattern)
+    public struct Point has copy, drop {
+        x: u64,
+        y: u64,
+    }
+
+    /// Configuration with defaults (builder pattern)
+    public struct Config has copy, drop {
+        max_habits: u64,
+        reminder_enabled: bool,
+        streak_goal: u64,
+    }
+
+    /// Wrapper for type safety (newtype pattern)
+    public struct HabitId has copy, drop, store {
+        value: u64,
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONSTRUCTORS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Creates a new habit (required by Day 3 challenge)
+    public fun new_habit(name: vector<u8>): Habit {
+        Habit {
+            name,
+            completed: false,
+        }
+    }
+
+    /// Creates a habit that's already completed
+    public fun new_completed_habit(name: vector<u8>): Habit {
+        Habit {
+            name,
+            completed: true,
+        }
+    }
+
+    /// Creates a detailed habit with all fields
+    public fun new_detailed_habit(
+        name: vector<u8>,
+        description: vector<u8>,
+    ): DetailedHabit {
+        DetailedHabit {
+            name,
+            description,
+            completed: false,
+            streak: 0,
+            total_completions: 0,
+        }
+    }
+
+    /// Creates a new point
+    public fun new_point(x: u64, y: u64): Point {
+        Point { x, y }
+    }
+
+    /// Creates default configuration
+    public fun default_config(): Config {
+        Config {
+            max_habits: 10,
+            reminder_enabled: true,
+            streak_goal: 21,
+        }
+    }
+
+    /// Creates a HabitId
+    public fun new_habit_id(value: u64): HabitId {
+        HabitId { value }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ACCESSORS (Getters)
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Gets the habit name (by reference)
+    public fun habit_name(habit: &Habit): &vector<u8> {
+        &habit.name
+    }
+
+    /// Checks if habit is completed
+    public fun is_completed(habit: &Habit): bool {
+        habit.completed
+    }
+
+    /// Gets point x coordinate
+    public fun point_x(p: &Point): u64 {
+        p.x
+    }
+
+    /// Gets point y coordinate
+    public fun point_y(p: &Point): u64 {
+        p.y
+    }
+
+    /// Gets the streak from a detailed habit
+    public fun get_streak(habit: &DetailedHabit): u64 {
+        habit.streak
+    }
+
+    /// Gets total completions
+    public fun get_total_completions(habit: &DetailedHabit): u64 {
+        habit.total_completions
+    }
+
+    /// Gets the raw value from HabitId
+    public fun habit_id_value(id: &HabitId): u64 {
+        id.value
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MUTATORS (Setters)
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Marks a habit as complete
+    public fun complete_habit(habit: &mut Habit) {
+        habit.completed = true;
+    }
+
+    /// Resets a habit to incomplete
+    public fun reset_habit(habit: &mut Habit) {
+        habit.completed = false;
+    }
+
+    /// Renames a habit
+    public fun rename_habit(habit: &mut Habit, new_name: vector<u8>) {
+        habit.name = new_name;
+    }
+
+    /// Completes a detailed habit and updates stats
+    public fun complete_detailed_habit(habit: &mut DetailedHabit) {
+        if (!habit.completed) {
+            habit.completed = true;
+            habit.streak = habit.streak + 1;
+            habit.total_completions = habit.total_completions + 1;
+        }
+    }
+
+    /// Resets daily status (keeps streak if was completed)
+    public fun reset_daily(habit: &mut DetailedHabit) {
+        if (!habit.completed) {
+            // Missed a day, reset streak
+            habit.streak = 0;
+        };
+        habit.completed = false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Unpacks a habit into its components
+    public fun unpack_habit(habit: Habit): (vector<u8>, bool) {
+        let Habit { name, completed } = habit;
+        (name, completed)
+    }
+
+    /// Calculates distance between two points
+    public fun distance_squared(p1: &Point, p2: &Point): u64 {
+        let dx = if (p1.x > p2.x) { p1.x - p2.x } else { p2.x - p1.x };
+        let dy = if (p1.y > p2.y) { p1.y - p2.y } else { p2.y - p1.y };
+        dx * dx + dy * dy
+    }
+
+    /// Creates a new config with custom max_habits
+    public fun config_with_max_habits(config: Config, max_habits: u64): Config {
+        Config {
+            max_habits,
+            reminder_enabled: config.reminder_enabled,
+            streak_goal: config.streak_goal,
+        }
+    }
+
+    /// Creates a new config with custom streak_goal
+    public fun config_with_streak_goal(config: Config, streak_goal: u64): Config {
+        Config {
+            max_habits: config.max_habits,
+            reminder_enabled: config.reminder_enabled,
+            streak_goal,
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Basic Struct Operations
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_new_habit() {
+        let habit = new_habit(b"Exercise");
+        assert_eq!(is_completed(&habit), false);
+    }
+
+    #[test]
+    fun test_habit_name() {
+        let habit = new_habit(b"Read");
+        assert_eq!(*habit_name(&habit), b"Read");
+    }
+
+    #[test]
+    fun test_complete_habit() {
+        let mut habit = new_habit(b"Meditate");
+        assert_eq!(is_completed(&habit), false);
+
+        complete_habit(&mut habit);
+        assert_eq!(is_completed(&habit), true);
+    }
+
+    #[test]
+    fun test_reset_habit() {
+        let mut habit = new_completed_habit(b"Code");
+        assert_eq!(is_completed(&habit), true);
+
+        reset_habit(&mut habit);
+        assert_eq!(is_completed(&habit), false);
+    }
+
+    #[test]
+    fun test_rename_habit() {
+        let mut habit = new_habit(b"Run");
+        rename_habit(&mut habit, b"Jog");
+        assert_eq!(*habit_name(&habit), b"Jog");
+    }
+
+    #[test]
+    fun test_unpack_habit() {
+        let habit = new_completed_habit(b"Sleep");
+        let (name, completed) = unpack_habit(habit);
+        assert_eq!(name, b"Sleep");
+        assert_eq!(completed, true);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Detailed Habit
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_detailed_habit_creation() {
+        let habit = new_detailed_habit(b"Learn Move", b"Daily coding practice");
+        assert_eq!(get_streak(&habit), 0);
+        assert_eq!(get_total_completions(&habit), 0);
+    }
+
+    #[test]
+    fun test_detailed_habit_completion() {
+        let mut habit = new_detailed_habit(b"Exercise", b"30 min workout");
+
+        complete_detailed_habit(&mut habit);
+        assert_eq!(get_streak(&habit), 1);
+        assert_eq!(get_total_completions(&habit), 1);
+
+        // Completing again same day should not increase
+        complete_detailed_habit(&mut habit);
+        assert_eq!(get_streak(&habit), 1);
+        assert_eq!(get_total_completions(&habit), 1);
+    }
+
+    #[test]
+    fun test_streak_continues() {
+        let mut habit = new_detailed_habit(b"Read", b"Read 20 pages");
+
+        // Day 1
+        complete_detailed_habit(&mut habit);
+        reset_daily(&mut habit);
+        assert_eq!(get_streak(&habit), 1);
+
+        // Day 2
+        complete_detailed_habit(&mut habit);
+        reset_daily(&mut habit);
+        assert_eq!(get_streak(&habit), 2);
+
+        // Day 3
+        complete_detailed_habit(&mut habit);
+        assert_eq!(get_streak(&habit), 3);
+        assert_eq!(get_total_completions(&habit), 3);
+    }
+
+    #[test]
+    fun test_streak_breaks() {
+        let mut habit = new_detailed_habit(b"Meditate", b"10 min");
+
+        // Day 1 - complete
+        complete_detailed_habit(&mut habit);
+        reset_daily(&mut habit);
+        assert_eq!(get_streak(&habit), 1);
+
+        // Day 2 - miss (don't complete before reset)
+        reset_daily(&mut habit);
+        assert_eq!(get_streak(&habit), 0);
+
+        // Day 3 - start again
+        complete_detailed_habit(&mut habit);
+        assert_eq!(get_streak(&habit), 1);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Point Operations
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_point_creation() {
+        let p = new_point(10, 20);
+        assert_eq!(point_x(&p), 10);
+        assert_eq!(point_y(&p), 20);
+    }
+
+    #[test]
+    fun test_distance_same_point() {
+        let p = new_point(5, 5);
+        assert_eq!(distance_squared(&p, &p), 0);
+    }
+
+    #[test]
+    fun test_distance_calculation() {
+        let p1 = new_point(0, 0);
+        let p2 = new_point(3, 4);
+        // Distance squared = 3^2 + 4^2 = 9 + 16 = 25
+        assert_eq!(distance_squared(&p1, &p2), 25);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - Config Operations
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_default_config() {
+        let config = default_config();
+        assert_eq!(config.max_habits, 10);
+        assert_eq!(config.reminder_enabled, true);
+        assert_eq!(config.streak_goal, 21);
+    }
+
+    #[test]
+    fun test_config_builder() {
+        let config = default_config();
+        let config = config_with_max_habits(config, 20);
+        let config = config_with_streak_goal(config, 30);
+
+        assert_eq!(config.max_habits, 20);
+        assert_eq!(config.streak_goal, 30);
+        assert_eq!(config.reminder_enabled, true); // Unchanged
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS - HabitId (Newtype Pattern)
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_habit_id() {
+        let id = new_habit_id(42);
+        assert_eq!(habit_id_value(&id), 42);
+    }
+
+    #[test]
+    fun test_copy_ability() {
+        let habit = new_habit(b"Test");
+        let habit_copy = habit; // Copy happens here
+
+        // Both are valid
+        assert_eq!(is_completed(&habit), false);
+        assert_eq!(is_completed(&habit_copy), false);
+    }
+}
+```
+
+## Running the Tests
+
+```bash
+cd day_03
+sui move test
+```
+
+Expected output:
+
+```
+Running Move unit tests
+[ PASS    ] challenge::day_03::test_complete_habit
+[ PASS    ] challenge::day_03::test_config_builder
+[ PASS    ] challenge::day_03::test_copy_ability
+[ PASS    ] challenge::day_03::test_default_config
+[ PASS    ] challenge::day_03::test_detailed_habit_completion
+[ PASS    ] challenge::day_03::test_detailed_habit_creation
+[ PASS    ] challenge::day_03::test_distance_calculation
+[ PASS    ] challenge::day_03::test_distance_same_point
+[ PASS    ] challenge::day_03::test_habit_id
+[ PASS    ] challenge::day_03::test_habit_name
+[ PASS    ] challenge::day_03::test_new_habit
+[ PASS    ] challenge::day_03::test_point_creation
+[ PASS    ] challenge::day_03::test_rename_habit
+[ PASS    ] challenge::day_03::test_reset_habit
+[ PASS    ] challenge::day_03::test_streak_breaks
+[ PASS    ] challenge::day_03::test_streak_continues
+[ PASS    ] challenge::day_03::test_unpack_habit
+Test result: OK. 17 passed; 0 failed
+```
+
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/21-day-sui-challenge/day-3-test-results.png"
+    alt="Day 3 Move tests passing - structs and abilities"
+    width={800}
+    height={600}
+    watermark="cli.firstmovers.io"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    All 17 tests passing — structs, abilities, and patterns working correctly
+  </figcaption>
+</figure>
+
+## Try It Live with Sui CLI Web
+
+After running tests, let's **deploy and interact** with your Habit struct on-chain!
+
+### Step 1: Deploy Your Package
+
+Use the **One-Click Workflow** in Sui CLI Web:
+
+1. Open [cli.firstmovers.io](https://cli.firstmovers.io)
+2. Navigate to **Move Dev Studio** (`/app/move`)
+3. Click **Build → Test → Publish**
+
+<figure className="my-8">
+  <img
+    src="/blog/images/posts/21-day-sui-challenge/day-3-deploy.png"
+    alt="Deploy Day 3 package with One-Click Workflow"
+    className="rounded-xl border border-white/10 w-full"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    One-Click Workflow: Build, Test, and Publish in one step
+  </figcaption>
+</figure>
+
+### Step 2: Load Your Package
+
+After publishing, switch to the **Interact** tab:
+
+1. Copy your **Package ID** from the publish result
+2. Paste it in "Load Package"
+3. Click **Load** — you'll see your modules listed!
+
+<figure className="my-8">
+  <img
+    src="/blog/images/posts/21-day-sui-challenge/day-3-load-package.png"
+    alt="Load published package in Interact tab"
+    className="rounded-xl border border-white/10 w-full"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    Package loaded with day_03 and day_03_solution modules
+  </figcaption>
+</figure>
+
+### Step 3: Call `new_habit` Function
+
+Let's create a new habit on-chain:
+
+1. Expand **day_03_solution** module
+2. Click **new_habit** function
+3. Fill in parameters:
+   - `name` (vector&lt;u8&gt;): Type `Exercise` and click **Convert**
+4. Click **Call Function**
+
+<figure className="my-8">
+  <img
+    src="/blog/images/posts/21-day-sui-challenge/day-3-new-habit.png"
+    alt="Calling new_habit function"
+    className="rounded-xl border border-white/10 w-full"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    Creating a new Habit with name "Exercise"
+  </figcaption>
+</figure>
+
+### Step 4: Call `create_habit` with Custom Status
+
+Try creating a habit that's already completed:
+
+1. Click **create_habit** function
+2. Fill in parameters:
+   - `name` (vector&lt;u8&gt;): Type `Meditate` → **Convert**
+   - `completed` (bool): Select **true**
+3. Click **Call Function**
+
+<figure className="my-8">
+  <img
+    src="/blog/images/posts/21-day-sui-challenge/day-3-create-habit.png"
+    alt="Calling create_habit with completed=true"
+    className="rounded-xl border border-white/10 w-full"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    Creating a pre-completed habit using create_habit
+  </figcaption>
+</figure>
+
+> **💡 Tip:** The `vector<u8>` type expects bytes. Sui CLI Web's **Convert** button automatically converts your text to the correct byte format!
+
+## Key Takeaways
+
+<RevealOnScroll client:visible>
+
+### 1. Structs Group Related Data
+
+```move
+public struct Habit has copy, drop {
+    name: vector<u8>,
+    completed: bool,
+}
+```
+
+### 2. Abilities Control What You Can Do
+
+- `copy` — Value can be duplicated
+- `drop` — Value can be discarded
+- `store` — Can be stored in other structs
+- `key` — Can be a Sui object (Day 7!)
+
+### 3. Convention: `new_*` Constructors
+
+```move
+public fun new_habit(name: vector<u8>): Habit {
+    Habit { name, completed: false }
+}
+```
+
+### 4. References for Access
+
+- `&Habit` — Read-only borrow
+- `&mut Habit` — Mutable borrow
+
+### 5. Destructuring Unpacks Structs
+
+```move
+let Habit { name, completed } = habit;
+```
+
+</RevealOnScroll>
+
+## What's Next
+
+<RevealOnScroll client:visible>
+
+Tomorrow in **Day 4**, we dive deeper into the ability system:
+
+- What happens when a struct *doesn't* have `drop`?
+- The `store` ability and nested structs
+- Preparing for Sui objects with `key`
+
+Structs are the foundation. Abilities determine what they can become.
+
+<AccordionCTA
+  client:visible
+  icon="🔗"
+  title="Continue the Challenge"
+  description="Day 4 explores abilities in depth. Critical knowledge for building Sui objects."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_04"
+  linkText="View Day 4"
+/>
+
+</RevealOnScroll>
+
+## Commit Your Progress
+
+```bash
+cd day_03
+sui move test
+git add day_03/
+git commit -m "Day 3: add Habit struct and constructor"
+```
+
+**Day 3 complete.** You've learned how to define custom data types, control their behavior with abilities, and follow Move conventions for constructors and accessors.
+
+See you on Day 4.
+
+*Follow: [@ercandotsui](https://x.com/ercandotsui) | [@harry_phan06](https://x.com/harry_phan06)*
+
+## 🇻🇳 Vietnamese Builders: Level Up Your Journey
+
+<RevealOnScroll client:visible>
+
+**First Movers Sprint 2026 is here!**
+
+Following the success of CommandOSS Hacker House HCMC, First Movers Sprint 2026 is designed as a stepping-stone Hacker House — a space for builders in the Sui ecosystem to sharpen their skills, accelerate product development, and get fully prepared for the next CommandOSS Hacker House.
+
+Whether you're a developer or a non-technical business/growth builder, you're welcome to join!
+
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/21-day-sui-challenge/first-movers-sprint.png"
+    alt="First Movers Sprint 2026 Hackathon"
+    width={800}
+    height={800}
+    watermark="firstmovers.io"
+  />
+</figure>
+
+**Why join First Movers Sprint?**
+
+- 💼 **Paid internship** at top Sui ecosystem projects (full-time)
+- 🏆 **Exciting prizes** and rewards
+- 🌟 **Learn directly** with top mentors from the Sui ecosystem
+
+Co-organized by [@firstmoversvn](https://x.com/firstmoversvn), [@0xCommandOSS](https://x.com/0xCommandOSS), and ITviec — the leading IT recruitment platform.
+
+<AccordionCTA
+  client:visible
+  icon="🚀"
+  title="Join First Movers Sprint 2026"
+  description="A stepping-stone Hacker House for Vietnamese builders in the Sui ecosystem. Sharpen your skills, accelerate your product, and prepare for CommandOSS."
+  link="https://luma.com/first-movers-sprint"
+  linkText="Apply Now"
+/>
+
+</RevealOnScroll>
