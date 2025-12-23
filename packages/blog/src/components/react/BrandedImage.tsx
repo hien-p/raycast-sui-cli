@@ -40,7 +40,6 @@ export function BrandedImage({
   const imgRef = useRef<HTMLImageElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [tiltStyle, setTiltStyle] = useState({ rotateX: 0, rotateY: 0, scale: 1 });
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -133,6 +132,22 @@ export function BrandedImage({
     if (!container || !displacement || !turbulence) return;
 
     const state = animationRef.current;
+    let isAnimating = false;
+
+    // Only run animation loop when there's active movement
+    const startAnimation = () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      animate();
+    };
+
+    const stopAnimation = () => {
+      isAnimating = false;
+      if (state.animationFrame) {
+        cancelAnimationFrame(state.animationFrame);
+        state.animationFrame = null;
+      }
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
@@ -149,19 +164,25 @@ export function BrandedImage({
       state.prevX = x;
       state.prevY = y;
 
-      // Update turbulence seed for organic feel
-      const seed = Math.floor(Math.random() * 100);
-      turbulence.setAttribute('seed', seed.toString());
+      // Update turbulence seed for organic feel (throttled)
+      if (distance > 5) {
+        const seed = Math.floor(Math.random() * 100);
+        turbulence.setAttribute('seed', seed.toString());
+      }
 
-      // 3D Tilt effect - calculate rotation based on mouse position relative to center
-      // Only apply on non-touch devices
+      // Start animation if not running
+      startAnimation();
+
+      // 3D Tilt effect - use CSS variables instead of state for performance
       if (enableTilt && !isTouchDevice) {
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        // Calculate rotation: mouse left of center = rotate right (positive Y), etc.
         const rotateY = ((x - centerX) / centerX) * maxTilt;
         const rotateX = ((centerY - y) / centerY) * maxTilt;
-        setTiltStyle({ rotateX, rotateY, scale: 1.02 });
+        // Direct DOM update instead of setState to avoid re-renders
+        container.style.setProperty('--tilt-x', `${rotateX}deg`);
+        container.style.setProperty('--tilt-y', `${rotateY}deg`);
+        container.style.setProperty('--tilt-scale', '1.02');
       }
     };
 
@@ -169,7 +190,9 @@ export function BrandedImage({
       state.targetScale = 0;
       // Reset tilt on mouse leave
       if (enableTilt && !isTouchDevice) {
-        setTiltStyle({ rotateX: 0, rotateY: 0, scale: 1 });
+        container.style.setProperty('--tilt-x', '0deg');
+        container.style.setProperty('--tilt-y', '0deg');
+        container.style.setProperty('--tilt-scale', '1');
       }
     };
 
@@ -180,6 +203,7 @@ export function BrandedImage({
       const rect = container.getBoundingClientRect();
       state.prevX = touch.clientX - rect.left;
       state.prevY = touch.clientY - rect.top;
+      startAnimation();
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -198,9 +222,11 @@ export function BrandedImage({
       state.prevX = x;
       state.prevY = y;
 
-      // Update turbulence
-      const seed = Math.floor(Math.random() * 100);
-      turbulence.setAttribute('seed', seed.toString());
+      // Update turbulence (throttled)
+      if (distance > 5) {
+        const seed = Math.floor(Math.random() * 100);
+        turbulence.setAttribute('seed', seed.toString());
+      }
     };
 
     const handleTouchEnd = () => {
@@ -209,6 +235,8 @@ export function BrandedImage({
     };
 
     const animate = () => {
+      if (!isAnimating) return;
+
       // Smooth interpolation toward target
       state.currentScale = lerp(state.currentScale, state.targetScale, 0.15);
 
@@ -218,8 +246,21 @@ export function BrandedImage({
       // Gradually decay the target
       state.targetScale *= 0.95;
 
+      // Stop animation when effect is nearly complete
+      if (state.currentScale < 0.1 && state.targetScale < 0.1) {
+        state.currentScale = 0;
+        displacement.setAttribute('scale', '0');
+        stopAnimation();
+        return;
+      }
+
       state.animationFrame = requestAnimationFrame(animate);
     };
+
+    // Initialize CSS variables
+    container.style.setProperty('--tilt-x', '0deg');
+    container.style.setProperty('--tilt-y', '0deg');
+    container.style.setProperty('--tilt-scale', '1');
 
     container.addEventListener('mousemove', handleMouseMove);
     container.addEventListener('mouseleave', handleMouseLeave);
@@ -227,7 +268,6 @@ export function BrandedImage({
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchmove', handleTouchMove, { passive: true });
     container.addEventListener('touchend', handleTouchEnd);
-    state.animationFrame = requestAnimationFrame(animate);
 
     return () => {
       container.removeEventListener('mousemove', handleMouseMove);
@@ -235,9 +275,7 @@ export function BrandedImage({
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
-      if (state.animationFrame) {
-        cancelAnimationFrame(state.animationFrame);
-      }
+      stopAnimation();
     };
   }, [enableTilt, maxTilt, isTouchDevice]);
 
@@ -287,24 +325,24 @@ export function BrandedImage({
 
       {/* Tilt wrapper - applies 3D rotation (desktop) or scale (mobile) */}
       <div
+        className="branded-image-tilt-wrapper"
         style={{
           width: '100%',
           height: '100%',
           borderRadius: '12px',
           overflow: 'hidden',
-          // Desktop: tilt transform, Mobile: scale on touch
+          // Use CSS variables for tilt (set via JS for performance)
+          // Desktop: tilt transform using CSS vars, Mobile: scale on touch
           transform: !isTouchDevice
-            ? `rotateX(${tiltStyle.rotateX}deg) rotateY(${tiltStyle.rotateY}deg) scale(${tiltStyle.scale})`
+            ? 'rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(var(--tilt-scale, 1))'
             : isTouching
               ? 'scale(0.98)'
               : 'scale(1)',
           transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
           transformStyle: 'preserve-3d',
-          boxShadow: !isTouchDevice && enableTilt && tiltStyle.scale > 1
-            ? `${-tiltStyle.rotateY * 0.5}px ${tiltStyle.rotateX * 0.5}px 30px rgba(0,0,0,0.3)`
-            : isTouching
-              ? '0 2px 10px rgba(0,0,0,0.3)'
-              : '0 4px 20px rgba(0,0,0,0.2)',
+          boxShadow: isTouching
+            ? '0 2px 10px rgba(0,0,0,0.3)'
+            : '0 4px 20px rgba(0,0,0,0.2)',
         }}
       >
         {/* Image with decay effect */}

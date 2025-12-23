@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface AnimatedGradientBackgroundProps {
   /**
@@ -83,6 +83,31 @@ const AnimatedGradientBackground: React.FC<AnimatedGradientBackgroundProps> = ({
   containerClassName = '',
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isLightMode, setIsLightMode] = useState(false);
+
+  // Listen for theme changes
+  useEffect(() => {
+    const checkTheme = () => {
+      const theme = document.documentElement.getAttribute('data-theme');
+      setIsLightMode(theme === 'light');
+    };
+
+    // Initial check
+    checkTheme();
+
+    // Watch for theme attribute changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          checkTheme();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Validation
   if (gradientColors.length !== gradientStops.length) {
@@ -94,35 +119,45 @@ const AnimatedGradientBackground: React.FC<AnimatedGradientBackgroundProps> = ({
   }
 
   useEffect(() => {
-    let animationFrame: number;
+    let animationFrame: number | null = null;
     let width = startingGap;
     let directionWidth = 1;
+
+    const gradientStopsString = gradientStops
+      .map((stop, index) => `${gradientColors[index]} ${stop}%`)
+      .join(', ');
+
+    // Set initial gradient immediately
+    const setGradient = (w: number) => {
+      const gradient = `radial-gradient(${w}% ${w + topOffset}% at 50% 20%, ${gradientStopsString})`;
+      if (containerRef.current) {
+        containerRef.current.style.background = gradient;
+      }
+    };
+
+    // Set initial state
+    setGradient(width);
+
+    // Only run animation loop if breathing is enabled
+    if (!breathing) {
+      return; // No cleanup needed - no animation started
+    }
 
     const animateGradient = () => {
       if (width >= startingGap + breathingRange) directionWidth = -1;
       if (width <= startingGap - breathingRange) directionWidth = 1;
 
-      if (!breathing) directionWidth = 0;
       width += directionWidth * animationSpeed;
-
-      const gradientStopsString = gradientStops
-        .map((stop, index) => `${gradientColors[index]} ${stop}%`)
-        .join(', ');
-
-      // Gradient emanates from TOP CENTER
-      // Position at 50% 20% creates a large black oval in center with colors at edges
-      const gradient = `radial-gradient(${width}% ${width + topOffset}% at 50% 20%, ${gradientStopsString})`;
-
-      if (containerRef.current) {
-        containerRef.current.style.background = gradient;
-      }
+      setGradient(width);
 
       animationFrame = requestAnimationFrame(animateGradient);
     };
 
     animationFrame = requestAnimationFrame(animateGradient);
 
-    return () => cancelAnimationFrame(animationFrame);
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
   }, [
     startingGap,
     breathing,
@@ -132,6 +167,11 @@ const AnimatedGradientBackground: React.FC<AnimatedGradientBackgroundProps> = ({
     breathingRange,
     topOffset,
   ]);
+
+  // Don't render in light mode - let CSS background handle it
+  if (isLightMode) {
+    return null;
+  }
 
   return (
     <motion.div

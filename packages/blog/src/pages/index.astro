@@ -28,11 +28,11 @@ const recentPosts = posts.slice(1);
   title="Sui Development Tutorials & Guides"
   description="Learn Sui blockchain development with step-by-step tutorials. Deploy Move contracts, transfer tokens, manage gas. The fastest way to build on Sui."
 >
-  <!-- Animated Gradient Background -->
+  <!-- Animated Gradient Background - static for best scroll performance -->
   <div class="fixed inset-0 -z-10">
     <AnimatedGradientBackground
-      client:load
-      breathing={true}
+      client:idle
+      breathing={false}
       startingGap={125}
       breathingRange={5}
       animationSpeed={0.02}
@@ -44,9 +44,9 @@ const recentPosts = posts.slice(1);
 
   <main class="min-h-screen pt-4 pb-16 relative z-0">
     <div class="max-w-4xl mx-auto px-4">
-      <!-- Animated Cat Mascot (Lottie) - closer to navbar -->
+      <!-- Animated Cat Mascot (Lottie) - load only when visible for better performance -->
       <div class="flex justify-center pt-6 pb-4">
-        <AnimatedCat client:load className="w-64 h-64 md:w-80 md:h-80" />
+        <AnimatedCat client:visible className="w-64 h-64 md:w-80 md:h-80" />
       </div>
 
       <!-- Hero Section -->
@@ -57,7 +57,7 @@ const recentPosts = posts.slice(1);
         </div>
 
         <TextReveal
-          client:load
+          client:visible
           text="Sui CLI Web Blog"
           as="h1"
           className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
@@ -86,7 +86,7 @@ const recentPosts = posts.slice(1);
         <div class="flex flex-wrap gap-2">
           <a
             href="/blog/"
-            class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/40 backdrop-blur-md text-white border border-white/20 shadow-lg hover:bg-black/60 hover:border-white/30 transition-all"
+            class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/70 text-white border border-white/20 shadow-lg hover:bg-black/80 hover:border-white/30 transition-colors"
           >
             all ({posts.length})
           </a>
@@ -95,7 +95,7 @@ const recentPosts = posts.slice(1);
             return (
               <a
                 href={`/blog/category/${cat}/`}
-                class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/30 backdrop-blur-md text-white/70 border border-white/10 shadow-md hover:bg-black/50 hover:text-white hover:border-white/20 transition-all"
+                class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/60 text-white/70 border border-white/10 shadow-md hover:bg-black/70 hover:text-white hover:border-white/20 transition-colors"
               >
                 {cat} ({count})
               </a>
@@ -113,7 +113,7 @@ const recentPosts = posts.slice(1);
           </div>
 
           <a href={`/blog/posts/${featuredPost.slug}/`} class="block group">
-            <article class="relative p-6 rounded-xl border border-white/20 bg-black/40 backdrop-blur-xl shadow-xl overflow-hidden hover:border-white/30 hover:bg-black/50 transition-all">
+            <article class="relative p-6 rounded-xl border border-white/20 bg-black/70 shadow-xl overflow-hidden hover:border-white/30 hover:bg-black/80 transition-colors">
               {featuredPost.data.heroImage && (
                 <div class="mb-4 rounded-lg overflow-hidden border border-white/10">
                   <img
@@ -169,7 +169,7 @@ const recentPosts = posts.slice(1);
           <div class="space-y-3">
             {recentPosts.map((post) => (
               <a href={`/blog/posts/${post.slug}/`} class="block group">
-                <article class="p-4 rounded-xl border border-white/10 bg-black/30 backdrop-blur-md hover:border-white/20 hover:bg-black/40 transition-all">
+                <article class="p-4 rounded-xl border border-white/10 bg-black/60 hover:border-white/20 hover:bg-black/70 transition-colors">
                   <div class="flex items-center gap-3 mb-2 font-mono text-xs">
                     <span class={`px-2 py-0.5 rounded border ${
                       post.data.category === 'announcement' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
@@ -202,7 +202,7 @@ const recentPosts = posts.slice(1);
       )}
 
       <!-- CTA Section -->
-      <section class="mt-16 p-6 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 shadow-xl text-center">
+      <section class="mt-16 p-6 rounded-xl bg-black/70 border border-white/20 shadow-xl text-center">
         <h2 class="text-xl font-bold text-white mb-2 drop-shadow-lg">Ready to try Sui CLI Web?</h2>
         <p class="text-white/70 mb-4">
           The fastest way to interact with Sui blockchain. No setup required.

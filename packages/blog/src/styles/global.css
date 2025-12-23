@@ -97,9 +97,9 @@
     @apply bg-green-500/80;
   }
 
-  /* Glassmorphism */
+  /* Glassmorphism - using solid colors for scroll performance */
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    @apply bg-black/70 border border-white/10;
   }
 
   .glass-hover {
@@ -128,19 +128,222 @@
   }
 }
 
-/* Prose styles for blog content */
+/* Prose styles for blog content - Dark mode default */
 @layer utilities {
   .prose-terminal {
     @apply prose prose-invert prose-lg max-w-none;
-    @apply prose-headings:text-white prose-headings:font-semibold prose-headings:font-mono;
-    @apply prose-p:text-white/80 prose-p:leading-relaxed;
-    @apply prose-a:text-primary prose-a:no-underline hover:prose-a:underline;
-    @apply prose-code:text-primary prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm;
-    @apply prose-pre:bg-black/60 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-lg;
-    @apply prose-strong:text-white prose-strong:font-semibold;
-    @apply prose-ul:text-white/80 prose-ol:text-white/80;
-    @apply prose-li:marker:text-white/40;
-    @apply prose-blockquote:border-l-primary prose-blockquote:text-white/60 prose-blockquote:italic;
-    @apply prose-hr:border-white/10;
+    @apply prose-headings:font-semibold prose-headings:font-mono;
+    @apply prose-p:leading-relaxed;
+    @apply prose-a:no-underline hover:prose-a:underline;
+    @apply prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm;
+    @apply prose-pre:border prose-pre:rounded-lg;
+    @apply prose-strong:font-semibold;
+    @apply prose-blockquote:italic;
+
+    /* Dark mode colors (default) */
+    --tw-prose-body: rgba(255, 255, 255, 0.8);
+    --tw-prose-headings: #ffffff;
+    --tw-prose-links: rgb(77, 162, 255);
+    --tw-prose-bold: #ffffff;
+    --tw-prose-counters: rgba(255, 255, 255, 0.4);
+    --tw-prose-bullets: rgba(255, 255, 255, 0.4);
+    --tw-prose-hr: rgba(255, 255, 255, 0.1);
+    --tw-prose-quotes: rgba(255, 255, 255, 0.6);
+    --tw-prose-quote-borders: rgb(77, 162, 255);
+    --tw-prose-code: rgb(77, 162, 255);
+    --tw-prose-pre-code: rgba(255, 255, 255, 0.9);
+    --tw-prose-pre-bg: rgba(0, 0, 0, 0.6);
+    --tw-prose-th-borders: rgba(255, 255, 255, 0.2);
+    --tw-prose-td-borders: rgba(255, 255, 255, 0.1);
   }
+
+  .prose-terminal code:not(pre code) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .prose-terminal pre {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Light mode prose overrides */
+[data-theme="light"] .prose-terminal {
+  --tw-prose-body: rgba(17, 17, 17, 0.8);
+  --tw-prose-headings: #111111;
+  --tw-prose-links: rgb(37, 99, 235);
+  --tw-prose-bold: #111111;
+  --tw-prose-counters: rgba(17, 17, 17, 0.5);
+  --tw-prose-bullets: rgba(17, 17, 17, 0.5);
+  --tw-prose-hr: rgba(0, 0, 0, 0.1);
+  --tw-prose-quotes: rgba(17, 17, 17, 0.6);
+  --tw-prose-quote-borders: rgb(37, 99, 235);
+  --tw-prose-code: rgb(37, 99, 235);
+  --tw-prose-pre-code: rgba(255, 255, 255, 0.95);
+  --tw-prose-pre-bg: rgb(30, 30, 30);
+  --tw-prose-th-borders: rgba(0, 0, 0, 0.2);
+  --tw-prose-td-borders: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .prose-terminal {
+  @apply prose prose-lg max-w-none;
+}
+
+[data-theme="light"] .prose-terminal code:not(pre code) {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+[data-theme="light"] .prose-terminal pre {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   LIGHT MODE GLOBAL OVERRIDES
+   Transform dark-first Tailwind classes to light mode equivalents
+   ======================================== */
+
+/* Text colors */
+[data-theme="light"] .text-white {
+  color: rgb(17, 17, 17) !important;
+}
+
+[data-theme="light"] .text-white\/90 {
+  color: rgba(17, 17, 17, 0.9) !important;
+}
+
+[data-theme="light"] .text-white\/80 {
+  color: rgba(17, 17, 17, 0.8) !important;
+}
+
+[data-theme="light"] .text-white\/70 {
+  color: rgba(17, 17, 17, 0.7) !important;
+}
+
+[data-theme="light"] .text-white\/60 {
+  color: rgba(17, 17, 17, 0.6) !important;
+}
+
+[data-theme="light"] .text-white\/50 {
+  color: rgba(17, 17, 17, 0.5) !important;
+}
+
+[data-theme="light"] .text-white\/40 {
+  color: rgba(17, 17, 17, 0.4) !important;
+}
+
+[data-theme="light"] .text-white\/30 {
+  color: rgba(17, 17, 17, 0.3) !important;
+}
+
+/* Background colors */
+[data-theme="light"] .bg-black\/70 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme="light"] .bg-black\/60 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="light"] .bg-black\/40 {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="light"] .bg-black\/80 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .hover\:bg-black\/80:hover {
+  background-color: rgba(245, 245, 245, 0.95) !important;
+}
+
+[data-theme="light"] .hover\:bg-black\/70:hover {
+  background-color: rgba(250, 250, 250, 0.9) !important;
+}
+
+/* Border colors */
+[data-theme="light"] .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .border-white\/30 {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="light"] .hover\:border-white\/20:hover {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .hover\:border-white\/30:hover {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Hover text colors */
+[data-theme="light"] .hover\:text-white:hover {
+  color: rgb(17, 17, 17) !important;
+}
+
+/* Background white opacity for glass effects */
+[data-theme="light"] .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Primary color - slightly darker for light mode */
+[data-theme="light"] .text-primary {
+  color: rgb(37, 99, 235) !important;
+}
+
+/* Drop shadows - lighter in light mode */
+[data-theme="light"] .drop-shadow-lg,
+[data-theme="light"] .drop-shadow-md,
+[data-theme="light"] [class*="drop-shadow-\["] {
+  filter: none !important;
+}
+
+/* Shadow adjustments */
+[data-theme="light"] .shadow-lg {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .shadow-xl {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .shadow-md {
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Green accent stays green but slightly darker */
+[data-theme="light"] .text-green-400 {
+  color: rgb(22, 163, 74) !important;
+}
+
+/* Yellow accent */
+[data-theme="light"] .text-yellow-400 {
+  color: rgb(202, 138, 4) !important;
+}
+
+/* Scrollbar for light mode */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Selection highlight */
+[data-theme="light"] ::selection {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: rgb(17, 17, 17);
 }

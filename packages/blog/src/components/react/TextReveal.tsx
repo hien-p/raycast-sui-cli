@@ -40,18 +40,18 @@ export function TextReveal({
     },
   };
 
+  // Optimized: removed blur filter animation (GPU-intensive during scroll)
+  // Using transform-only animations for better performance
   const wordVariants: Variants = {
     hidden: {
       opacity: 0,
       x: 40,
       skewX: -8,
-      filter: 'blur(4px)',
     },
     visible: {
       opacity: 1,
       x: 0,
       skewX: 0,
-      filter: 'blur(0px)',
       transition: {
         type: 'spring',
         stiffness: 100,
@@ -165,6 +165,7 @@ interface RevealOnScrollProps {
 /**
  * Generic reveal wrapper for any content.
  * Animates children when scrolled into view.
+ * Optimized: removed blur filter animation for better scroll performance.
  */
 export function RevealOnScroll({
   children,
@@ -186,15 +187,15 @@ export function RevealOnScroll({
     <motion.div
       ref={ref}
       className={className}
+      style={{ willChange: 'transform, opacity' }}
       initial={{
         opacity: 0,
         ...directionOffset[direction],
-        filter: 'blur(4px)',
       }}
       animate={
         isInView
-          ? { opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }
-          : { opacity: 0, ...directionOffset[direction], filter: 'blur(4px)' }
+          ? { opacity: 1, x: 0, y: 0 }
+          : { opacity: 0, ...directionOffset[direction] }
       }
       transition={{
         type: 'spring',

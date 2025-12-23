@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface Section {
   id: string;
@@ -22,64 +22,74 @@ export function ScrollProgress({
   const { scrollYProgress } = useScroll();
   const [activeSection, setActiveSection] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [displayPercentage, setDisplayPercentage] = useState(0);
 
-  // Smooth spring animation for progress bar
+  // Use refs to avoid re-renders during scroll
+  const rafRef = useRef<number | null>(null);
+  const lastPercentageRef = useRef(0);
+
+  // Smooth spring animation for progress bar - optimized settings
   const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
+    stiffness: 80,
+    damping: 25,
+    restDelta: 0.01, // Less precise = fewer updates
   });
 
-  // Percentage display
+  // Percentage display - throttled updates
   const percentage = useTransform(scrollYProgress, [0, 1], [0, 100]);
-  const [displayPercentage, setDisplayPercentage] = useState(0);
 
   useEffect(() => {
     const unsubscribe = percentage.on('change', (v) => {
-      setDisplayPercentage(Math.round(v));
+      const rounded = Math.round(v);
+      // Only update if changed by more than 1%
+      if (Math.abs(rounded - lastPercentageRef.current) >= 1) {
+        lastPercentageRef.current = rounded;
+        setDisplayPercentage(rounded);
+      }
     });
     return () => unsubscribe();
   }, [percentage]);
 
-  // Show after slight scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 100);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Combined scroll handler with RAF throttling
+  const handleScrollThrottled = useCallback(() => {
+    if (rafRef.current) return;
 
-  // Track active section using getBoundingClientRect for accurate positioning
-  // (offsetTop can be inaccurate when elements are inside transformed containers)
-  useEffect(() => {
-    if (sections.length === 0) return;
+    rafRef.current = requestAnimationFrame(() => {
+      // Visibility check
+      const shouldBeVisible = window.scrollY > 100;
+      setIsVisible(prev => prev !== shouldBeVisible ? shouldBeVisible : prev);
 
-    const handleScroll = () => {
-      // Find the section currently in view (closest to top third of viewport)
-      const viewportThreshold = window.innerHeight / 3;
-      let currentSection = 0;
+      // Section tracking
+      if (sections.length > 0) {
+        const viewportThreshold = window.innerHeight / 3;
+        let currentSection = 0;
 
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sections[i].id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          // If the top of this section is above the threshold, it's the active one
-          if (rect.top <= viewportThreshold) {
-            currentSection = i;
-            break;
+        for (let i = sections.length - 1; i >= 0; i--) {
+          const el = document.getElementById(sections[i].id);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= viewportThreshold) {
+              currentSection = i;
+              break;
+            }
           }
         }
+
+        setActiveSection(prev => prev !== currentSection ? currentSection : prev);
       }
 
-      setActiveSection(currentSection);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initial check
-    return () => window.removeEventListener('scroll', handleScroll);
+      rafRef.current = null;
+    });
   }, [sections]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScrollThrottled, { passive: true });
+    handleScrollThrottled(); // Initial check
+    return () => {
+      window.removeEventListener('scroll', handleScrollThrottled);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [handleScrollThrottled]);
 
   return (
     <>

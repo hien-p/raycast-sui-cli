@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useRef, useState, useEffect, useMemo, type ReactNode } from 'react';
 
 /**
  * Hook to get the current theme from data-theme attribute
@@ -49,6 +49,7 @@ interface ProgressiveBlurProps {
 /**
  * Scroll-based progressive blur effect.
  * Content gradually blurs as user scrolls past.
+ * Optimized: Uses CSS will-change and memoized transforms.
  */
 export function ProgressiveBlur({
   children,
@@ -63,11 +64,12 @@ export function ProgressiveBlur({
     offset: ['start end', 'end start'],
   });
 
+  // Memoize transforms to prevent recreation on every render
   const blur = useTransform(
     scrollYProgress,
     [blurStart, blurEnd],
     [0, maxBlur],
-    { clamp: true } // Prevent negative values
+    { clamp: true }
   );
 
   const opacity = useTransform(
@@ -76,12 +78,16 @@ export function ProgressiveBlur({
     [1, 0.5]
   );
 
+  // Pre-compute filter string transform (stable reference)
+  const filterBlur = useTransform(blur, (v) => `blur(${v}px)`);
+
   return (
     <div ref={ref} className={`relative ${className}`}>
       <motion.div
         style={{
-          filter: useTransform(blur, (v) => `blur(${v}px)`),
+          filter: filterBlur,
           opacity,
+          willChange: 'filter, opacity',
         }}
       >
         {children}
@@ -246,6 +252,7 @@ interface ReadingBlurProps {
  * - Gradient mask for smooth fade
  * - Works with any scrollable content
  * - Auto-adapts to light/dark theme
+ * - Optimized: RAF-throttled scroll handler
  */
 export function ReadingBlur({
   className = '',
@@ -258,21 +265,31 @@ export function ReadingBlur({
 }: ReadingBlurProps) {
   const [showTopBlur, setShowTopBlur] = useState(false);
   const theme = useTheme();
+  const rafRef = useRef<number | null>(null);
 
   // Theme-aware background color
   const backgroundColor = propBackgroundColor ||
     (theme === 'light' ? 'rgba(250, 250, 250, 1)' : 'rgba(10, 10, 10, 1)');
 
-  // Show top blur only after scrolling past threshold
+  // Show top blur only after scrolling past threshold - RAF throttled
   useEffect(() => {
     const handleScroll = () => {
-      const scrollThreshold = 200; // Show top blur after scrolling 200px
-      setShowTopBlur(window.scrollY > scrollThreshold);
+      if (rafRef.current) return;
+
+      rafRef.current = requestAnimationFrame(() => {
+        const scrollThreshold = 200;
+        const shouldShow = window.scrollY > scrollThreshold;
+        setShowTopBlur(prev => prev !== shouldShow ? shouldShow : prev);
+        rafRef.current = null;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Check initial state
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   // Top blur styles - positioned below navbar

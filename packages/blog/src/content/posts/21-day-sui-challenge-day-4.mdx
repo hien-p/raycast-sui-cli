@@ -1,0 +1,794 @@
+---
+title: "21-Day Sui Challenge Day 4: Vectors & Ownership"
+description: "Learn dynamic collections with vectors and understand Move's ownership model. Build a HabitList that grows, shrinks, and teaches you memory safety."
+publishDate: 2025-12-23
+category: tutorial
+tags: ["sui-challenge", "learn-move", "vectors", "ownership", "sui-tutorial", "day-4", "beginner"]
+author: "Harry Phan"
+heroImage: "/blog/images/posts/21-day-sui-challenge/day-4-hero.png"
+draft: false
+sections:
+  - id: "vectors-dynamic-lists"
+    title: "Vectors: Dynamic Lists"
+  - id: "ownership-the-big-idea"
+    title: "Ownership: The Big Idea"
+  - id: "from-bytes-to-strings"
+    title: "From Bytes to Strings"
+  - id: "building-habitlist"
+    title: "Building HabitList"
+  - id: "complete-solution"
+    title: "Complete Solution"
+  - id: "try-it-live-with-sui-cli-web"
+    title: "Try It Live"
+  - id: "whats-next"
+    title: "What's Next"
+  - id: "vietnamese-builders-level-up-your-journey"
+    title: "First Movers Sprint"
+---
+
+import { AccordionCTA } from '../../components/react/BouncyAccordion';
+import { RevealOnScroll } from '../../components/react/TextReveal';
+import { BrandedImage } from '../../components/react/BrandedImage';
+
+**Day 4 of the 21-Day Sui Challenge.**
+
+You've learned structs and abilities. Now it's time to make things *grow*. Vectors let you store collections of data, and ownership determines who controls that data. Together, they form the foundation for every real application you'll build on Sui.
+
+<AccordionCTA
+  client:visible
+  icon="📚"
+  title="Day 4 Challenge"
+  description="Build a HabitList using vectors. Learn ownership by adding, removing, and iterating over habits."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_04"
+  linkText="View on GitHub"
+/>
+
+
+
+## Vectors: Dynamic Lists
+
+A **vector** is a built-in type in Move that stores a collection of elements. Unlike arrays in other languages, vectors can grow and shrink at runtime. The vector type doesn't need to be imported from a module.
+
+### Vector Literals (Move 2024)
+
+The cleanest way to create vectors:
+
+```move
+// Empty vector with explicit type
+let empty: vector<bool> = vector[];
+
+// Vector with initial values
+let numbers: vector<u8> = vector[10, 20, 30];
+
+// Nested vectors
+let matrix: vector<vector<u8>> = vector[
+    vector[1, 2],
+    vector[3, 4]
+];
+
+// Byte vectors (strings)
+let hello = b"Hello";  // vector<u8>
+```
+
+### Common Vector Operations
+
+The `std::vector` module provides these standard operations:
+
+| Operation | What It Does |
+|-----------|--------------|
+| `push_back` | Adds an element to the end of the vector |
+| `pop_back` | Removes the last element from the vector |
+| `length` | Returns the number of elements in the vector |
+| `is_empty` | Returns true if the vector is empty |
+| `remove` | Removes an element at a given index |
+| `borrow` | Gets a read-only reference to an element |
+| `borrow_mut` | Gets a mutable reference to an element |
+
+**Example usage:**
+
+```move
+let mut v = vector[10u8, 20, 30];
+
+// Check properties
+assert!(v.length() == 3);
+assert!(!v.is_empty());
+
+// Add and remove
+v.push_back(40);
+let last = v.pop_back();  // returns 40
+
+// Access elements
+let first = v.borrow(0);        // &u8, read-only
+*v.borrow_mut(0) = 99;          // modify in place
+```
+
+### Index Syntax (Move 2024)
+
+Move 2024 introduced borrowing operators that make vector access cleaner:
+
+```move
+let v = vector[10, 20, 30];
+
+// These are equivalent:
+let first = &v[0];           // calls vector::borrow(v, 0)
+let first = v.borrow(0);
+
+// Mutable access:
+let first_mut = &mut v[0];   // calls vector::borrow_mut(v, 0)
+
+// Copy value (if type has copy):
+let first_copy = v[0];       // calls *vector::borrow(v, 0)
+```
+
+### Ability Inheritance
+
+Vectors inherit abilities from their element type. This is important:
+
+```move
+// u64 has copy and drop, so vector<u64> does too
+let v1: vector<u64> = vector[1, 2, 3];
+let v2 = v1;  // Copy works
+
+// But if elements don't have copy...
+// vector<SomeNonCopyType> won't have copy either
+```
+
+This is Move protecting you. You cannot accidentally duplicate a vector of NFTs because NFTs don't have `copy`.
+
+
+
+## Ownership: The Big Idea
+
+Here's the concept that makes Move special: **every value has exactly one owner at a time.**
+
+References are a way to *show* a value to a function without giving up ownership. When you create a reference, you're "borrowing" the value.
+
+### Immutable References (&)
+
+Use `&` when you need to read but not modify:
+
+```move
+public fun is_valid(card: &Card): bool {
+    card.uses > 0
+}
+
+// Usage
+let card = new_card();
+let valid = is_valid(&card);  // borrow immutably
+// card is still valid here
+```
+
+The function cannot modify `card`. The original owner retains control after the call.
+
+### Mutable References (&mut)
+
+Use `&mut` when you need to modify the value:
+
+```move
+public fun use_card(card: &mut Card) {
+    assert!(card.uses > 0, ENoUses);
+    card.uses = card.uses - 1;
+}
+
+// Usage
+let mut card = new_card();
+use_card(&mut card);  // borrow mutably
+// card is still valid, but modified
+```
+
+The function can read and modify `card`. The original owner keeps ownership.
+
+### Pass by Value (Ownership Transfer)
+
+When you omit `&` or `&mut`, ownership transfers:
+
+```move
+public fun recycle(card: Card) {
+    // This function now owns card
+    let Card { uses: _ } = card;
+    // card is destroyed here
+}
+
+// Usage
+let card = new_card();
+recycle(card);
+// card is NO LONGER VALID here
+// Using it would cause a compile error
+```
+
+### The Borrowing Rules
+
+1. **One owner**: Every value has exactly one owner at a time
+2. **Move by default**: Passing by value transfers ownership
+3. **Borrow to share**: Use `&` for read-only, `&mut` for read-write
+4. **No dangling references**: References must remain valid
+
+These rules prevent entire categories of bugs:
+- No use-after-free
+- No double-free
+- No data races
+- No dangling pointers
+
+
+
+## From Bytes to Strings
+
+Day 3 used `vector<u8>` for text. Day 4 introduces the `String` type, which is cleaner and safer.
+
+### String Structure
+
+Move doesn't have a native string type, but the standard library provides one. It's essentially a wrapped byte vector with UTF-8 validation:
+
+```move
+// In std::string module
+public struct String has copy, drop, store {
+    bytes: vector<u8>,
+}
+```
+
+### Creating Strings
+
+```move
+use std::string::{Self, String};
+
+// From bytes using utf8
+let hello: String = string::utf8(b"Hello");
+
+// Convenient method syntax
+let world = b"World".to_string();
+
+// Safe creation with validation
+let maybe_str = b"Hello".try_to_string();  // Returns Option<String>
+assert!(maybe_str.is_some());
+
+let invalid = b"\xFF".try_to_string();  // Invalid UTF-8
+assert!(invalid.is_none());
+```
+
+### String Operations
+
+| Operation | Example | Description |
+|-----------|---------|-------------|
+| `length` | `str.length()` | Returns byte count (not characters!) |
+| `is_empty` | `str.is_empty()` | Returns true if empty |
+| `append` | `str.append(other)` | Concatenates another string |
+| `sub_string` | `str.sub_string(0, 5)` | Extracts a substring |
+| `bytes` | `str.bytes()` | Gets `&vector<u8>` |
+
+**Important:** String length is in *bytes*, not characters. UTF-8 uses variable-length encoding (1-4 bytes per character).
+
+### Why Use String Over vector&lt;u8&gt;
+
+1. **Semantic clarity**: `String` clearly indicates text data
+2. **UTF-8 validation**: Invalid encodings are caught early
+3. **Better API**: More string-specific operations
+4. **Industry standard**: Recommended for new Move code
+
+
+
+## Building HabitList
+
+Let's combine vectors, ownership, and strings to build something practical.
+
+### The Structs
+
+```move
+public struct Habit has copy, drop, store {
+    name: String,
+    completed: bool,
+}
+
+public struct HabitList has drop {
+    habits: vector<Habit>,
+}
+```
+
+Notice `HabitList` has `drop` but not `copy`. You can destroy it, but you cannot duplicate it. This prevents copies of your tracker floating around with stale data.
+
+### Constructor
+
+```move
+public fun empty_list(): HabitList {
+    HabitList {
+        habits: vector::empty(),
+    }
+}
+```
+
+### Adding Habits
+
+Here ownership gets interesting:
+
+```move
+public fun add_habit(list: &mut HabitList, habit: Habit) {
+    vector::push_back(&mut list.habits, habit);
+}
+
+// Usage:
+let mut list = empty_list();
+let habit = new_habit(string::utf8(b"Exercise"));
+add_habit(&mut list, habit);
+// habit ownership moved into the list
+```
+
+We borrow `list` mutably so we keep ownership of the list. But we take `habit` by value, so it moves into the vector.
+
+### Getting Habits
+
+```move
+// Borrow a habit (read-only)
+public fun get_habit(list: &HabitList, index: u64): &Habit {
+    vector::borrow(&list.habits, index)
+}
+
+// Get the count
+public fun habit_count(list: &HabitList): u64 {
+    vector::length(&list.habits)
+}
+```
+
+### Modifying Habits
+
+```move
+public fun complete_habit(list: &mut HabitList, index: u64) {
+    let habit = vector::borrow_mut(&mut list.habits, index);
+    habit.completed = true;
+}
+```
+
+We borrow the list mutably, then borrow the specific habit mutably, then modify it. The chain of `&mut` flows through each level.
+
+### Removing Habits
+
+```move
+// Remove and return the last habit
+public fun remove_last(list: &mut HabitList): Habit {
+    vector::pop_back(&mut list.habits)
+}
+
+// Remove at index (swap with last, then pop)
+public fun remove_at(list: &mut HabitList, index: u64): Habit {
+    vector::swap_remove(&mut list.habits, index)
+}
+```
+
+`swap_remove` is O(1). It swaps the target element with the last one, then pops. Use this when order doesn't matter.
+
+
+
+## Complete Solution
+
+Here's the full Day 4 implementation with comprehensive tests:
+
+```move
+/// DAY 4: Vectors & Ownership
+///
+/// Learn:
+/// - Vector creation and manipulation
+/// - String type for text data
+/// - Ownership and borrowing patterns
+/// - Building collection-based structs
+
+module challenge::day_04 {
+    use std::string::{Self, String};
+    use std::vector;
+
+    #[test_only]
+    use std::unit_test::assert_eq;
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONSTANTS
+    // ═══════════════════════════════════════════════════════════════
+
+    const E_INDEX_OUT_OF_BOUNDS: u64 = 1001;
+    const E_EMPTY_LIST: u64 = 1002;
+    const MAX_HABITS: u64 = 100;
+    const E_LIST_FULL: u64 = 1003;
+
+    // ═══════════════════════════════════════════════════════════════
+    // STRUCTS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// A habit with String name
+    /// copy: Can duplicate
+    /// drop: Can discard
+    /// store: Can be stored in other structs
+    public struct Habit has copy, drop, store {
+        name: String,
+        completed: bool,
+    }
+
+    /// A collection of habits
+    /// drop: Can discard (no copy prevents accidental duplication)
+    public struct HabitList has drop {
+        habits: vector<Habit>,
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONSTRUCTORS
+    // ═══════════════════════════════════════════════════════════════
+
+    public fun new_habit(name: String): Habit {
+        Habit { name, completed: false }
+    }
+
+    public fun new_habit_from_bytes(name_bytes: vector<u8>): Habit {
+        new_habit(string::utf8(name_bytes))
+    }
+
+    public fun empty_list(): HabitList {
+        HabitList { habits: vector::empty() }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ACCESSORS
+    // ═══════════════════════════════════════════════════════════════
+
+    public fun habit_name(habit: &Habit): &String {
+        &habit.name
+    }
+
+    public fun is_completed(habit: &Habit): bool {
+        habit.completed
+    }
+
+    public fun habit_count(list: &HabitList): u64 {
+        vector::length(&list.habits)
+    }
+
+    public fun is_empty(list: &HabitList): bool {
+        vector::is_empty(&list.habits)
+    }
+
+    public fun get_habit(list: &HabitList, index: u64): &Habit {
+        assert!(index < habit_count(list), E_INDEX_OUT_OF_BOUNDS);
+        vector::borrow(&list.habits, index)
+    }
+
+    public fun completed_count(list: &HabitList): u64 {
+        let mut count = 0;
+        let len = habit_count(list);
+        let mut i = 0;
+        while (i < len) {
+            if (vector::borrow(&list.habits, i).completed) {
+                count = count + 1;
+            };
+            i = i + 1;
+        };
+        count
+    }
+
+    public fun completion_percentage(list: &HabitList): u64 {
+        let total = habit_count(list);
+        if (total == 0) return 100;
+        (completed_count(list) * 100) / total
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MUTATORS
+    // ═══════════════════════════════════════════════════════════════
+
+    public fun add_habit(list: &mut HabitList, habit: Habit) {
+        assert!(habit_count(list) < MAX_HABITS, E_LIST_FULL);
+        vector::push_back(&mut list.habits, habit);
+    }
+
+    public fun add_habit_by_name(list: &mut HabitList, name: String) {
+        add_habit(list, new_habit(name));
+    }
+
+    public fun complete_habit(list: &mut HabitList, index: u64) {
+        assert!(index < habit_count(list), E_INDEX_OUT_OF_BOUNDS);
+        vector::borrow_mut(&mut list.habits, index).completed = true;
+    }
+
+    public fun reset_habit(list: &mut HabitList, index: u64) {
+        assert!(index < habit_count(list), E_INDEX_OUT_OF_BOUNDS);
+        vector::borrow_mut(&mut list.habits, index).completed = false;
+    }
+
+    public fun toggle_habit(list: &mut HabitList, index: u64) {
+        assert!(index < habit_count(list), E_INDEX_OUT_OF_BOUNDS);
+        let habit = vector::borrow_mut(&mut list.habits, index);
+        habit.completed = !habit.completed;
+    }
+
+    public fun remove_last(list: &mut HabitList): Habit {
+        assert!(!is_empty(list), E_EMPTY_LIST);
+        vector::pop_back(&mut list.habits)
+    }
+
+    public fun remove_at(list: &mut HabitList, index: u64): Habit {
+        assert!(index < habit_count(list), E_INDEX_OUT_OF_BOUNDS);
+        vector::swap_remove(&mut list.habits, index)
+    }
+
+    public fun complete_all(list: &mut HabitList) {
+        let len = habit_count(list);
+        let mut i = 0;
+        while (i < len) {
+            vector::borrow_mut(&mut list.habits, i).completed = true;
+            i = i + 1;
+        };
+    }
+
+    public fun clear(list: &mut HabitList) {
+        list.habits = vector::empty();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITY
+    // ═══════════════════════════════════════════════════════════════
+
+    public fun contains_habit(list: &HabitList, name: &String): bool {
+        let len = habit_count(list);
+        let mut i = 0;
+        while (i < len) {
+            if (vector::borrow(&list.habits, i).name == *name) {
+                return true
+            };
+            i = i + 1;
+        };
+        false
+    }
+
+    public fun unpack_habit(habit: Habit): (String, bool) {
+        let Habit { name, completed } = habit;
+        (name, completed)
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_new_habit() {
+        let habit = new_habit(string::utf8(b"Exercise"));
+        assert_eq!(is_completed(&habit), false);
+        assert_eq!(*habit_name(&habit), string::utf8(b"Exercise"));
+    }
+
+    #[test]
+    fun test_empty_list() {
+        let list = empty_list();
+        assert_eq!(habit_count(&list), 0);
+        assert!(is_empty(&list), 0);
+    }
+
+    #[test]
+    fun test_add_and_get_habit() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(string::utf8(b"Exercise")));
+        add_habit(&mut list, new_habit(string::utf8(b"Read")));
+
+        assert_eq!(habit_count(&list), 2);
+        assert_eq!(*habit_name(get_habit(&list, 1)), string::utf8(b"Read"));
+    }
+
+    #[test]
+    fun test_complete_and_toggle() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(string::utf8(b"Exercise")));
+
+        complete_habit(&mut list, 0);
+        assert!(is_completed(get_habit(&list, 0)), 0);
+
+        toggle_habit(&mut list, 0);
+        assert!(!is_completed(get_habit(&list, 0)), 1);
+    }
+
+    #[test]
+    fun test_remove_operations() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(string::utf8(b"A")));
+        add_habit(&mut list, new_habit(string::utf8(b"B")));
+        add_habit(&mut list, new_habit(string::utf8(b"C")));
+
+        let removed = remove_at(&mut list, 0);
+        assert_eq!(*habit_name(&removed), string::utf8(b"A"));
+        assert_eq!(habit_count(&list), 2);
+    }
+
+    #[test]
+    fun test_completion_stats() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(string::utf8(b"A")));
+        add_habit(&mut list, new_habit(string::utf8(b"B")));
+        add_habit(&mut list, new_habit(string::utf8(b"C")));
+        add_habit(&mut list, new_habit(string::utf8(b"D")));
+
+        complete_habit(&mut list, 0);
+        complete_habit(&mut list, 1);
+
+        assert_eq!(completed_count(&list), 2);
+        assert_eq!(completion_percentage(&list), 50);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_INDEX_OUT_OF_BOUNDS)]
+    fun test_get_invalid_index() {
+        let list = empty_list();
+        let _habit = get_habit(&list, 0);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_EMPTY_LIST)]
+    fun test_remove_from_empty() {
+        let mut list = empty_list();
+        let _habit = remove_last(&mut list);
+    }
+
+    #[test]
+    fun test_ownership_with_copy() {
+        let habit = new_habit(string::utf8(b"Exercise"));
+        let habit_copy = habit;  // Habit has copy, so this works
+
+        // Both are valid
+        assert_eq!(is_completed(&habit), false);
+        assert_eq!(is_completed(&habit_copy), false);
+    }
+}
+```
+
+## Running the Tests
+
+```bash
+cd day_04
+sui move test
+```
+
+Expected output:
+
+```
+Running Move unit tests
+[ PASS    ] challenge::day_04::test_add_and_get_habit
+[ PASS    ] challenge::day_04::test_complete_and_toggle
+[ PASS    ] challenge::day_04::test_completion_stats
+[ PASS    ] challenge::day_04::test_empty_list
+[ PASS    ] challenge::day_04::test_get_invalid_index
+[ PASS    ] challenge::day_04::test_new_habit
+[ PASS    ] challenge::day_04::test_ownership_with_copy
+[ PASS    ] challenge::day_04::test_remove_from_empty
+[ PASS    ] challenge::day_04::test_remove_operations
+Test result: OK. 9 passed; 0 failed
+```
+
+## Try It Live with Sui CLI Web
+
+Build and test your package using Move Dev Studio:
+
+1. Open [cli.firstmovers.io](https://cli.firstmovers.io)
+2. Navigate to **Move** section (`/app/move`)
+3. Click **Build** then **Test**
+
+<figure className="my-8">
+  <img
+    src="/blog/images/posts/21-day-sui-challenge/day-4-test.png"
+    alt="Day 4 test results"
+    className="rounded-xl border border-white/10 w-full"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    All tests passing in Move Dev Studio
+  </figcaption>
+</figure>
+
+> **Note:** Day 4 functions don't have `entry`, so they can't be called from transactions yet. On-chain interaction comes in Day 7 when we create Sui objects.
+
+## Key Takeaways
+
+<RevealOnScroll client:visible>
+
+### 1. Vectors Are Built-In Dynamic Arrays
+
+```move
+let v = vector[1, 2, 3];
+v.push_back(4);
+let len = v.length();
+```
+
+### 2. Ownership Is Exclusive
+
+Every value has one owner. Pass by value to transfer, use references to borrow.
+
+```move
+fun consume(habit: Habit) { ... }     // takes ownership
+fun read(habit: &Habit) { ... }       // borrows immutably
+fun modify(habit: &mut Habit) { ... } // borrows mutably
+```
+
+### 3. Use String for Text
+
+The `String` type validates UTF-8 and is cleaner than raw `vector<u8>`.
+
+```move
+let s = string::utf8(b"Hello");
+let s = b"Hello".to_string();  // Move 2024
+```
+
+### 4. Abilities Flow Through Collections
+
+Vectors inherit abilities from elements. No `copy` on elements means no `copy` on vector.
+
+### 5. swap_remove Is O(1)
+
+When order doesn't matter, `swap_remove` beats regular removal.
+
+</RevealOnScroll>
+
+## What's Next
+
+<RevealOnScroll client:visible>
+
+Tomorrow in **Day 5**, we dive deep into references:
+
+- Immutable vs mutable borrows
+- Borrowing rules and safety guarantees
+- When to use each reference type
+
+Day 4 touched on references. Day 5 masters them.
+
+<AccordionCTA
+  client:visible
+  icon="🔗"
+  title="Continue the Challenge"
+  description="Day 5 explores references in depth. Master borrowing to write efficient, safe code."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_05"
+  linkText="View Day 5"
+/>
+
+</RevealOnScroll>
+
+## Commit Your Progress
+
+```bash
+cd day_04
+sui move test
+git add day_04/
+git commit -m "Day 4: vectors and ownership basics"
+```
+
+**Day 4 complete.** You've learned dynamic collections and Move's ownership model. These concepts are foundational. Every Sui object you create will use them.
+
+See you on Day 5.
+
+*Follow: [@ercandotsui](https://x.com/ercandotsui) | [@harry_phan06](https://x.com/harry_phan06)*
+
+## Vietnamese Builders: Level Up Your Journey
+
+<RevealOnScroll client:visible>
+
+**First Movers Sprint 2026 is here!**
+
+Following the success of CommandOSS Hacker House HCMC, First Movers Sprint 2026 is designed as a stepping-stone Hacker House. A space for builders in the Sui ecosystem to sharpen their skills, accelerate product development, and prepare for the next CommandOSS Hacker House.
+
+Whether you're a developer or a non-technical business/growth builder, you're welcome to join!
+
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/21-day-sui-challenge/first-movers-sprint.png"
+    alt="First Movers Sprint 2026 Hackathon"
+    width={800}
+    height={800}
+    watermark="firstmovers.io"
+  />
+</figure>
+
+**Why join First Movers Sprint?**
+
+- **Paid internship** at top Sui ecosystem projects (full-time)
+- **Exciting prizes** and rewards
+- **Learn directly** with top mentors from the Sui ecosystem
+
+Co-organized by [@firstmoversvn](https://x.com/firstmoversvn), [@0xCommandOSS](https://x.com/0xCommandOSS), and ITviec.
+
+<AccordionCTA
+  client:visible
+  icon="🚀"
+  title="Join First Movers Sprint 2026"
+  description="A stepping-stone Hacker House for Vietnamese builders in the Sui ecosystem. Sharpen your skills, accelerate your product, and prepare for CommandOSS."
+  link="https://luma.com/first-movers-sprint"
+  linkText="Apply Now"
+/>
+
+</RevealOnScroll>

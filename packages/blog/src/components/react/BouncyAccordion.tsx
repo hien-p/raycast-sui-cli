@@ -67,7 +67,7 @@ export function BouncyAccordion({ items, allowMultiple = false }: BouncyAccordio
           >
             {/* Glassmorphism Icon Container */}
             <motion.div
-              className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-lg"
+              className="w-10 h-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-lg"
               animate={{
                 scale: isOpen(item.id) ? 1.1 : 1,
                 rotate: isOpen(item.id) ? 5 : 0,

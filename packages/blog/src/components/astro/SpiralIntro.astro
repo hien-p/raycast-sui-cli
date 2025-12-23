@@ -163,14 +163,14 @@ const uniqueId = postId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice
     margin-right: 0.25em;
     opacity: 0;
     transform: translateX(40px);
-    filter: blur(4px);
-    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Removed blur filter - causes jank during animation */
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .word.visible {
     opacity: 1;
     transform: translateX(0);
-    filter: blur(0px);
   }
 
   /* Progress Container */
@@ -388,14 +388,14 @@ const uniqueId = postId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice
     private size: number;
     private stars: Star[] = [];
 
-    // Constants
+    // Constants - reduced particle count for better performance
     private readonly changeEventTime = 0.32;
     public readonly cameraZ = -400;
     public readonly cameraTravelDistance = 3400;
     private readonly startDotYOffset = 28;
     public readonly viewZoom = 100;
-    private readonly numberOfStars = 5000;
-    private readonly trailLength = 80;
+    private readonly numberOfStars = 2000; // Reduced from 5000
+    private readonly trailLength = 60; // Reduced from 80
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, size: number) {
       this.canvas = canvas;

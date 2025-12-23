@@ -62,11 +62,11 @@ const categories = ['announcement', 'tutorial', 'wrapup', 'guide'] as const;
   title={`${meta.title} - Sui CLI Web Blog`}
   description={meta.description}
 >
-  <!-- Animated Gradient Background -->
+  <!-- Animated Gradient Background - static for best scroll performance -->
   <div class="fixed inset-0 -z-10">
     <AnimatedGradientBackground
-      client:load
-      breathing={true}
+      client:idle
+      breathing={false}
       startingGap={125}
       breathingRange={5}
       animationSpeed={0.02}
@@ -109,7 +109,7 @@ const categories = ['announcement', 'tutorial', 'wrapup', 'guide'] as const;
         <div class="flex flex-wrap gap-2">
           <a
             href="/blog"
-            class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/30 backdrop-blur-md text-white/70 hover:text-white hover:bg-black/50 transition-colors border border-white/10 shadow-md"
+            class="px-3 py-1.5 rounded-lg text-sm font-mono bg-black/70 text-white/70 hover:text-white hover:bg-black/80 transition-colors border border-white/10 shadow-md"
           >
             all ({allPosts.length})
           </a>
@@ -120,10 +120,10 @@ const categories = ['announcement', 'tutorial', 'wrapup', 'guide'] as const;
               <a
                 href={`/blog/category/${cat}`}
                 class:list={[
-                  'px-3 py-1.5 rounded-lg text-sm font-mono transition-colors border backdrop-blur-md shadow-md',
+                  'px-3 py-1.5 rounded-lg text-sm font-mono transition-colors border shadow-md',
                   isActive
-                    ? 'bg-black/40 text-white border-white/20'
-                    : 'bg-black/30 text-white/70 hover:text-white hover:bg-black/50 border-white/10',
+                    ? 'bg-black/80 text-white border-white/20'
+                    : 'bg-black/70 text-white/70 hover:text-white hover:bg-black/80 border-white/10',
                 ]}
               >
                 {cat} ({count})
