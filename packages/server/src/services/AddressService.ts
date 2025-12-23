@@ -347,9 +347,11 @@ export class AddressService {
     keyScheme: 'ed25519' | 'secp256k1' | 'secp256r1' = 'ed25519',
     alias?: string
   ): Promise<{ address: string; phrase?: string }> {
+    // Sui CLI format: sui client new-address <KEY_SCHEME> [ALIAS] [WORD_LENGTH] [DERIVATION_PATH]
+    // ALIAS is now a positional argument, not a --alias flag
     const args = ['client', 'new-address', keyScheme];
     if (alias) {
-      args.push('--alias', alias);
+      args.push(alias); // positional argument
     }
 
     const output = await this.executor.execute(args);
