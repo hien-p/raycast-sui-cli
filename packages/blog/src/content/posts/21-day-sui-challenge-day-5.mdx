@@ -1,0 +1,630 @@
+---
+title: "21-Day Sui Challenge Day 5: Control Flow & Complete Habits"
+description: "Learn control flow with if/else statements. Safely access vector elements and modify struct fields through mutable references."
+publishDate: 2025-12-24
+category: tutorial
+tags: ["sui-challenge", "learn-move", "control-flow", "if-else", "sui-tutorial", "day-5", "beginner"]
+author: "Harry Phan"
+heroImage: "/blog/images/posts/21-day-sui-challenge/day-5-hero.png"
+draft: false
+sections:
+  - id: "control-flow-basics"
+    title: "Control Flow Basics"
+  - id: "safe-vector-access"
+    title: "Safe Vector Access"
+  - id: "completing-habits"
+    title: "Completing Habits"
+  - id: "complete-solution"
+    title: "Complete Solution"
+  - id: "try-it-live-with-sui-cli-web"
+    title: "Try It Live"
+  - id: "whats-next"
+    title: "What's Next"
+  - id: "vietnamese-builders-level-up-your-journey"
+    title: "First Movers Sprint"
+---
+
+import { AccordionCTA } from '../../components/react/BouncyAccordion';
+import { RevealOnScroll } from '../../components/react/TextReveal';
+import { BrandedImage } from '../../components/react/BrandedImage';
+
+**Day 5 of the 21-Day Sui Challenge.**
+
+Your HabitList can grow. Now it's time to give it a brain. Today you'll learn **control flow**: the art of making your code think, decide, and choose different paths. We're teaching your program to check things off.
+
+<AccordionCTA
+  client:visible
+  icon="📚"
+  title="Day 5 Challenge"
+  description="Write a complete_habit function that marks a habit as done by index. Use control flow for bounds checking."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_05"
+  linkText="View on GitHub"
+/>
+
+## Control Flow Basics
+
+Your code just got decision-making powers. Control flow is how programs think. Checking conditions. Making choices. Taking different paths. And it all starts with one powerful word: `if`.
+
+### If Statements
+
+```move
+if (condition) {
+    // Executes when condition is true
+}
+```
+
+The condition **must** be a `bool`. Move doesn't play games here. No "truthy" values like JavaScript. It's either `true` or `false`. Period.
+
+```move
+let count = 5;
+
+// This works
+if (count > 0) {
+    // do something
+}
+
+// This does NOT work
+// if (count) { }  // Error: expected bool, got u64
+```
+
+Move is strict for a reason. Blockchain code that "kinda works" costs people real money.
+
+### If-Else
+
+Split the timeline. One path for true, another for false.
+
+```move
+if (condition) {
+    // When true
+} else {
+    // When false
+}
+```
+
+**Example:**
+
+```move
+public fun status_message(completed: bool): vector<u8> {
+    if (completed) {
+        b"Done!"
+    } else {
+        b"Not yet"
+    }
+}
+```
+
+Simple. Powerful. Every decision your code makes starts here.
+
+### If as an Expression
+
+Here's where Move gets beautiful. `if` isn't just a statement. It's an expression that **returns a value**.
+
+```move
+let message = if (score >= 60) {
+    b"Pass"
+} else {
+    b"Fail"
+};
+```
+
+Both branches must return the same type. The compiler enforces this. No surprises at runtime.
+
+### Else-If Chains
+
+When you need more than two paths, chain your decisions:
+
+```move
+public fun grade(score: u64): vector<u8> {
+    if (score >= 90) {
+        b"A"
+    } else if (score >= 80) {
+        b"B"
+    } else if (score >= 70) {
+        b"C"
+    } else if (score >= 60) {
+        b"D"
+    } else {
+        b"F"
+    }
+}
+```
+
+The first matching condition wins. Order matters.
+
+## Safe Vector Access
+
+Ever tried grabbing the 10th cookie from a jar that only has 3? Your program will crash just as hard. Always check before you reach.
+
+### The Problem
+
+```move
+let habits = vector[habit1, habit2];
+let third = vector::borrow(&habits, 2);  // Runtime error! Index out of bounds
+```
+
+Move aborts if you access an invalid index. Your transaction dies. Gas vanishes. Users rage quit. Not good.
+
+### The Solution: Bounds Checking
+
+```move
+let habits = vector[habit1, habit2];
+let len = vector::length(&habits);
+
+if (index < len) {
+    let habit = vector::borrow(&habits, index);
+    // Safe to use habit
+}
+```
+
+Two lines of defense. Get the length. Check before you leap.
+
+### Vector Length
+
+The `vector::length` function tells you how many elements exist:
+
+```move
+let empty: vector<u64> = vector[];
+let numbers = vector[10, 20, 30];
+
+assert!(vector::length(&empty) == 0);
+assert!(vector::length(&numbers) == 3);
+```
+
+Know your bounds. Respect your limits.
+
+### Borrowing Elements
+
+Two flavors of borrowing, two different powers:
+
+| Function | Returns | Use Case |
+|----------|---------|----------|
+| `vector::borrow(&vec, i)` | `&T` | Read element |
+| `vector::borrow_mut(&mut vec, i)` | `&mut T` | Modify element |
+
+```move
+// Read-only access
+let habit = vector::borrow(&list.habits, 0);
+let name = habit.name;  // Can read
+
+// Mutable access
+let habit = vector::borrow_mut(&mut list.habits, 0);
+habit.completed = true;  // Can modify
+```
+
+Want to change something? Borrow mutably. Just looking? Read-only is enough.
+
+## Completing Habits
+
+Now we combine control flow and vector access into something real. Time to mark habits complete.
+
+### The Challenge
+
+Write a function that:
+1. Takes a `HabitList` and an `index`
+2. Checks if the index is valid
+3. If valid, marks that habit as completed
+
+Three steps. Defensive programming. No crashes.
+
+### Step 1: Get the Length
+
+```move
+public fun complete_habit(list: &mut HabitList, index: u64) {
+    let len = vector::length(&list.habits);
+    // ...
+}
+```
+
+We need `&list.habits` (immutable borrow) to check the length. Just reading metadata here.
+
+### Step 2: Bounds Check
+
+```move
+public fun complete_habit(list: &mut HabitList, index: u64) {
+    let len = vector::length(&list.habits);
+    if (index < len) {
+        // Safe to proceed
+    }
+}
+```
+
+If `index >= len`, we bail out silently. No drama. In production, you might abort with an error message instead. But for learning? Graceful degradation works.
+
+### Step 3: Borrow and Modify
+
+```move
+public fun complete_habit(list: &mut HabitList, index: u64) {
+    let len = vector::length(&list.habits);
+    if (index < len) {
+        let habit = vector::borrow_mut(&mut list.habits, index);
+        habit.completed = true;
+    }
+}
+```
+
+We use `vector::borrow_mut` to get a mutable reference. Then flip `completed` to `true`. Done.
+
+### Complete Function
+
+```move
+/// Mark a habit as completed by index
+/// Does nothing if index is out of bounds
+public fun complete_habit(list: &mut HabitList, index: u64) {
+    let len = vector::length(&list.habits);
+    if (index < len) {
+        let habit = vector::borrow_mut(&mut list.habits, index);
+        habit.completed = true;
+    }
+    // Note: In production, consider aborting on invalid index
+}
+```
+
+Three lines of logic. A lifetime of good habits (pun intended).
+
+## Complete Solution
+
+Here's the full Day 5 implementation with all bells and whistles:
+
+```move
+/// DAY 5: Control Flow & Complete Habits
+///
+/// Learn:
+/// - If/else statements for decision making
+/// - Safe vector access with bounds checking
+/// - Modifying struct fields through mutable references
+
+module challenge::day_05 {
+    use std::vector;
+
+    #[test_only]
+    use std::unit_test::assert_eq;
+
+    // ═══════════════════════════════════════════════════════════════
+    // STRUCTS
+    // ═══════════════════════════════════════════════════════════════
+
+    public struct Habit has copy, drop {
+        name: vector<u8>,
+        completed: bool,
+    }
+
+    public struct HabitList has drop {
+        habits: vector<Habit>,
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONSTRUCTORS (from previous days)
+    // ═══════════════════════════════════════════════════════════════
+
+    public fun new_habit(name: vector<u8>): Habit {
+        Habit {
+            name,
+            completed: false,
+        }
+    }
+
+    public fun empty_list(): HabitList {
+        HabitList {
+            habits: vector::empty(),
+        }
+    }
+
+    public fun add_habit(list: &mut HabitList, habit: Habit) {
+        vector::push_back(&mut list.habits, habit);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DAY 5: COMPLETE HABIT
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Mark a habit as completed by index
+    /// Does nothing if index is out of bounds
+    public fun complete_habit(list: &mut HabitList, index: u64) {
+        let len = vector::length(&list.habits);
+        if (index < len) {
+            let habit = vector::borrow_mut(&mut list.habits, index);
+            habit.completed = true;
+        }
+        // Note: In a real app, you might want to abort if index is invalid
+        // For simplicity, we just do nothing if index is out of bounds
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Get the number of habits in the list
+    public fun habit_count(list: &HabitList): u64 {
+        vector::length(&list.habits)
+    }
+
+    /// Check if a habit at index is completed
+    public fun is_completed(list: &HabitList, index: u64): bool {
+        let len = vector::length(&list.habits);
+        if (index < len) {
+            vector::borrow(&list.habits, index).completed
+        } else {
+            false
+        }
+    }
+
+    /// Get habit name at index (returns empty if out of bounds)
+    public fun get_habit_name(list: &HabitList, index: u64): vector<u8> {
+        let len = vector::length(&list.habits);
+        if (index < len) {
+            vector::borrow(&list.habits, index).name
+        } else {
+            vector::empty()
+        }
+    }
+
+    /// Count completed habits
+    public fun completed_count(list: &HabitList): u64 {
+        let mut count = 0;
+        let len = vector::length(&list.habits);
+        let mut i = 0;
+        while (i < len) {
+            if (vector::borrow(&list.habits, i).completed) {
+                count = count + 1;
+            };
+            i = i + 1;
+        };
+        count
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fun test_complete_habit() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(b"Exercise"));
+        add_habit(&mut list, new_habit(b"Read"));
+        add_habit(&mut list, new_habit(b"Meditate"));
+
+        // Initially all incomplete
+        assert!(!is_completed(&list, 0));
+        assert!(!is_completed(&list, 1));
+        assert!(!is_completed(&list, 2));
+
+        // Complete the second habit
+        complete_habit(&mut list, 1);
+
+        // Check status
+        assert!(!is_completed(&list, 0));
+        assert!(is_completed(&list, 1));  // Now completed
+        assert!(!is_completed(&list, 2));
+    }
+
+    #[test]
+    fun test_complete_out_of_bounds() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(b"Exercise"));
+
+        // This should do nothing (not abort)
+        complete_habit(&mut list, 999);
+
+        // Original habit unchanged
+        assert!(!is_completed(&list, 0));
+    }
+
+    #[test]
+    fun test_completed_count() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(b"A"));
+        add_habit(&mut list, new_habit(b"B"));
+        add_habit(&mut list, new_habit(b"C"));
+        add_habit(&mut list, new_habit(b"D"));
+
+        assert_eq!(completed_count(&list), 0);
+
+        complete_habit(&mut list, 0);
+        complete_habit(&mut list, 2);
+
+        assert_eq!(completed_count(&list), 2);
+    }
+
+    #[test]
+    fun test_complete_all() {
+        let mut list = empty_list();
+        add_habit(&mut list, new_habit(b"A"));
+        add_habit(&mut list, new_habit(b"B"));
+        add_habit(&mut list, new_habit(b"C"));
+
+        // Complete all
+        let len = habit_count(&list);
+        let mut i = 0;
+        while (i < len) {
+            complete_habit(&mut list, i);
+            i = i + 1;
+        };
+
+        assert_eq!(completed_count(&list), 3);
+    }
+
+    #[test]
+    fun test_if_expression() {
+        let score = 75u64;
+        
+        let passed = if (score >= 60) {
+            true
+        } else {
+            false
+        };
+
+        assert!(passed);
+    }
+}
+```
+
+## Running the Tests
+
+Fire up your terminal:
+
+```bash
+cd day_05
+sui move test
+```
+
+Expected output (green lights all the way):
+
+```
+Running Move unit tests
+[ PASS    ] challenge::day_05::test_complete_all
+[ PASS    ] challenge::day_05::test_complete_habit
+[ PASS    ] challenge::day_05::test_complete_out_of_bounds
+[ PASS    ] challenge::day_05::test_completed_count
+[ PASS    ] challenge::day_05::test_if_expression
+Test result: OK. 5 passed; 0 failed
+```
+
+Five tests. Five passes. That's the sound of progress.
+
+## Try It Live with Sui CLI Web
+
+Want to see your code run without leaving the browser? Move Dev Studio has your back:
+
+1. Open [cli.firstmovers.io](https://cli.firstmovers.io)
+2. Navigate to **Move** section (`/app/move`)
+3. Click **Build** then **Test**
+
+<figure className="my-8">
+  <img
+    src="/blog/images/posts/21-day-sui-challenge/day-5-test.png"
+    alt="Day 5 test results"
+    className="rounded-xl border border-white/10 w-full"
+  />
+  <figcaption className="text-center text-white/50 text-sm mt-3">
+    All tests passing in Move Dev Studio
+  </figcaption>
+</figure>
+
+> **Note:** Day 5 functions don't have `entry`, so they can't be called from transactions yet. On-chain interaction comes in Day 7 when we create Sui objects.
+
+## Key Takeaways
+
+<RevealOnScroll client:visible>
+
+### 1. If Statements Require Bool
+
+No shortcuts. No "truthy" values. Just honest truth.
+
+```move
+if (count > 0) { }  // OK
+if (count) { }      // Error!
+```
+
+### 2. Always Check Bounds
+
+Before you reach into that vector, make sure there's something there.
+
+```move
+let len = vector::length(&vec);
+if (index < len) {
+    // Safe to access
+}
+```
+
+### 3. Borrow Mutably to Modify
+
+Read-only? Immutable borrow. Changing stuff? Mutable borrow.
+
+```move
+let habit = vector::borrow_mut(&mut list.habits, index);
+habit.completed = true;
+```
+
+### 4. If Can Return Values
+
+Move's `if` is an expression, not just a statement. Use that power.
+
+```move
+let result = if (condition) { a } else { b };
+```
+
+Both branches must return the same type. The compiler's got your back.
+
+</RevealOnScroll>
+
+## What's Next
+
+<RevealOnScroll client:visible>
+
+Tomorrow in **Day 6**, we're adding more firepower to your habit list:
+
+- Remove habits from the list
+- Reset completion status
+- Advanced vector operations
+
+Day 5 taught you to complete habits. Day 6 gives you full control: add, remove, reset, manipulate. Your list becomes truly dynamic.
+
+<AccordionCTA
+  client:visible
+  icon="🔗"
+  title="Continue the Challenge"
+  description="Day 6 adds remove and reset operations. Master vector manipulation."
+  link="https://github.com/riva-labs/21Challenge/tree/main/day_06"
+  linkText="View Day 6"
+/>
+
+</RevealOnScroll>
+
+## Commit Your Progress
+
+Lock it in. Make it official.
+
+```bash
+cd day_05
+sui move test
+git add day_05/
+git commit -m "Day 5: control flow and complete habit"
+```
+
+**Day 5 complete.** You've learned control flow and safe vector access. These patterns aren't just for habit trackers. They power token transfers, NFT minting, DeFi protocols, everything that runs on-chain.
+
+You're building the muscle memory that separates good Move developers from great ones.
+
+See you on Day 6.
+
+*Follow: [@ercandotsui](https://x.com/ercandotsui) | [@harry_phan06](https://x.com/harry_phan06)*
+
+## Vietnamese Builders: Level Up Your Journey
+
+<RevealOnScroll client:visible>
+
+**First Movers Sprint 2026 is here!**
+
+Following the success of CommandOSS Hacker House HCMC, First Movers Sprint 2026 is designed as a stepping-stone Hacker House. A space for builders in the Sui ecosystem to sharpen their skills, accelerate product development, and prepare for the next CommandOSS Hacker House.
+
+Whether you're a developer or a non-technical business/growth builder, you're welcome to join!
+
+<figure className="my-8">
+  <BrandedImage
+    client:visible
+    src="/blog/images/posts/21-day-sui-challenge/first-movers-sprint.png"
+    alt="First Movers Sprint 2026 Hackathon"
+    width={800}
+    height={800}
+    watermark="firstmovers.io"
+  />
+</figure>
+
+**Why join First Movers Sprint?**
+
+- **Paid internship** at top Sui ecosystem projects (full-time)
+- **Exciting prizes** and rewards
+- **Learn directly** with top mentors from the Sui ecosystem
+
+Co-organized by [@firstmoversvn](https://x.com/firstmoversvn), [@0xCommandOSS](https://x.com/0xCommandOSS), and ITviec.
+
+<AccordionCTA
+  client:visible
+  icon="🚀"
+  title="Join First Movers Sprint 2026"
+  description="A stepping-stone Hacker House for Vietnamese builders in the Sui ecosystem. Sharpen your skills, accelerate your product, and prepare for CommandOSS."
+  link="https://luma.com/first-movers-sprint"
+  linkText="Apply Now"
+/>
+
+</RevealOnScroll>
